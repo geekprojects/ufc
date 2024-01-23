@@ -3,15 +3,16 @@
 //
 
 #include "display.h"
-#include "xplane.h"
-
-#include <thread>
-#include <mutex>
 
 #include "widgets/adi.h"
 #include "widgets/speedindicator.h"
 #include "widgets/altitudeindicator.h"
 #include "widgets/headingindicator.h"
+
+#include "datasources/xplane.h"
+
+#include <thread>
+#include <mutex>
 
 using namespace std;
 using namespace Geek;
@@ -67,8 +68,8 @@ bool XPFlightDisplay::init()
     m_altitudeIndicatorWidget = make_shared<AltitudeIndicatorWidget>(this, (m_screenWidth / 2) - (indicatorWidth + 5), adiY, indicatorWidth, indicatorHeight);
     m_headingIndicatorWidget = make_shared<HeadingIndicatorWidget>(this, adiX, m_screenHeight - headingHeight, adiWidth, headingHeight);
 
-    m_client = new XPlaneClient();
-    m_client->connect();
+    m_dataSource = make_shared<XPlaneDataSource>(this);
+    m_dataSource->init();
 
     m_running = true;
     m_updateThread = new thread(&XPFlightDisplay::updateMain, this);
@@ -78,38 +79,51 @@ bool XPFlightDisplay::init()
 
 void XPFlightDisplay::close()
 {
+    m_dataSource->close();
+
     SDL_DestroyWindow(m_window);
-    m_client->disconnect();
+
     m_running = false;
 }
 
 
 void XPFlightDisplay::draw()
 {
-    m_updateMutex.lock();
-    m_displaySurface->clear(0x0);
-
-
-    m_adiWidget->draw(m_state, m_displaySurface);
-    m_speedIndicatorWidget->draw(m_state, m_displaySurface);
-    m_altitudeIndicatorWidget->draw(m_state, m_displaySurface);
-    m_headingIndicatorWidget->draw(m_state, m_displaySurface);
-
-    m_displaySurface->drawLine(m_screenWidth / 2, 0, m_screenWidth / 2, m_screenHeight, 0xffffffff);
-
-    if (!m_state.connected)
     {
-        uint32_t t = SDL_GetTicks();
-        if ((t / 1000) % 2)
+        scoped_lock lock(m_stateMutex);
+        m_displaySurface->clear(0x0);
+
+        m_adiWidget->draw(m_state, m_displaySurface);
+        m_speedIndicatorWidget->draw(m_state, m_displaySurface);
+        m_altitudeIndicatorWidget->draw(m_state, m_displaySurface);
+        m_headingIndicatorWidget->draw(m_state, m_displaySurface);
+
+        m_displaySurface->drawLine(m_screenWidth / 2, 0, m_screenWidth / 2, m_screenHeight, 0xffffffff);
+
+        m_largeFont->write(
+            m_displaySurface.get(),
+            (m_screenWidth / 2) + 5,
+            5,
+            L"Navigation Display",
+            0xffffffff);
+
+        if (!m_state.connected)
         {
-            wstring str = L"No Connection";
-            int w = m_largeFont->width(str);
-            int h = m_largeFont->getPixelHeight();
-            m_largeFont->write(m_displaySurface.get(), (m_screenWidth / 2) - (w / 2), (m_screenHeight / 2) - (h / 2), str, 0xffffffff);
+            uint32_t t = SDL_GetTicks();
+            if ((t / 1000) % 2)
+            {
+                wstring str = L"No Connection";
+                int w = m_largeFont->width(str);
+                int h = m_largeFont->getPixelHeight();
+                m_largeFont->write(
+                    m_displaySurface.get(),
+                    (m_screenWidth / 2) - (w / 2),
+                    (m_screenHeight / 2) - (h / 2),
+                    str,
+                    0xffffffff);
+            }
         }
     }
-
-    m_updateMutex.unlock();
 
     SDL_Surface* sdlSurface = SDL_GetWindowSurface(m_window);
     SDL_ConvertPixels(
@@ -121,57 +135,22 @@ void XPFlightDisplay::draw()
 
 void XPFlightDisplay::updateMain()
 {
-    vector<pair<int, string>> datarefs;
-    datarefs.push_back(make_pair(1, "sim/flightmodel/position/indicated_airspeed"));
-    datarefs.push_back(make_pair(2, "sim/flightmodel/position/theta"));
-    datarefs.push_back(make_pair(3, "sim/flightmodel/position/phi"));
-    datarefs.push_back(make_pair(4, "sim/cockpit2/gauges/indicators/altitude_ft_pilot"));
-    datarefs.push_back(make_pair(5, "sim/cockpit2/gauges/indicators/vvi_fpm_pilot"));
-    datarefs.push_back(make_pair(6, "sim/cockpit2/gauges/indicators/mach_pilot"));
-    datarefs.push_back(make_pair(7, "sim/flightmodel/position/mag_psi"));
-    datarefs.push_back(make_pair(8, "sim/cockpit2/gauges/actuators/barometer_setting_in_hg_pilot"));
-
-    m_client->streamDataRefs(datarefs, [this](map<int, float> values)
+    while (m_running)
     {
-        updateState(values);
-    });
+        m_dataSource->update();
+        SDL_Delay(100);
+    }
 }
 
-void XPFlightDisplay::updateState(std::map<int, float> values)
+State XPFlightDisplay::getState()
 {
-    scoped_lock lock(m_updateMutex);
+    scoped_lock lock(m_stateMutex);
+    return m_state;
+}
 
-    m_state.connected = true;
-    for (auto it : values)
-    {
-        float value = it.second;
-        switch (it.first)
-        {
-            case 1:
-                m_state.indicatedAirspeed = value;
-                break;
-            case 2:
-                m_state.pitch = value;
-                break;
-            case 3:
-                m_state.roll = value;
-                break;
-            case 4:
-                m_state.altitude = value;
-                break;
-            case 5:
-                m_state.verticalSpeed = value;
-                break;
-            case 6:
-                m_state.indicatedMach = value;
-                break;
-            case 7:
-                m_state.magHeading = value;
-                break;
-            case 8:
-                m_state.barometerHG = value;
-                break;
-        }
-    }
+void XPFlightDisplay::updateState(State& state)
+{
+    scoped_lock lock(m_stateMutex);
+    m_state = state;
 }
 

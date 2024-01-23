@@ -7,7 +7,7 @@
 #include <sys/select.h>
 #include <arpa/inet.h>
 
-#include "xplane.h"
+#include "xplaneclient.h"
 
 #include <geek/core-data.h>
 
@@ -47,12 +47,12 @@ bool XPlaneClient::connect()
     m_serverAddr.sin_port = htons(m_port);
     m_serverAddr.sin_addr.s_addr = inet_addr(m_host.c_str());
 
-    sockaddr_in recvaddr = {};
-    recvaddr.sin_family = AF_INET;
-    recvaddr.sin_addr.s_addr = INADDR_ANY;
-    recvaddr.sin_port = 0;
+    sockaddr_in receiveAddr = {};
+    receiveAddr.sin_family = AF_INET;
+    receiveAddr.sin_addr.s_addr = INADDR_ANY;
+    receiveAddr.sin_port = 0;
 
-    int res = ::bind(m_socket, (struct sockaddr*)&recvaddr, sizeof(recvaddr));
+    int res = ::bind(m_socket, (struct sockaddr*)&receiveAddr, sizeof(receiveAddr));
     if (res == -1)
     {
         printf("XPlaneClient::connect: Failed to bind\n");

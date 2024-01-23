@@ -2,8 +2,8 @@
 // Created by Ian Parker on 19/01/2024.
 //
 
-#ifndef XPFD_XPLANE_H
-#define XPFD_XPLANE_H
+#ifndef XPFD_XPLANECLIENT_H
+#define XPFD_XPLANECLIENT_H
 
 #include <geek/core-data.h>
 #include <netinet/in.h>
@@ -64,4 +64,4 @@ class XPlaneClient
     static void disconnectAll();
 };
 
-#endif //XPFD_XPLANE_H
+#endif //XPFD_XPLANECLIENT_H

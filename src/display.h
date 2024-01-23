@@ -12,7 +12,7 @@
 
 #include <thread>
 
-class XPlaneClient;
+class DataSource;
 class XPFlightDisplay;
 class ADIWidget;
 class SpeedIndicatorWidget;
@@ -61,7 +61,6 @@ class XPFlightDisplay
     int m_screenWidth = 0;
     int m_screenHeight = 0;
 
-    XPlaneClient* m_client = nullptr;
     State m_state;
     bool m_running = false;
 
@@ -77,11 +76,12 @@ class XPFlightDisplay
     Geek::FontHandle* m_fontSmall = nullptr;
     Geek::FontHandle* m_largeFont = nullptr;
 
+    std::shared_ptr<DataSource> m_dataSource;
+
     std::thread* m_updateThread = nullptr;
-    std::mutex m_updateMutex;
+    std::mutex m_stateMutex;
 
     void updateMain();
-    void updateState(std::map<int, float> values);
 
  public:
     XPFlightDisplay();
@@ -94,6 +94,9 @@ class XPFlightDisplay
 
     Geek::FontHandle* getFont() const { return m_font; }
     Geek::FontHandle* getSmallFont() const { return m_fontSmall; }
+
+    State getState();
+    void updateState(State& state);
 };
 
 

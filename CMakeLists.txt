@@ -16,8 +16,8 @@ SET(CMAKE_CXX_FLAGS_RELEASE  "${FLAGS_COMMON} -O3")
 include_directories(${CMAKE_SOURCE_DIR}/src)
 add_definitions(-I/usr/local/include ${sdl2_CFLAGS} ${libgeek_CFLAGS} ${yamlcpp_CFLAGS} ${glm_CFLAGS})
 
-add_executable(xpfd src/main.cpp src/xplane.cpp
-        src/xplane.h
+add_executable(xpfd
+        src/main.cpp
         src/display.cpp
         src/display.h
         src/gfxutils.cpp
@@ -32,6 +32,11 @@ add_executable(xpfd src/main.cpp src/xplane.cpp
         src/widgets/altitudeindicator.h
         src/widgets/headingindicator.cpp
         src/widgets/headingindicator.h
+        src/datasources/datasource.h
+        src/datasources/xplane.cpp
+        src/datasources/xplane.h
+        src/datasources/xplaneclient.cpp
+        src/datasources/xplaneclient.h
 )
 
 target_link_libraries(xpfd
