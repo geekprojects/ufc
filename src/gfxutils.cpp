@@ -26,7 +26,6 @@ void drawPolygon(
         ivec2 last = points.front();
         points.push_back(last);
 
-
         vector<float> slope(n);
         int minY = surface->getHeight();
         int maxY = 0;
@@ -90,10 +89,15 @@ void drawPolygon(
     }
     if (drawOutline)
     {
-        for (i = 0; i < n; i++)
-        {
-            surface->drawLine(points[i].x, points[i].y, points[i + 1].x, points[i + 1].y, outline);
-        }
+        drawPolygonOutline(surface, points, outline, i, n);
+    }
+}
+
+void drawPolygonOutline(Surface* surface, const vector<ivec2> &points, uint32_t outline, int i, int n)
+{
+    for (i = 0; i < n; i++)
+    {
+        surface->drawLine(points[i].x, points[i].y, points[i + 1].x, points[i + 1].y, outline);
     }
 }
 

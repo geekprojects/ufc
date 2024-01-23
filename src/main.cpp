@@ -7,7 +7,6 @@
 
 int main()
 {
-    //float roll = glm::radians(5.0);
     XPFlightDisplay display;
     display.init();
     bool running = true;

@@ -24,6 +24,14 @@ add_executable(xpfd src/main.cpp src/xplane.cpp
         src/gfxutils.h
         src/state.cpp
         src/state.h
+        src/widgets/adi.cpp
+        src/widgets/adi.h
+        src/widgets/speedindicator.cpp
+        src/widgets/speedindicator.h
+        src/widgets/altitudeindicator.cpp
+        src/widgets/altitudeindicator.h
+        src/widgets/headingindicator.cpp
+        src/widgets/headingindicator.h
 )
 
 target_link_libraries(xpfd

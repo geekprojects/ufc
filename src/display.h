@@ -13,9 +13,15 @@
 #include <thread>
 
 class XPlaneClient;
+class XPFlightDisplay;
+class ADIWidget;
+class SpeedIndicatorWidget;
+class AltitudeIndicatorWidget;
+class HeadingIndicatorWidget;
 
 struct State
 {
+    bool connected = false;
     float indicatedAirspeed = 0.0f;
     float indicatedMach = 0.0f;
     float roll = 0.0f;
@@ -28,8 +34,25 @@ struct State
 
 class FlightWidget
 {
+ protected:
+    XPFlightDisplay* m_display;
+    int m_x;
+    int m_y;
+    int m_width;
+    int m_height;
 
+ public:
+    FlightWidget(XPFlightDisplay* flightDisplay, int x, int y, int w, int h) :
+        m_display(flightDisplay),
+        m_x(x),
+        m_y(y),
+        m_width(w),
+        m_height(h) {}
+    virtual ~FlightWidget() = default;
+
+    virtual void draw(State& state, std::shared_ptr<Geek::Gfx::Surface> surface) = 0;
 };
+
 
 class XPFlightDisplay
 {
@@ -42,31 +65,23 @@ class XPFlightDisplay
     State m_state;
     bool m_running = false;
 
-    Geek::Gfx::Surface* m_displaySurface = nullptr;
-    Geek::Gfx::Surface* m_adiSurface = nullptr;
-    Geek::Gfx::Surface* m_speedSurface = nullptr;
-    Geek::Gfx::Surface* m_altitudeSurface = nullptr;
-    Geek::Gfx::Surface* m_altitudeHundredsSurface = nullptr;
-    Geek::Gfx::Surface* m_headingSurface = nullptr;
-    Geek::FontManager* m_fontManager;
-    Geek::FontHandle* m_font;
-    Geek::FontHandle* m_fontSmall;
-    Geek::FontHandle* m_largeFont;
+    std::shared_ptr<ADIWidget> m_adiWidget;
+    std::shared_ptr<SpeedIndicatorWidget> m_speedIndicatorWidget;
+    std::shared_ptr<AltitudeIndicatorWidget> m_altitudeIndicatorWidget;
+    std::shared_ptr<HeadingIndicatorWidget> m_headingIndicatorWidget;
 
-    std::thread* m_updateThread;
+    std::shared_ptr<Geek::Gfx::Surface> m_displaySurface;
+    std::shared_ptr<Geek::FontManager> m_fontManager;
+
+    Geek::FontHandle* m_font = nullptr;
+    Geek::FontHandle* m_fontSmall = nullptr;
+    Geek::FontHandle* m_largeFont = nullptr;
+
+    std::thread* m_updateThread = nullptr;
     std::mutex m_updateMutex;
 
     void updateMain();
     void updateState(std::map<int, float> values);
-
-    void drawADI(
-        int adiX,
-        int adiY,
-        int adiWidth,
-        int adiHeight);
-    void drawSpeedIndicator(int x, int y, int w, int h);
-    void drawAltitudeIndicator(int x, int y, int w, int h);
-    void drawHeading(int x, int y, int w, int h);
 
  public:
     XPFlightDisplay();
@@ -77,6 +92,8 @@ class XPFlightDisplay
 
     void draw();
 
+    Geek::FontHandle* getFont() const { return m_font; }
+    Geek::FontHandle* getSmallFont() const { return m_fontSmall; }
 };
 
 
