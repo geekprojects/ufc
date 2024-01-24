@@ -5,7 +5,7 @@
 #ifndef XPFD_ADI_H
 #define XPFD_ADI_H
 
-#include "display.h"
+#include "widgets/widget.h"
 
 class ADIWidget : public FlightWidget
 {

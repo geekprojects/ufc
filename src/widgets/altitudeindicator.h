@@ -5,7 +5,7 @@
 #ifndef XPFD_ALTITUDEINDICATOR_H
 #define XPFD_ALTITUDEINDICATOR_H
 
-#include "display.h"
+#include "widgets/widget.h"
 
 class AltitudeIndicatorWidget : public FlightWidget
 {

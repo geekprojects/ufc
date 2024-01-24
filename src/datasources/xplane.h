@@ -15,7 +15,7 @@ class XPlaneDataSource : public DataSource
  private:
     XPlaneClient m_client;
 
-    void updateState(std::map<int, float> values);
+    void updateState(const std::map<int, float>& values);
 
  public:
     explicit XPlaneDataSource(XPFlightDisplay* display);

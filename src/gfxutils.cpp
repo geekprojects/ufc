@@ -18,16 +18,16 @@ void drawPolygon(
     uint32_t outline)
 {
     int i;
-    int n = points.size();
+    int n = (int)points.size();
 
     if (drawFill)
     {
-        int surfaceWidth = surface->getWidth();
+        int surfaceWidth = (int)surface->getWidth();
         ivec2 last = points.front();
         points.push_back(last);
 
         vector<float> slope(n);
-        int minY = surface->getHeight();
+        int minY = (int)surface->getHeight();
         int maxY = 0;
         for (i = 0; i < n; i++)
         {
@@ -89,15 +89,10 @@ void drawPolygon(
     }
     if (drawOutline)
     {
-        drawPolygonOutline(surface, points, outline, i, n);
-    }
-}
-
-void drawPolygonOutline(Surface* surface, const vector<ivec2> &points, uint32_t outline, int i, int n)
-{
-    for (i = 0; i < n; i++)
-    {
-        surface->drawLine(points[i].x, points[i].y, points[i + 1].x, points[i + 1].y, outline);
+        for (i = 0; i < n; i++)
+        {
+            surface->drawLine(points[i].x, points[i].y, points[i + 1].x, points[i + 1].y, outline);
+        }
     }
 }
 

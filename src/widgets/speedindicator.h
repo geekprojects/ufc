@@ -4,7 +4,8 @@
 
 #ifndef XPFD_SPEEDINDICATOR_H
 #define XPFD_SPEEDINDICATOR_H
-#include "display.h"
+
+#include "widgets/widget.h"
 
 class SpeedIndicatorWidget : public FlightWidget
 {

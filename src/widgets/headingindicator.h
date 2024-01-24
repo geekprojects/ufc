@@ -5,7 +5,7 @@
 #ifndef XPFD_HEADINGINDICATOR_H
 #define XPFD_HEADINGINDICATOR_H
 
-#include "display.h"
+#include "widgets/widget.h"
 
 class HeadingIndicatorWidget : public FlightWidget
 {

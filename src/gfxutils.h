@@ -30,6 +30,6 @@ void drawFilledPolygon(
     std::vector<glm::ivec2> points,
     uint32_t c);
 
-void drawPolygonOutline(Geek::Gfx::Surface* surface, const std::vector<glm::ivec2> &points, uint32_t outline, int i, int n);
+void drawPolygonOutline(Geek::Gfx::Surface* surface, const std::vector<glm::ivec2> &points, uint32_t outline, int i);
 
 #endif //XPFD_GFXUTILS_H

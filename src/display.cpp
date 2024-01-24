@@ -60,13 +60,13 @@ bool XPFlightDisplay::init()
     int adiY = (m_screenHeight / 2) - (adiHeight / 2);
 
     int indicatorHeight = (m_screenHeight / 3) * 2;
-    int indicatorWidth = ((m_screenWidth / 2) - adiWidth) / 3;//(m_screenWidth - adiWidth) / 3;
+    int indicatorWidth = ((m_screenWidth / 2) - adiWidth) / 3;
     int headingHeight = (m_screenHeight - adiHeight) / 3;
 
-    m_adiWidget = make_shared<ADIWidget>(this, adiX, adiY, adiWidth, adiHeight);
-    m_speedIndicatorWidget = make_shared<SpeedIndicatorWidget>(this, 5, adiY, indicatorWidth, indicatorHeight);
-    m_altitudeIndicatorWidget = make_shared<AltitudeIndicatorWidget>(this, (m_screenWidth / 2) - (indicatorWidth + 5), adiY, indicatorWidth, indicatorHeight);
-    m_headingIndicatorWidget = make_shared<HeadingIndicatorWidget>(this, adiX, m_screenHeight - headingHeight, adiWidth, headingHeight);
+    m_widgets.push_back(make_shared<ADIWidget>(this, adiX, adiY, adiWidth, adiHeight));
+    m_widgets.push_back(make_shared<SpeedIndicatorWidget>(this, 5, adiY, indicatorWidth, indicatorHeight));
+    m_widgets.push_back(make_shared<AltitudeIndicatorWidget>(this, (m_screenWidth / 2) - (indicatorWidth + 5), adiY, indicatorWidth, indicatorHeight));
+    m_widgets.push_back(make_shared<HeadingIndicatorWidget>(this, adiX, m_screenHeight - headingHeight, adiWidth, headingHeight));
 
     m_dataSource = make_shared<XPlaneDataSource>(this);
     m_dataSource->init();
@@ -86,44 +86,9 @@ void XPFlightDisplay::close()
     m_running = false;
 }
 
-
 void XPFlightDisplay::draw()
 {
-    {
-        scoped_lock lock(m_stateMutex);
-        m_displaySurface->clear(0x0);
-
-        m_adiWidget->draw(m_state, m_displaySurface);
-        m_speedIndicatorWidget->draw(m_state, m_displaySurface);
-        m_altitudeIndicatorWidget->draw(m_state, m_displaySurface);
-        m_headingIndicatorWidget->draw(m_state, m_displaySurface);
-
-        m_displaySurface->drawLine(m_screenWidth / 2, 0, m_screenWidth / 2, m_screenHeight, 0xffffffff);
-
-        m_largeFont->write(
-            m_displaySurface.get(),
-            (m_screenWidth / 2) + 5,
-            5,
-            L"Navigation Display",
-            0xffffffff);
-
-        if (!m_state.connected)
-        {
-            uint32_t t = SDL_GetTicks();
-            if ((t / 1000) % 2)
-            {
-                wstring str = L"No Connection";
-                int w = m_largeFont->width(str);
-                int h = m_largeFont->getPixelHeight();
-                m_largeFont->write(
-                    m_displaySurface.get(),
-                    (m_screenWidth / 2) - (w / 2),
-                    (m_screenHeight / 2) - (h / 2),
-                    str,
-                    0xffffffff);
-            }
-        }
-    }
+    drawWidgets();
 
     SDL_Surface* sdlSurface = SDL_GetWindowSurface(m_window);
     SDL_ConvertPixels(
@@ -131,6 +96,43 @@ void XPFlightDisplay::draw()
         SDL_PIXELFORMAT_ARGB8888, m_displaySurface->getData(), m_screenWidth * 4,
         sdlSurface->format->format, sdlSurface->pixels, sdlSurface->pitch);
     SDL_UpdateWindowSurface(m_window);
+}
+
+void XPFlightDisplay::drawWidgets()
+{
+    scoped_lock lock(m_stateMutex);
+    m_displaySurface->clear(0x0);
+
+    for (auto const& widget : m_widgets)
+    {
+        widget->draw(m_state, m_displaySurface);
+    }
+
+    m_displaySurface->drawLine(m_screenWidth / 2, 0, m_screenWidth / 2, m_screenHeight, 0xffffffff);
+
+    m_largeFont->write(
+        m_displaySurface.get(),
+        (m_screenWidth / 2) + 5,
+        5,
+        L"Navigation Display",
+        0xffffffff);
+
+    if (!m_state.connected)
+    {
+        uint32_t t = SDL_GetTicks();
+        if ((t / 1000) % 2)
+        {
+            wstring str = L"No Connection";
+            int w = m_largeFont->width(str);
+            int h = m_largeFont->getPixelHeight();
+            m_largeFont->write(
+                m_displaySurface.get(),
+                (m_screenWidth / 2) - (w / 2),
+                (m_screenHeight / 2) - (h / 2),
+                str,
+                0xffffffff);
+        }
+    }
 }
 
 void XPFlightDisplay::updateMain()

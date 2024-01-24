@@ -12,47 +12,10 @@
 
 #include <thread>
 
+#include "state.h"
+#include "widgets/widget.h"
+
 class DataSource;
-class XPFlightDisplay;
-class ADIWidget;
-class SpeedIndicatorWidget;
-class AltitudeIndicatorWidget;
-class HeadingIndicatorWidget;
-
-struct State
-{
-    bool connected = false;
-    float indicatedAirspeed = 0.0f;
-    float indicatedMach = 0.0f;
-    float roll = 0.0f;
-    float pitch = 0.0f;
-    float altitude = 0.0f;
-    float verticalSpeed = 0.0f;
-    float magHeading = 0.0f;
-    float barometerHG = 0.0f;
-};
-
-class FlightWidget
-{
- protected:
-    XPFlightDisplay* m_display;
-    int m_x;
-    int m_y;
-    int m_width;
-    int m_height;
-
- public:
-    FlightWidget(XPFlightDisplay* flightDisplay, int x, int y, int w, int h) :
-        m_display(flightDisplay),
-        m_x(x),
-        m_y(y),
-        m_width(w),
-        m_height(h) {}
-    virtual ~FlightWidget() = default;
-
-    virtual void draw(State& state, std::shared_ptr<Geek::Gfx::Surface> surface) = 0;
-};
-
 
 class XPFlightDisplay
 {
@@ -64,10 +27,7 @@ class XPFlightDisplay
     State m_state;
     bool m_running = false;
 
-    std::shared_ptr<ADIWidget> m_adiWidget;
-    std::shared_ptr<SpeedIndicatorWidget> m_speedIndicatorWidget;
-    std::shared_ptr<AltitudeIndicatorWidget> m_altitudeIndicatorWidget;
-    std::shared_ptr<HeadingIndicatorWidget> m_headingIndicatorWidget;
+    std::vector<std::shared_ptr<FlightWidget>> m_widgets;
 
     std::shared_ptr<Geek::Gfx::Surface> m_displaySurface;
     std::shared_ptr<Geek::FontManager> m_fontManager;
@@ -97,6 +57,8 @@ class XPFlightDisplay
 
     State getState();
     void updateState(State& state);
+
+    void drawWidgets();
 };
 
 

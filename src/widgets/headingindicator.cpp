@@ -3,6 +3,7 @@
 //
 
 #include "headingindicator.h"
+#include "display.h"
 
 using namespace std;
 using namespace Geek;
@@ -11,7 +12,7 @@ using namespace Geek::Gfx;
 HeadingIndicatorWidget::HeadingIndicatorWidget(XPFlightDisplay* display, int x, int y, int w, int h)
     : FlightWidget( display, x, y, w, h)
 {
-    m_headingSurface = make_shared<Surface>(m_surfaceWidth, m_height, 4);
+    m_headingSurface = make_shared<Surface>(m_surfaceWidth, getHeight(), 4);
     drawCompass();
 }
 
@@ -46,11 +47,11 @@ void HeadingIndicatorWidget::drawCompass()
             {
                 swprintf(buf, 50, L"%d", n);
             }
-            int w = m_display->getFont()->width(buf);
+            int w = getDisplay()->getFont()->width(buf);
             for (int j = 0; j < 3; j++)
             {
                 int x = (n * m_spacing) + (j * 36 * m_spacing);
-                m_display->getFont()->write(m_headingSurface.get(), x - (w / 2), 25, buf, 0xffffffff);
+                getDisplay()->getFont()->write(m_headingSurface.get(), x - (w / 2), 25, buf, 0xffffffff);
                 m_headingSurface->drawLine(x, 0, x, 20, 0xffffffff);
             }
         }
@@ -69,23 +70,23 @@ void HeadingIndicatorWidget::drawCompass()
 void HeadingIndicatorWidget::draw(State &state, std::shared_ptr<Geek::Gfx::Surface> surface)
 {
     surface->blit(
-        m_x,
-        m_y,
+        getX(),
+        getY(),
         m_headingSurface.get(),
-        m_width36 + (m_width36 * (fmod(state.magHeading, 360.f) / 360.0f)) - (m_width / 2),
+        m_width36 + (int)((float)m_width36 * (fmod(state.magHeading, 360.f) / 360.0f)) - (getWidth() / 2),
         0,
-        m_width,
-        m_height);
+        getWidth(),
+        getHeight());
 
-    surface->drawRect(m_x, m_y, m_width, m_height, 0xffffffff);
+    surface->drawRect(getX(), getY(), getWidth(), getHeight(), 0xffffffff);
     surface->drawLine(
-        m_x + (m_width / 2),
-        m_y,
-        m_x + (m_width / 2),
-        m_y + m_height,
+        getX() + (getWidth() / 2),
+        getY(),
+        getX() + (getWidth() / 2),
+        getY() + getHeight(),
         0xffffffff);
 
     wchar_t buf[50];
     swprintf(buf, 50, L"%0.2f", state.magHeading);
-    m_display->getSmallFont()->write(surface.get(), m_x + 10, m_y + m_height - m_display->getSmallFont()->getPixelHeight(), buf, 0xffffffff);
+    getDisplay()->getSmallFont()->write(surface.get(), getX() + 10, getY() + getHeight() - getDisplay()->getSmallFont()->getPixelHeight(), buf, 0xffffffff);
 }

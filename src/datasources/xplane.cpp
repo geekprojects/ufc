@@ -24,30 +24,29 @@ void XPlaneDataSource::close()
 bool XPlaneDataSource::update()
 {
     vector<pair<int, string>> datarefs;
-    datarefs.push_back(make_pair(1, "sim/flightmodel/position/indicated_airspeed"));
-    datarefs.push_back(make_pair(2, "sim/flightmodel/position/theta"));
-    datarefs.push_back(make_pair(3, "sim/flightmodel/position/phi"));
-    datarefs.push_back(make_pair(4, "sim/cockpit2/gauges/indicators/altitude_ft_pilot"));
-    datarefs.push_back(make_pair(5, "sim/cockpit2/gauges/indicators/vvi_fpm_pilot"));
-    datarefs.push_back(make_pair(6, "sim/cockpit2/gauges/indicators/mach_pilot"));
-    datarefs.push_back(make_pair(7, "sim/flightmodel/position/mag_psi"));
-    datarefs.push_back(make_pair(8, "sim/cockpit2/gauges/actuators/barometer_setting_in_hg_pilot"));
+    datarefs.emplace_back(1, "sim/flightmodel/position/indicated_airspeed");
+    datarefs.emplace_back(2, "sim/flightmodel/position/theta");
+    datarefs.emplace_back(3, "sim/flightmodel/position/phi");
+    datarefs.emplace_back(4, "sim/cockpit2/gauges/indicators/altitude_ft_pilot");
+    datarefs.emplace_back(5, "sim/cockpit2/gauges/indicators/vvi_fpm_pilot");
+    datarefs.emplace_back(6, "sim/cockpit2/gauges/indicators/mach_pilot");
+    datarefs.emplace_back(7, "sim/flightmodel/position/mag_psi");
+    datarefs.emplace_back(8, "sim/cockpit2/gauges/actuators/barometer_setting_in_hg_pilot");
 
-    return m_client.streamDataRefs(datarefs, [this](map<int, float> values)
+    return m_client.streamDataRefs(datarefs, [this](map<int, float> const& values)
     {
         updateState(values);
     });
 }
 
-void XPlaneDataSource::updateState(std::map<int, float> values)
+void XPlaneDataSource::updateState(const std::map<int, float>& values)
 {
     State state = m_display->getState();
 
     state.connected = true;
-    for (auto it : values)
+    for (const auto& [idx, value] : values)
     {
-        float value = it.second;
-        switch (it.first)
+        switch (idx)
         {
             case 1:
                 state.indicatedAirspeed = value;
@@ -73,6 +72,8 @@ void XPlaneDataSource::updateState(std::map<int, float> values)
             case 8:
                 state.barometerHG = value;
                 break;
+            default:
+                printf("updateState: Unknown value %d = %0.5f\n", idx, value);
         }
     }
     m_display->updateState(state);

@@ -13,7 +13,7 @@ using namespace Geek::Gfx;
 ADIWidget::ADIWidget(XPFlightDisplay* display, int x, int y, int w, int h)
     : FlightWidget(display, x, y, w, h)
 {
-    m_adiSurface = make_shared<Surface>(m_width, m_height, 4);
+    m_adiSurface = make_shared<Surface>(getWidth(), getHeight(), 4);
 }
 
 void ADIWidget::draw(State& state, std::shared_ptr<Geek::Gfx::Surface> surface)
@@ -23,14 +23,14 @@ void ADIWidget::draw(State& state, std::shared_ptr<Geek::Gfx::Surface> surface)
     float roll = radians(state.roll);
     float pitch = state.pitch;
 
-    int halfWidth = m_width / 2;
-    int halfHeight = m_height / 2;
+    int halfWidth = getWidth() / 2;
+    int halfHeight = getHeight() / 2;
 
     ivec2 centre(halfWidth, halfHeight);
 
-    int pitchY = halfHeight + (int) ((float)m_height * pitch / 44.0f);
+    int pitchY = halfHeight + (int) ((float)getHeight() * pitch / 44.0f);
 
-    ivec2 horizonCentre = ivec2(halfWidth, pitchY);
+    auto horizonCentre = ivec2(halfWidth, pitchY);
     ivec2 horizon0 = rotate(horizonCentre, ivec2(-halfWidth * 2, 0), roll);
     ivec2 horizon1 = rotate(horizonCentre, ivec2(halfWidth * 2, 0), roll);
 
@@ -39,8 +39,8 @@ void ADIWidget::draw(State& state, std::shared_ptr<Geek::Gfx::Surface> surface)
         vector<ivec2> points;
         points.push_back(horizon0);
         points.push_back(horizon1);
-        points.push_back(ivec2(m_width - 1, m_height - 1));
-        points.push_back(ivec2(0, m_height - 1));
+        points.emplace_back(getWidth() - 1, getHeight() - 1);
+        points.emplace_back(0, getHeight() - 1);
         drawFilledPolygon(m_adiSurface.get(), points, 0xff884400);
     }
 
@@ -77,7 +77,7 @@ void ADIWidget::draw(State& state, std::shared_ptr<Geek::Gfx::Surface> surface)
         drawPolygon(m_adiSurface.get(), points, true, 0xffffffff, true, 0xff000000);
     }
 
-    surface->blit(m_x, m_y, m_adiSurface.get());
+    surface->blit(getX(), getY(), m_adiSurface.get());
 }
 
 
