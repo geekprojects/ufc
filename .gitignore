@@ -1,0 +1,27 @@
+# Objects and archives
+*.o
+*.lo
+*.Po
+*.Plo
+*.Tlo
+*.a
+*.la
+*.so*
+*.deps
+*.dirstamp
+
+# OS and IDE files
+.DS_Store
+.idea
+
+# Backup files
+*~
+*.swp
+
+# CMake build
+cmake-build-*
+build
+
+# Sonar
+.scannerwork/
+
