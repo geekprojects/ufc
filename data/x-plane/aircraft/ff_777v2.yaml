@@ -1,0 +1,23 @@
+name: FlightFactor 777-200ER v2
+author: FlightFactor and StepToSky
+icao: B772
+
+data:
+  autopilot:
+    heading: 1-sim/output/mcp/hdg
+    speed: 1-sim/output/mcp/spd
+    altitude: 1-sim/output/mcp/alt
+    verticalSpeed: 1-sim/output/mcp/vs
+
+    fmsVnav: 1-sim/ckpt/lamps/mcpVNAV
+
+commands:
+  autopilot:
+    altitudeUp: 1-sim/command/mcpAltRotary_rotary+
+    altitudeDown: 1-sim/command/mcpAltRotary_rotary-
+    airspeedUp: 1-sim/command/mcpSpdRotary_rotary+
+    airspeedDown: 1-sim/command/mcpSpdRotary_rotary-
+    headingUp: 1-sim/command/mcpHdgRotary_rotary+
+    headingDown: 1-sim/command/mcpHdgRotary_rotary-
+
+

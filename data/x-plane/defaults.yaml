@@ -1,0 +1,62 @@
+
+data:
+  aircraft:
+    indicatedAirspeed: sim/flightmodel/position/indicated_airspeed
+    pitch: sim/flightmodel/position/theta
+    roll: sim/flightmodel/position/phi
+    altitude: sim/cockpit2/gauges/indicators/altitude_ft_pilot
+    verticalSpeed: sim/cockpit2/gauges/indicators/vvi_fpm_pilot
+    indicatedMach: sim/cockpit2/gauges/indicators/mach_pilot
+    magHeading: sim/flightmodel/position/mag_psi
+    barometerHG: sim/cockpit2/gauges/actuators/barometer_setting_in_hg_pilot
+  
+  flightDirector:
+    pitch: sim/cockpit/autopilot/flight_director_pitch
+    roll: sim/cockpit/autopilot/flight_director_roll
+    mode: sim/cockpit2/autopilot/flight_director_mode
+
+  comms:
+    com1Hz: sim/cockpit/radios/com1_freq_hz
+    com1StandbyHz: sim/cockpit/radios/com1_stdby_freq_hz
+    com2Hz: sim/cockpit/radios/com2_freq_hz
+    com2StandbyHz: sim/cockpit/radios/com2_stdby_freq_hz
+    nav1Hz: sim/cockpit/radios/nav1_freq_hz
+    nav1StandbyHz: sim/cockpit/radios/nav1_stdby_freq_hz
+    nav2Hz: sim/cockpit/radios/nav2_freq_hz
+    nav2StandbyHz: sim/cockpit/radios/nav2_stdby_freq_hz
+
+  autopilot:
+    # Speed
+    speedMach: sim/cockpit/autopilot/airspeed_is_mach
+    speed: sim/cockpit2/autopilot/airspeed_dial_kts_mach
+    speedWindowOpen: sim/cockpit2/autopilot/vnav_speed_window_open
+
+    # Heading
+    heading: 
+    headingWindowOpen: # No default
+    gpssStatus: sim/cockpit2/autopilot/gpss_status
+
+    # Altitude
+    altitude: sim/cockpit2/autopilot/altitude_dial_ft
+
+    # Vertical Speed
+    verticalSpeed: 
+
+
+    fmsVnav: sim/cockpit2/autopilot/sim/cockpit2/autopilot/fms_vnav
+
+    locMode: # No defaulr
+    ap1Mode: # No defaulr
+    ap2Mode: # No defaulr
+    autoThrottleMode: # No defaulr
+    approachMode: # No defaulr
+
+commands:
+  autopilot:
+    altitudeUp: sim/autopilot/altitude_up
+    altitudeDown: sim/autopilot/altitude_down
+    airspeedUp: sim/autopilot/airspeed_up
+    airspeedDown: sim/autopilot/airspeed_down
+    headingUp: sim/autopilot/heading_up
+    headingDown: sim/autopilot/heading_down
+
