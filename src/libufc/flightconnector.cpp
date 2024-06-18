@@ -12,13 +12,23 @@
 using namespace std;
 using namespace UFC;
 
-FlightConnector::FlightConnector() : Logger("FlightConnector")
+#define STRINGIFY(x) XSTRINGIFY(x)
+#define XSTRINGIFY(x) #x
+
+FlightConnector::FlightConnector() :
+    Logger("FlightConnector")
 {
+    Config config;
+    loadConfig(config);
 }
 
-FlightConnector::~FlightConnector()
+FlightConnector::FlightConnector(Config config) :
+    Logger("FlightConnector")
 {
+    loadConfig(config);
 }
+
+FlightConnector::~FlightConnector() = default;
 
 bool FlightConnector::init()
 {
@@ -48,18 +58,24 @@ bool FlightConnector::init()
 
 shared_ptr<DataSource> FlightConnector::openDefaultDataSource()
 {
-    return openDataSource(SOURCE_SIMULATOR);
+    return openDataSource(m_config.dataSource);
 }
 
 std::shared_ptr<DataSource> FlightConnector::openDataSource(std::string name)
 {
+    log(DEBUG, "openDataSource: Opening %s", name.c_str());
     if (name == SOURCE_XPLANE)
     {
-        m_dataSource = make_shared<XPlaneDataSource>();
+        m_dataSource = make_shared<XPlaneDataSource>(this);
     }
-    if (name == SOURCE_SIMULATOR)
+    else if (name == SOURCE_SIMULATOR)
     {
-        m_dataSource = make_shared<SimulatorDataSource>();
+        m_dataSource = make_shared<SimulatorDataSource>(this);
+    }
+    else
+    {
+        log(ERROR, "openDataSource: Unrecognised data source: %s", name.c_str());
+        m_dataSource = nullptr;
     }
     return m_dataSource;
 }
@@ -103,7 +119,7 @@ void FlightConnector::updateDeviceMain()
 
     while (m_running)
     {
-        auto state = dataSource->getState();
+        const auto state = getState();
         for (auto device : m_devices)
         {
             device->update(state);
@@ -117,3 +133,82 @@ void FlightConnector::updateDataSourceMain()
     auto dataSource = getDataSource();
     dataSource->update();
 }
+
+void FlightConnector::loadConfig(Config config)
+{
+    if (config.configPath.empty())
+    {
+        m_config.configPath = string(getenv("HOME")) + "/.config/ufc.yml";
+    }
+    else
+    {
+        m_config.configPath = config.configPath;
+    }
+
+    if (access(m_config.configPath.c_str(), R_OK) == 0)
+    {
+        log(INFO, "Loading configuration from: %s", m_config.configPath.c_str());
+        auto configNode = YAML::LoadFile(m_config.configPath);
+
+        if (configNode["dataDir"])
+        {
+            m_config.dataDir = configNode["dataDir"].as<string>();
+        }
+        if (configNode["dataSource"])
+        {
+            m_config.dataSource = configNode["dataSource"].as<string>();
+        }
+
+        if (configNode["xplane"])
+        {
+            auto xplaneNode = configNode["xplane"];
+            if (xplaneNode["host"])
+            {
+                m_config.xplaneHost = xplaneNode["host"].as<string>();
+            }
+            if (xplaneNode["port"])
+            {
+                m_config.xplanePort = xplaneNode["port"].as<int>();
+            }
+        }
+    }
+
+    if (!config.dataDir.empty())
+    {
+        m_config.dataDir = config.dataDir;
+    }
+    if (m_config.dataDir.empty())
+    {
+        m_config.dataDir = STRINGIFY(DATADIR);
+    }
+
+    if (!config.dataSource.empty())
+    {
+        m_config.dataSource = config.dataSource;
+    }
+    if (m_config.dataSource.empty())
+    {
+        m_config.dataSource = "Simulator";
+    }
+
+    if (config.xplaneHost.empty())
+    {
+        m_config.xplaneHost = config.xplaneHost;
+    }
+    if (m_config.xplaneHost.empty())
+    {
+        m_config.xplaneHost = "127.0.0.1";
+    }
+
+    if (config.xplanePort != 0)
+    {
+        m_config.xplanePort = config.xplanePort;
+    }
+    if (m_config.xplanePort == 0)
+    {
+        m_config.xplanePort = 49000;
+    }
+
+    m_config.dump();
+}
+

@@ -37,6 +37,14 @@ XPlaneClient::XPlaneClient() :
     g_clients.push_back(this);
 }
 
+XPlaneClient::XPlaneClient(string host, int port) :
+    Logger("XPlaneClient"),
+    m_port(port)
+{
+    m_host = host;
+    g_clients.push_back(this);
+}
+
 XPlaneClient::~XPlaneClient() = default;
 
 bool XPlaneClient::connect()

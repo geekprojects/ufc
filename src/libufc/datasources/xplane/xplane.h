@@ -40,7 +40,7 @@ struct CommandDefinition
 class XPlaneDataSource : public DataSource
 {
     private:
-    XPlaneClient m_client;
+    std::shared_ptr<XPlaneClient> m_client;
 
     int m_xPlaneVersion = 0;
 
@@ -58,7 +58,7 @@ class XPlaneDataSource : public DataSource
     void update(const std::map<int, float>& values);
 
     public:
-    explicit XPlaneDataSource();
+    explicit XPlaneDataSource(FlightConnector* flightConnector);
     ~XPlaneDataSource() override = default;
 
     bool init() override;

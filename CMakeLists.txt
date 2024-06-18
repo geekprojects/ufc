@@ -15,6 +15,9 @@ SET(FLAGS_COMMON "-Wall -Werror")
 SET(CMAKE_CXX_FLAGS_DEBUG "${FLAGS_COMMON} -O0 -g -fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer")
 SET(CMAKE_CXX_FLAGS_RELEASE  "${FLAGS_COMMON} -O3")
 
+set(DATADIR ${CMAKE_INSTALL_PREFIX}/share/ufc)
+
+
 include_directories(${CMAKE_SOURCE_DIR}/include)
 add_definitions(-I/usr/local/include ${sdl2_CFLAGS} ${libgeek_CFLAGS} ${yamlcpp_CFLAGS} ${glm_CFLAGS} ${hidapi_CFLAGS})
 
@@ -46,6 +49,12 @@ add_library(ufc
         src/libufc/devices/winwingfcu.h
 )
 target_link_options(ufc PUBLIC -all_load)
+target_compile_definitions(ufc PUBLIC -DDATADIR=${DATADIR})
+target_link_libraries(ufc
+        ${libgeek_LDFLAGS}
+        ${yamlcpp_LDFLAGS}
+        ${hidapi_LDFLAGS}
+)
 
 if (${libgeek_FOUND})
 add_executable(xpfd
@@ -76,6 +85,7 @@ target_link_libraries(xpfd
         ${sdl2_LDFLAGS}
         ${yamlcpp_LDFLAGS}
         ${glm_LDFLAGS}
+        ${hidapi_LDFLAGS}
 )
 endif()
 
@@ -84,7 +94,7 @@ target_link_libraries(ufctool
         -Wl,-rpath -Wl,/usr/local/lib
         -L/usr/local/lib
         ufc
-        ${libgeek_LDFLAGS}
-        ${yamlcpp_LDFLAGS}
-        ${hidapi_LDFLAGS}
 )
+
+install(DIRECTORY include/ufc DESTINATION include FILES_MATCHING PATTERN "*.h" )
+

@@ -104,7 +104,7 @@ void XPFlightDisplay::draw()
 
 void XPFlightDisplay::drawWidgets()
 {
-    AircraftState state = m_dataSource->getState();
+    AircraftState state = m_flightConnector.getState();
     m_displaySurface->clear(0x0);
 
     for (auto const& widget : m_widgets)

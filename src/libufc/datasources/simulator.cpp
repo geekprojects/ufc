@@ -8,16 +8,16 @@
 
 using namespace UFC;
 
-SimulatorDataSource::SimulatorDataSource() : DataSource("Simulator")
+SimulatorDataSource::SimulatorDataSource(FlightConnector* flightConnector) : DataSource(flightConnector, "Simulator")
 {
 
 }
 
 bool SimulatorDataSource::init()
 {
-    AircraftState state = getState();
+    AircraftState state = m_flightConnector->getState();
     state.connected = true;
-    updateState(state);
+    m_flightConnector->updateState(state);
     return true;
 }
 
@@ -29,7 +29,7 @@ bool SimulatorDataSource::update()
 {
     int rollDir = 1;
     int pitchDir = 1;
-    AircraftState state = getState();
+    AircraftState state = m_flightConnector->getState();
     state.connected = true;
 
     state.pitch = 10.0f;
@@ -38,11 +38,11 @@ bool SimulatorDataSource::update()
     state.flightDirector.pitch = 0.0f;
     state.flightDirector.roll = 0.0f;
 
-    updateState(state);
+    m_flightConnector->updateState(state);
 
     while (true)
     {
-        state = getState();
+        state = m_flightConnector->getState();
         state.connected = true;
         if (rollDir == 1)
         {
@@ -76,7 +76,7 @@ bool SimulatorDataSource::update()
                 pitchDir = 1;
             }
         }
-        updateState(state);
+        m_flightConnector->updateState(state);
         usleep(50000);
     }
     return true;

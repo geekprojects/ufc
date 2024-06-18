@@ -17,11 +17,36 @@ namespace UFC
 class DataSource;
 class Device;
 
+struct Config
+{
+    std::string configPath;
+    std::string dataDir;
+
+    std::string dataSource;
+
+    // X-Plane specific
+    std::string xplaneHost;
+    int xplanePort = 0;
+
+    void dump() const
+    {
+        printf("Config::dump: configPath=%s\n", configPath.c_str());
+        printf("Config::dump: dataPath=%s\n", dataDir.c_str());
+        printf("Config::dump: dataSource=%s\n", dataSource.c_str());
+        printf("Config::dump: X-Plane host=%s\n", xplaneHost.c_str());
+        printf("Config::dump: X-Plane port=%d\n", xplanePort);
+    }
+};
+
 class FlightConnector : public Logger
 {
  private:
+    Config m_config;
     std::shared_ptr<DataSource> m_dataSource;
     std::vector<Device*> m_devices;
+
+    std::mutex m_stateMutex;
+    AircraftState m_state;
 
     bool m_running = false;
     std::shared_ptr<std::thread> m_updateDeviceThread;
@@ -33,9 +58,12 @@ class FlightConnector : public Logger
     static void updateDataSourceThread(FlightConnector* flightConnector);
     void updateDataSourceMain();
 
+    void loadConfig(Config config);
+
  public:
     FlightConnector();
-    ~FlightConnector();
+    explicit FlightConnector(Config config);
+    ~FlightConnector() override;
 
     bool init();
 
@@ -46,6 +74,20 @@ class FlightConnector : public Logger
     void start();
     void stop();
     void wait();
+
+    [[nodiscard]] const Config& getConfig() const { return m_config; }
+
+    AircraftState getState()
+    {
+        std::scoped_lock lock(m_stateMutex);
+        return m_state;
+    }
+
+    void updateState(AircraftState& state)
+    {
+        std::scoped_lock lock(m_stateMutex);
+        m_state = state;
+    }
 };
 
 }

@@ -15,5 +15,10 @@ ConsoleOutput::ConsoleOutput(FlightConnector* flightConnector) : Device(flightCo
 
 void ConsoleOutput::update(AircraftState state)
 {
-    //printf("ConsoleOutput::update Here!!\n");
+    if (!state.connected)
+    {
+        printf("ConsoleOutput::update: Not connected\n");
+        return;
+    }
+    printf("ConsoleOutput::update altitude=%0.2f\n", state.altitude);
 }

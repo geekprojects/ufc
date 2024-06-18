@@ -6,9 +6,23 @@
 
 UFC_DEVICE(WinWingFCU, WinWingFCU)
 
+WinWingFCU::WinWingFCU(UFC::FlightConnector* flightConnector) :
+    USBHIDDevice(flightConnector, "WinWingFCU", 0x4098, 0xBB10)
+{
+}
+
 bool WinWingFCU::init()
 {
-    return USBHIDDevice::init();
+    bool res;
+    res = USBHIDDevice::init();
+    if (!res)
+    {
+        return false;
+    }
+
+    // Stuff
+
+    return true;
 }
 
 void WinWingFCU::update(UFC::AircraftState state)

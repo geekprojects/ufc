@@ -9,10 +9,13 @@
 
 #include <mutex>
 
+#include "flightconnector.h"
 #include "logger.h"
 
 namespace UFC
 {
+
+class FlightConnector;
 
 const std::string AUTOPILOT_AIRSPEED_UP = "autopilot/airspeedUp";
 const std::string AUTOPILOT_AIRSPEED_DOWN = "autopilot/airspeedDown";
@@ -21,31 +24,23 @@ const std::string AUTOPILOT_HEADING_DOWN = "autopilot/headingDown";
 const std::string AUTOPILOT_ALTITUDE_UP = "autopilot/altitudeUp";
 const std::string AUTOPILOT_ALTITUDE_DOWN = "autopilot/altitudeDown";
 
-const std::string SOURCE_SIMULATOR = "sim";
-const std::string SOURCE_XPLANE = "xplane";
+const std::string SOURCE_SIMULATOR = "Simulator";
+const std::string SOURCE_XPLANE = "XPlane";
 
 class DataSource : public Logger
 {
  protected:
+    FlightConnector* m_flightConnector;
     std::string m_name;
-    std::mutex m_stateMutex;
-    AircraftState m_state;
 
  public:
-    explicit DataSource(std::string name) : Logger("DataSource[" + name + "]"), m_name(name) {}
+    explicit DataSource(FlightConnector* flightConnector, std::string name) :
+        Logger("DataSource[" + name + "]"),
+        m_flightConnector(flightConnector),
+        m_name(name)
+    {}
     ~DataSource() override = default;
 
-    AircraftState getState()
-    {
-        std::scoped_lock lock(m_stateMutex);
-        return m_state;
-    }
-
-    void updateState(AircraftState& state)
-    {
-        std::scoped_lock lock(m_stateMutex);
-        m_state = state;
-    }
 
     virtual bool init() = 0;
     virtual void close() = 0;

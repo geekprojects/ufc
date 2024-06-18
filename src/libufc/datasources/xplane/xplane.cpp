@@ -53,25 +53,29 @@ static const DataDefinition g_dataRefsInit[] =
     {"autopilot/approachMode", INTEGER, offsetof(AircraftState, autopilot.approachMode)},
 };
 
-XPlaneDataSource::XPlaneDataSource() : DataSource("XPlane")
+XPlaneDataSource::XPlaneDataSource(FlightConnector* flightConnector) : DataSource(flightConnector, "XPlane")
 {
     for (const auto& dataRef : g_dataRefsInit)
     {
         addDataRef(dataRef);
     }
+
+    m_client = make_shared<XPlaneClient>(
+        flightConnector->getConfig().xplaneHost,
+        flightConnector->getConfig().xplanePort);
 }
 
 bool XPlaneDataSource::init()
 {
-    bool res = m_client.connect();
+    bool res = m_client->connect();
     if (!res)
     {
         return false;
     }
 
     log(INFO, "init: Requesting details from X-Plane...");
-    AircraftState state = getState();
-    res = m_client.readInt("sim/version/xplane_internal_version", m_xPlaneVersion);
+    AircraftState state = m_flightConnector->getState();
+    res = m_client->readInt("sim/version/xplane_internal_version", m_xPlaneVersion);
 
     if (!res || m_xPlaneVersion == 0)
     {
@@ -79,12 +83,12 @@ bool XPlaneDataSource::init()
         return false;
     }
 
-    m_client.readString("sim/aircraft/view/acf_studio", 64, state.aircraftAuthor);
+    m_client->readString("sim/aircraft/view/acf_studio", 64, state.aircraftAuthor);
     if (state.aircraftAuthor.empty())
     {
-        m_client.readString("sim/aircraft/view/acf_author", 64, state.aircraftAuthor);
+        m_client->readString("sim/aircraft/view/acf_author", 64, state.aircraftAuthor);
     }
-    m_client.readString("sim/aircraft/view/acf_ICAO", 10, state.aircraftICAO);
+    m_client->readString("sim/aircraft/view/acf_ICAO", 10, state.aircraftICAO);
 
     log(INFO, "X-Plane version: %d", m_xPlaneVersion);
     log(INFO, "Author: %s", state.aircraftAuthor.c_str());
@@ -107,7 +111,7 @@ bool XPlaneDataSource::init()
 
 void XPlaneDataSource::close()
 {
-    m_client.disconnect();
+    m_client->disconnect();
 }
 
 bool XPlaneDataSource::update()
@@ -125,7 +129,7 @@ bool XPlaneDataSource::update()
         idx++;
     }
 
-    return m_client.streamDataRefs(datarefs, [this](map<int, float> const& values)
+    return m_client->streamDataRefs(datarefs, [this](map<int, float> const& values)
     {
         update(values);
     });
@@ -210,7 +214,7 @@ void XPlaneDataSource::loadDefinitions(YAML::Node config)
 
 void XPlaneDataSource::update(const map<int, float>& values)
 {
-    AircraftState state = getState();
+    AircraftState state = m_flightConnector->getState();
 
     state.connected = true;
 
@@ -244,7 +248,7 @@ void XPlaneDataSource::update(const map<int, float>& values)
             }
         }
     }
-    updateState(state);
+    m_flightConnector->updateState(state);
 }
 
 void XPlaneDataSource::command(string command)
@@ -257,7 +261,7 @@ void XPlaneDataSource::command(string command)
         return;
     }
 
-    m_client.sendCommand(it->second);
+    m_client->sendCommand(it->second);
 }
 
 void XPlaneDataSource::addDataRef(const DataDefinition& dataRef)

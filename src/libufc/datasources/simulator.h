@@ -12,8 +12,8 @@ namespace UFC
 
 class SimulatorDataSource : public DataSource
 {
-    public:
-    SimulatorDataSource();
+ public:
+    explicit SimulatorDataSource(FlightConnector* flightConnector);
     ~SimulatorDataSource() override = default;
 
     bool init() override;

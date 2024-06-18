@@ -53,9 +53,11 @@ class XPlaneClient : Logger
 
     bool sendRREF(std::vector<std::pair<int, std::string>> datarefs, int freq);
 
-    public:
+ public:
     XPlaneClient();
-    ~XPlaneClient();
+    XPlaneClient(std::string host, int port);
+
+    ~XPlaneClient() override;
 
     bool connect();
     bool disconnect();
