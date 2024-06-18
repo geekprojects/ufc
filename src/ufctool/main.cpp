@@ -17,6 +17,7 @@ static option g_options[] =
     {"data", required_argument, 0,  'd' },
     {"source", required_argument, 0,  's' },
     {"xplane-port", required_argument, 0,  'p' },
+    {"arduino-device", required_argument, 0,  'a' },
     {"help", no_argument, 0,  'h' },
     {0, 0, 0,  0 }
 };
@@ -46,6 +47,9 @@ int main(int argc, char** argv)
                 break;
             case 'p':
                 config.xplanePort = atoi(optarg);
+                break;
+            case 'a':
+                config.arduinoDevice = optarg;
                 break;
         }
     }

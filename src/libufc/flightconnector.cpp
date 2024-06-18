@@ -145,6 +145,14 @@ void FlightConnector::loadConfig(Config config)
         m_config.configPath = config.configPath;
     }
 
+    // Set defaults
+    m_config.dataDir = STRINGIFY(DATADIR);
+    m_config.dataSource = "Simulator";
+    m_config.xplaneHost = "127.0.0.1";
+    m_config.xplanePort = 49000;
+    m_config.arduinoDevice = "";
+
+    // Set values from config file
     if (access(m_config.configPath.c_str(), R_OK) == 0)
     {
         log(INFO, "Loading configuration from: %s", m_config.configPath.c_str());
@@ -171,42 +179,37 @@ void FlightConnector::loadConfig(Config config)
                 m_config.xplanePort = xplaneNode["port"].as<int>();
             }
         }
+
+        if (configNode["arduino"])
+        {
+            auto arduinoNode = configNode["arduino"];
+            if (arduinoNode["device"])
+            {
+                m_config.arduinoDevice = arduinoNode["device"].as<string>();
+            }
+        }
     }
 
+    // Now override with any command line config
     if (!config.dataDir.empty())
     {
         m_config.dataDir = config.dataDir;
     }
-    if (m_config.dataDir.empty())
-    {
-        m_config.dataDir = STRINGIFY(DATADIR);
-    }
-
     if (!config.dataSource.empty())
     {
         m_config.dataSource = config.dataSource;
     }
-    if (m_config.dataSource.empty())
-    {
-        m_config.dataSource = "Simulator";
-    }
-
-    if (config.xplaneHost.empty())
+    if (!config.xplaneHost.empty())
     {
         m_config.xplaneHost = config.xplaneHost;
     }
-    if (m_config.xplaneHost.empty())
-    {
-        m_config.xplaneHost = "127.0.0.1";
-    }
-
     if (config.xplanePort != 0)
     {
         m_config.xplanePort = config.xplanePort;
     }
-    if (m_config.xplanePort == 0)
+    if (config.arduinoDevice.empty())
     {
-        m_config.xplanePort = 49000;
+        m_config.arduinoDevice = config.arduinoDevice;
     }
 
     m_config.dump();

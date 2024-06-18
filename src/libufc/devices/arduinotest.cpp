@@ -15,8 +15,6 @@ UFC_DEVICE(ArduinoTest, ArduinoTest)
 using namespace std;
 using namespace UFC;
 
-const char* DEVICE_FILE = "/dev/cu.usbmodem2101";
-
 static void updateThread(ArduinoTest* arduinoTest)
 {
     arduinoTest->readMain();
@@ -121,13 +119,20 @@ ArduinoTest::~ArduinoTest()
 
 bool ArduinoTest::detect()
 {
-    int res = access(DEVICE_FILE, R_OK | W_OK);
+    string device = m_flightConnector->getConfig().arduinoDevice;
+    if (device.empty())
+    {
+        // Not configured
+        return false;
+    }
+
+    int res = access(device.c_str(), R_OK | W_OK);
     return res == 0;
 }
 
 bool ArduinoTest::init()
 {
-    m_fd = open(DEVICE_FILE, O_RDWR | O_NOCTTY | O_SYNC);
+    m_fd = open(m_flightConnector->getConfig().arduinoDevice.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
     if (m_fd == -1)
     {
         return false;

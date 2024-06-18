@@ -28,6 +28,10 @@ struct Config
     std::string xplaneHost;
     int xplanePort = 0;
 
+
+    // Arduino specific
+    std::string arduinoDevice;
+
     void dump() const
     {
         printf("Config::dump: configPath=%s\n", configPath.c_str());
@@ -35,6 +39,7 @@ struct Config
         printf("Config::dump: dataSource=%s\n", dataSource.c_str());
         printf("Config::dump: X-Plane host=%s\n", xplaneHost.c_str());
         printf("Config::dump: X-Plane port=%d\n", xplanePort);
+        printf("Config::dump: Arduino device=%s\n", arduinoDevice.c_str());
     }
 };
 
