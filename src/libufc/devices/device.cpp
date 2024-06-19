@@ -9,7 +9,7 @@ using namespace UFC;
 
 static DeviceRegistry* g_deviceRegistry = nullptr;
 
-Device::Device(FlightConnector* flightConnector, string name) :
+Device::Device(FlightConnector* flightConnector, const string& name) :
     Logger("Device[" + name + "]"),
     m_flightConnector(flightConnector),
     m_name(name)

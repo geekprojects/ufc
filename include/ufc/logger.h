@@ -18,8 +18,8 @@
  * along with libgeek.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __UFC_CORE_LOGGER_H_
-#define __UFC_CORE_LOGGER_H_
+#ifndef UFC_CORE_LOGGER_H_
+#define UFC_CORE_LOGGER_H_
 
 #include <string>
 
@@ -40,17 +40,17 @@ class Logger
     int m_depth;
 
  public:
-    Logger(std::string name);
-    Logger(std::wstring name);
+    explicit Logger(const std::string &name);
+    explicit Logger(const std::wstring &name);
     virtual ~Logger();
 
-    void setLoggerName(std::string name);
-    void setLoggerName(std::wstring name);
+    void setLoggerName(const std::string &name);
+    void setLoggerName(const std::wstring &name);
 
-    void log(LoggerLevel_t level, const char* __format, ...);
-    void logv(LoggerLevel_t level, const char* __format, va_list ap);
-    void debug(const char* __format, ...);
-    void error(const char* __format, ...);
+    void log(LoggerLevel_t level, const char* format, ...);
+    void logv(LoggerLevel_t level, const char* format, va_list ap);
+    void debug(const char* format, ...);
+    void error(const char* format, ...);
 
     // Not thread safe!
     void pushDepth() { m_depth++; }

@@ -37,7 +37,7 @@ XPlaneClient::XPlaneClient() :
     g_clients.push_back(this);
 }
 
-XPlaneClient::XPlaneClient(string host, int port) :
+XPlaneClient::XPlaneClient(const string &host, const int port) :
     Logger("XPlaneClient"),
     m_port(port)
 {
@@ -145,15 +145,15 @@ shared_ptr<Data> XPlaneClient::receive()
     }
 
     char buffer[4096];
-    res = recv(m_socket, buffer, 4096, 0);
-    if (res <= 0)
+    ssize_t len = ::recv(m_socket, buffer, 4096, 0);
+    if (len <= 0)
     {
         log(ERROR, "receive: Failed to read data?");
         return nullptr;
     }
 
-    auto data = make_shared<Data>(res);
-    memcpy(data->getData(), buffer, res);
+    auto data = make_shared<Data>(len);
+    memcpy(data->getData(), buffer, len);
 
     return data;
 }
@@ -217,18 +217,20 @@ bool XPlaneClient::sendConnection()
 
 struct dref_struct_in
 {
-    char header[4];
+    char header[4] = {};
     uint8_t pad = 0;
-    uint32_t dref_freq;
-    uint32_t dref_sender_index;	// the index the customer is using to define this dataref
-    char dref_string[400];
+    uint32_t dref_freq = 0;
+    uint32_t dref_sender_index = 0;	// the index the customer is using to define this dataref
+    char dref_string[400] = {};
 } __attribute__((packed));
 
-bool XPlaneClient::streamDataRefs(vector<pair<int, string>> datarefs, function<void(map<int, float>)> callback, int count)
+bool XPlaneClient::streamDataRefs(
+    const vector<pair<int, string>>& datarefs,
+    const function<void(map<int, float>)>& callback,
+    const int count)
 {
-    bool res;
     m_currentDataRefs = datarefs;
-    res = sendRREF(datarefs, 20);
+    bool res = sendRREF(datarefs, 20);
     if (!res)
     {
         return false;
@@ -257,7 +259,7 @@ bool XPlaneClient::streamDataRefs(vector<pair<int, string>> datarefs, function<v
         map<int, float> values;
         while (!packet->eof())
         {
-            int idx = packet->read32();
+            int idx = (int)packet->read32();
             float value = packet->readFloat();
             values.insert(make_pair(idx, value));
         }
@@ -276,9 +278,10 @@ bool XPlaneClient::sendRREF(std::vector<std::pair<int, std::string>> datarefs, i
         {
             dref_struct_in drefRequest;
 
-            memcpy(drefRequest.header, "RREF", 4);
+            const auto rref = "RREF";
+            memcpy(drefRequest.header, rref, 4);
 
-            int idx = datarefs[i + j].first;
+            const int idx = datarefs[i + j].first;
             string dataref = datarefs[i + j].second;
             drefRequest.dref_freq = freq;
             drefRequest.dref_sender_index = idx;
@@ -299,16 +302,17 @@ void XPlaneClient::stopDataRefs()
     m_currentDataRefs.clear();
 }
 
-void XPlaneClient::sendCommand(std::string command)
+void XPlaneClient::sendCommand(const std::string& command)
 {
-    int len = 5 + command.length();
+    const int len = 5 + command.length();
     char buffer[len];
-    memcpy(buffer, "CMND\00", 5);
+    const auto cmnd = "CMND\00";
+    memcpy(buffer, cmnd, 5);
     memcpy(buffer + 5, command.c_str(), command.length());
     send(buffer, len);
 }
 
-bool XPlaneClient::readString(std::string dataref, int len, string &returnValue)
+bool XPlaneClient::readString(const std::string& dataref, int len, string& value)
 {
     vector<pair<int, string>> datarefs;
     for (int i = 0; i < len; i++)
@@ -329,12 +333,12 @@ bool XPlaneClient::readString(std::string dataref, int len, string &returnValue)
         }
     }, 1);
 
-    returnValue = string(buffer);
+    value = string(buffer);
 
     return true;
 }
 
-bool XPlaneClient::read(std::string dataref, double& returnValue)
+bool XPlaneClient::read(const std::string& dataref, double& returnValue)
 {
     vector<pair<int, string>> datarefs;
     datarefs.emplace_back(0, dataref);

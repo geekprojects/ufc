@@ -7,8 +7,12 @@
 using namespace std;
 using namespace UFC;
 
-USBHIDDevice::USBHIDDevice(FlightConnector* flightConnector, string name, uint16_t vendorId, uint16_t productId)
-    : Device(flightConnector, name)
+USBHIDDevice::USBHIDDevice(
+    FlightConnector* flightConnector,
+    const string &name,
+    uint16_t vendorId,
+    uint16_t productId)
+: Device(flightConnector, name)
 {
     m_compatibleIds.emplace_back(vendorId, productId);
 }

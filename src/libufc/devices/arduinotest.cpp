@@ -22,7 +22,7 @@ static void updateThread(ArduinoTest* arduinoTest)
 
 int set_interface_attribs(int fd, int speed, int parity)
 {
-    struct termios tty;
+    termios tty;
     if (tcgetattr(fd, &tty) != 0)
     {
         printf("error %d from tcgetattr\n", errno);
@@ -61,7 +61,7 @@ int set_interface_attribs(int fd, int speed, int parity)
 
 void set_blocking(int fd, int should_block)
 {
-    struct termios tty;
+    termios tty;
     memset(&tty, 0, sizeof tty);
     if (tcgetattr(fd, &tty) != 0)
     {
@@ -162,12 +162,12 @@ void ArduinoTest::update(UFC::AircraftState state)
     writeNumber(2, (int)state.autopilot.altitude);
 }
 
-void ArduinoTest::writeNumber(int id, int value)
+void ArduinoTest::writeNumber(const int id, const int value) const
 {
     char buffer[1024];
     snprintf(buffer, 1024, "NUMBER:%d:%d\n", id, value);
     //printf("ArduinoTest::update: %s", buffer);
-    int len = strlen(buffer);
+    const int len = strlen(buffer);
     write(m_fd, buffer, len);
 }
 
@@ -177,23 +177,23 @@ void ArduinoTest::readMain()
     char buf[1024];
     while (true)
     {
-        int res = read(m_fd, buf, 1024);
+        const ssize_t res = read(m_fd, buf, 1024);
         if (res < 0)
         {
-            printf("mcpd: Error: Got %d\n", res);
+            printf("mcpd: Error: Got %ld\n", res);
             break;
         }
         if (res > 0)
         {
             buffer += string(buf, res);
 
-            int idx;
+            string::size_type idx;
             while ((idx = buffer.find('\n')) != -1)
             {
                 string line = buffer.substr(0, idx);
                 trim(line);
                 buffer = buffer.substr(idx + 1);
-                if (line.length() > 0)
+                if (!line.empty())
                 {
                     printf("mcpd: line: %s\n", line.c_str());
                     handleLine(line);
@@ -207,7 +207,7 @@ vector<string> splitString(string line, char splitChar)
 {
     vector<string> parts;
 
-    while (line.length() > 0)
+    while (!line.empty())
     {
         size_t pos = line.find(splitChar);
         if (pos == string::npos)
@@ -233,7 +233,7 @@ vector<string> splitString(string line, char splitChar)
     return parts;
 }
 
-void ArduinoTest::handleLine(std::string line)
+void ArduinoTest::handleLine(const std::string& line) const
 {
     vector<string> message = splitString(line, ':');
 

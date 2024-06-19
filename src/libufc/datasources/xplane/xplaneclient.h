@@ -55,7 +55,7 @@ class XPlaneClient : Logger
 
  public:
     XPlaneClient();
-    XPlaneClient(std::string host, int port);
+    XPlaneClient(const std::string &host, int port);
 
     ~XPlaneClient() override;
 
@@ -64,8 +64,8 @@ class XPlaneClient : Logger
 
     bool getPosition(Position& position);
 
-    bool readString(std::string dataref, int len, std::string& value);
-    bool read(std::string dataref, double& value);
+    bool readString(const std::string &dataref, int len, std::string& value);
+    bool read(const std::string& dataref, double& returnValue);
     bool readInt(std::string dataref, int& value)
     {
         double d;
@@ -78,10 +78,10 @@ class XPlaneClient : Logger
         return true;
     }
 
-    bool streamDataRefs(std::vector<std::pair<int, std::string>> datarefs, std::function<void(std::map<int, float>)>, int count = 0);
+    bool streamDataRefs(const std::vector<std::pair<int, std::string>> &datarefs, const std::function<void(std::map<int, float>)> &, int count = 0);
     void stopDataRefs();
 
-    void sendCommand(std::string command);
+    void sendCommand(const std::string &command);
 
     static void disconnectAll();
 };

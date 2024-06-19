@@ -73,8 +73,8 @@ class Device : public Logger
     std::string m_name;
 
  public:
-    explicit Device(FlightConnector* flightConnector, std::string name);
-    virtual ~Device() = default;
+    explicit Device(FlightConnector* flightConnector, const std::string &name);
+    ~Device() override = default;
 
     virtual bool detect() = 0;
     virtual bool init() { return true; }

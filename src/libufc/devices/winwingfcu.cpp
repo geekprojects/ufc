@@ -13,8 +13,7 @@ WinWingFCU::WinWingFCU(UFC::FlightConnector* flightConnector) :
 
 bool WinWingFCU::init()
 {
-    bool res;
-    res = USBHIDDevice::init();
+    bool res = USBHIDDevice::init();
     if (!res)
     {
         return false;

@@ -18,11 +18,11 @@ using namespace UFC;
 FlightConnector::FlightConnector() :
     Logger("FlightConnector")
 {
-    Config config;
+    Config config = {};
     loadConfig(config);
 }
 
-FlightConnector::FlightConnector(Config config) :
+FlightConnector::FlightConnector(const Config& config) :
     Logger("FlightConnector")
 {
     loadConfig(config);
@@ -61,7 +61,7 @@ shared_ptr<DataSource> FlightConnector::openDefaultDataSource()
     return openDataSource(m_config.dataSource);
 }
 
-std::shared_ptr<DataSource> FlightConnector::openDataSource(std::string name)
+std::shared_ptr<DataSource> FlightConnector::openDataSource(const std::string& name)
 {
     log(DEBUG, "openDataSource: Opening %s", name.c_str());
     if (name == SOURCE_XPLANE)
@@ -101,7 +101,7 @@ void FlightConnector::stop()
     m_running = false;
 }
 
-void FlightConnector::wait()
+void FlightConnector::wait() const
 {
     if (!m_updateDeviceThread)
     {
@@ -134,7 +134,7 @@ void FlightConnector::updateDataSourceMain()
     dataSource->update();
 }
 
-void FlightConnector::loadConfig(Config config)
+void FlightConnector::loadConfig(const Config& config)
 {
     if (config.configPath.empty())
     {

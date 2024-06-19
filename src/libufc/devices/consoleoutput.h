@@ -13,7 +13,7 @@ class ConsoleOutput : public Device
 {
  private:
  public:
-    ConsoleOutput(FlightConnector* flightConnector);
+    explicit ConsoleOutput(FlightConnector* flightConnector);
     ~ConsoleOutput() override = default;
 
     void update(AircraftState state) override;

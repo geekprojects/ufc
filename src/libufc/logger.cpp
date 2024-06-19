@@ -19,37 +19,35 @@
  */
 
 
-#include <stdio.h>
-#include <stdarg.h>
+#include <cstdio>
+#include <cstdarg>
 #include <ufc/logger.h>
 
 using namespace std;
 using namespace UFC;
 
-Logger::Logger(std::string name)
+Logger::Logger(const std::string& name)
 {
     m_depth = 0;
 
     setLoggerName(name);
 }
 
-Logger::Logger(std::wstring name)
+Logger::Logger(const std::wstring& name)
 {
     m_depth = 0;
 
     setLoggerName(name);
 }
 
-Logger::~Logger()
-{
-}
+Logger::~Logger() = default;
 
-void Logger::setLoggerName(std::string name)
+void Logger::setLoggerName(const std::string& name)
 {
     m_name = name;
 }
 
-void Logger::setLoggerName(std::wstring name)
+void Logger::setLoggerName(const std::wstring& name)
 {
     m_name = "";
 
@@ -115,7 +113,7 @@ void Logger::logv(LoggerLevel_t level, const char* msg, va_list va)
             break;
     }
 
-    string spaces = "";
+    string spaces;
     int i;
     for (i = 0; i < m_depth; i++)
     {
@@ -124,9 +122,9 @@ void Logger::logv(LoggerLevel_t level, const char* msg, va_list va)
 
     char timeStr[256];
     time_t t;
-    t = time(NULL);
+    t = time(nullptr);
 
-    struct tm tm;
+    tm tm;
     localtime_r(&t, &tm);
 
     strftime(timeStr, 256, "%Y/%m/%d %H:%M:%S", &tm);

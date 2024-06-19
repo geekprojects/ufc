@@ -10,7 +10,7 @@ class WinWingFCU : public UFC::USBHIDDevice
 {
  public:
     explicit WinWingFCU(UFC::FlightConnector* flightConnector);
-    ~WinWingFCU() = default;
+    ~WinWingFCU() override = default;
 
     bool init() override;
 

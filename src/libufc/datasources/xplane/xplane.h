@@ -51,8 +51,8 @@ class XPlaneDataSource : public DataSource
 
     void addDataRef(const DataDefinition& dataRef);
 
-    void loadDefinitionsForAircraft(std::string author, std::string icaoType);
-    void loadDefinitions(std::string file);
+    void loadDefinitionsForAircraft(const std::string &author, const std::string &icaoType);
+    void loadDefinitions(const std::string &file);
     void loadDefinitions(YAML::Node config);
 
     void update(const std::map<int, float>& values);

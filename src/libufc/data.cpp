@@ -56,7 +56,7 @@ void Data::setEndian(Endian endian)
     m_endian = endian;
 }
 
-bool Data::load(string filename)
+bool Data::load(const string& filename)
 {
     clear();
     log(DEBUG, "load: Loading: %s", filename.c_str());
@@ -368,10 +368,10 @@ bool Data::appendDouble(double data)
 
 bool Data::append(uint8_t* data, int length)
 {
-    int remaining = m_bufferSize - m_length;
+    const int remaining = m_bufferSize - m_length;
     if (remaining < length)
     {
-        int grow = length * 2;
+        int grow;
         if (length < 32)
         {
             grow = 64;
@@ -387,7 +387,7 @@ bool Data::append(uint8_t* data, int length)
 
         m_bufferSize += grow;
 
-        m_data = (char*) realloc(m_data, m_bufferSize);
+        m_data = static_cast<char*>(realloc(m_data, m_bufferSize));
 
         m_pos = m_data;
         m_end = m_data + m_length;
@@ -407,10 +407,9 @@ bool Data::appendString(string str)
 
 static string wstring2utf8(wstring str)
 {
-    string result = "";
+    string result;
 
-    unsigned int pos;
-    for (pos = 0; pos < str.length(); pos++)
+    for (unsigned int pos = 0; pos < str.length(); pos++)
     {
         wchar_t c = str.at(pos);
         char buffer[6] = {0, 0, 0, 0, 0, 0};
@@ -435,18 +434,17 @@ static string wstring2utf8(wstring str)
     return result;
 }
 
-bool Data::appendString(wstring str)
+bool Data::appendString(const wstring& str)
 {
-    string strUtf8 = wstring2utf8(str);
-    return appendString(strUtf8);
+    return appendString(wstring2utf8(str));
 }
 
-bool Data::write(std::string file)
+bool Data::write(const std::string& file)
 {
     return write(file, 0, m_length);
 }
 
-bool Data::write(std::string file, uint32_t pos, uint32_t length)
+bool Data::write(const std::string& file, const uint32_t pos, const uint32_t length)
 {
     FILE* fp = fopen(file.c_str(), "w");
     if (fp == nullptr)
@@ -454,8 +452,7 @@ bool Data::write(std::string file, uint32_t pos, uint32_t length)
         return false;
     }
 
-    bool res;
-    res = Data::write(fp, pos, length);
+    const bool res = write(fp, pos, length);
 
     fclose(fp);
     return res;

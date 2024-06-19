@@ -18,7 +18,7 @@ struct USBIds
 
     USBIds() = default;
 
-    USBIds(uint16_t v, uint16_t p)
+    USBIds(const uint16_t v, const uint16_t p)
     {
         vendorId = v;
         productId = p;
@@ -34,7 +34,7 @@ class USBHIDDevice : public Device
     hid_device* m_device = nullptr;
 
  public:
-    USBHIDDevice(FlightConnector* flightConnector, std::string name, uint16_t vendorId, uint16_t productId);
+    USBHIDDevice(FlightConnector* flightConnector, const std::string &name, uint16_t vendorId, uint16_t productId);
     ~USBHIDDevice() override;
 
     bool detect() override;

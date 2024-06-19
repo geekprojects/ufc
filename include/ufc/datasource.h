@@ -7,9 +7,6 @@
 
 #include <ufc/aircraftstate.h>
 
-#include <mutex>
-
-#include "flightconnector.h"
 #include "logger.h"
 
 namespace UFC
@@ -32,9 +29,10 @@ class DataSource : public Logger
  protected:
     FlightConnector* m_flightConnector;
     std::string m_name;
+    bool m_running = true;
 
  public:
-    explicit DataSource(FlightConnector* flightConnector, std::string name) :
+    explicit DataSource(FlightConnector* flightConnector, const std::string& name) :
         Logger("DataSource[" + name + "]"),
         m_flightConnector(flightConnector),
         m_name(name)

@@ -13,7 +13,7 @@ ConsoleOutput::ConsoleOutput(FlightConnector* flightConnector) : Device(flightCo
     log(DEBUG, "Here!");
 }
 
-void ConsoleOutput::update(AircraftState state)
+void ConsoleOutput::update(const AircraftState state)
 {
     if (!state.connected)
     {

@@ -3,6 +3,7 @@
 //
 
 #include "simulator.h"
+#include <ufc/flightconnector.h>
 
 #include <unistd.h>
 
@@ -40,7 +41,7 @@ bool SimulatorDataSource::update()
 
     m_flightConnector->updateState(state);
 
-    while (true)
+    while (m_running)
     {
         state = m_flightConnector->getState();
         state.connected = true;

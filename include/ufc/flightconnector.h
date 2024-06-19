@@ -43,7 +43,7 @@ struct Config
     }
 };
 
-class FlightConnector : public Logger
+class FlightConnector final : public Logger
 {
  private:
     Config m_config;
@@ -63,22 +63,22 @@ class FlightConnector : public Logger
     static void updateDataSourceThread(FlightConnector* flightConnector);
     void updateDataSourceMain();
 
-    void loadConfig(Config config);
+    void loadConfig(const Config &config);
 
  public:
     FlightConnector();
-    explicit FlightConnector(Config config);
+    explicit FlightConnector(const Config &config);
     ~FlightConnector() override;
 
     bool init();
 
     std::shared_ptr<DataSource> openDefaultDataSource();
-    std::shared_ptr<DataSource> openDataSource(std::string name);
+    std::shared_ptr<DataSource> openDataSource(const std::string &name);
     std::shared_ptr<DataSource> getDataSource() { return m_dataSource; }
 
     void start();
     void stop();
-    void wait();
+    void wait() const;
 
     [[nodiscard]] const Config& getConfig() const { return m_config; }
 
@@ -88,7 +88,7 @@ class FlightConnector : public Logger
         return m_state;
     }
 
-    void updateState(AircraftState& state)
+    void updateState(const AircraftState& state)
     {
         std::scoped_lock lock(m_stateMutex);
         m_state = state;

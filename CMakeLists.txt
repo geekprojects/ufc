@@ -47,6 +47,7 @@ add_library(ufc
         src/libufc/devices/usbhiddevice.cpp
         src/libufc/devices/winwingfcu.cpp
         src/libufc/devices/winwingfcu.h
+        src/libufc/datasources/xplane/datadefs.h
 )
 target_link_options(ufc PUBLIC -all_load)
 target_compile_definitions(ufc PUBLIC -DDATADIR=${DATADIR})

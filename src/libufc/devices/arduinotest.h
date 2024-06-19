@@ -16,9 +16,9 @@ class ArduinoTest : public UFC::Device
 
     std::thread* m_readThread = nullptr;
 
-    void handleLine(std::string line);
+    void handleLine(const std::string &line) const;
 
-    void writeNumber(int id, int value);
+    void writeNumber(int id, int value) const;
 
  public:
     ArduinoTest(UFC::FlightConnector* flightConnector);

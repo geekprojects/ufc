@@ -1,5 +1,5 @@
-#ifndef __UFC_CORE_DATA_H_
-#define __UFC_CORE_DATA_H_
+#ifndef UFC_CORE_DATA_H_
+#define UFC_CORE_DATA_H_
 
 #include <string>
 #include <cstdint>
@@ -15,7 +15,7 @@ enum Endian
     LITTLE
 };
 
-class Data : public Logger
+class Data final : public Logger
 {
  protected:
     char* m_data = nullptr;
@@ -29,12 +29,13 @@ class Data : public Logger
  public:
     Data();
     Data(char* data, unsigned int length);
-    Data(unsigned int length);
-    virtual ~Data();
+    explicit Data(unsigned int length);
+
+    ~Data() override;
 
     static Data* copy(char* data, unsigned int length);
 
-    bool load(std::string filename);
+    bool load(const std::string &filename);
 
     void setEndian(Endian endian);
     void setSwap(bool swap)
@@ -56,19 +57,19 @@ class Data : public Logger
             m_endian = endian;
         }
     }
-    bool getSwap() const { return mustSwap(m_endian); }
+    [[nodiscard]] bool getSwap() const { return mustSwap(m_endian); }
 
     void clear();
     void reset();
 
-    char* getData() { return m_data; }
+    [[nodiscard]] char* getData() const { return m_data; }
     bool eof();
     uint32_t pos();
     void setPos(uint32_t pos);
     void skip(unsigned int amount);
-    uint32_t getLength() const { return m_length; }
-    uint32_t getRemaining() const { return m_end - m_pos; }
-    char* posPointer() { return m_pos; }
+    [[nodiscard]] uint32_t getLength() const { return m_length; }
+    [[nodiscard]] uint32_t getRemaining() const { return m_end - m_pos; }
+    [[nodiscard]] char* posPointer() const { return m_pos; }
 
     uint8_t peek8();
     uint32_t peek32();
@@ -99,15 +100,15 @@ class Data : public Logger
     bool appendDouble(double data);
     bool append(uint8_t* data, int length);
     bool appendString(std::string str);
-    bool appendString(std::wstring str);
+    bool appendString(const std::wstring &str);
 
-    bool write(std::string file);
-    bool write(std::string file, uint32_t pos, uint32_t length);
+    bool write(const std::string &file);
+    bool write(const std::string &file, uint32_t pos, uint32_t length);
     bool write(FILE* fp, uint32_t pos, uint32_t length);
 
     Data* getSubData(uint32_t pos, uint32_t length);
 
-    static inline Endian getMachineEndian()
+    static Endian getMachineEndian()
     {
         union
         {
@@ -119,13 +120,10 @@ class Data : public Logger
         {
             return BIG;
         }
-        else
-        {
-            return LITTLE;
-        }
+        return LITTLE;
     }
 
-    static bool mustSwap(Endian endian)
+    static bool mustSwap(const Endian endian)
     {
         return endian != NONE && endian != getMachineEndian();
     }
