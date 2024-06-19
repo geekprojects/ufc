@@ -5,11 +5,11 @@ set(CMAKE_CXX_STANDARD 17)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(yamlcpp REQUIRED yaml-cpp)
+pkg_check_modules(hidapi REQUIRED hidapi)
 
 pkg_check_modules(libgeek libgeek)
 pkg_check_modules(glm glm)
 pkg_check_modules(sdl2 sdl2)
-pkg_check_modules(hidapi hidapi)
 
 SET(FLAGS_COMMON "-Wall -Werror")
 SET(CMAKE_CXX_FLAGS_DEBUG "${FLAGS_COMMON} -O0 -g -fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer")
