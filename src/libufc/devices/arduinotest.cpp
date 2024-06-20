@@ -165,13 +165,16 @@ void ArduinoTest::update(UFC::AircraftState state)
     writeNumber(2, (int)state.autopilot.altitude);
 }
 
-void ArduinoTest::writeNumber(const int id, const int value) const
+void ArduinoTest::writeNumber(const int id, const int value)
 {
     char buffer[1024];
     snprintf(buffer, 1024, "NUMBER:%d:%d\n", id, value);
-    //printf("ArduinoTest::update: %s", buffer);
-    const int len = strlen(buffer);
-    write(m_fd, buffer, len);
+    const unsigned int len = strlen(buffer);
+    ssize_t res = write(m_fd, buffer, len);
+    if (res == -1)
+    {
+        log(WARN, "Failed to write to device");
+    }
 }
 
 void ArduinoTest::readMain()

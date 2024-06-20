@@ -18,7 +18,7 @@ class ArduinoTest : public UFC::Device
 
     void handleLine(const std::string &line) const;
 
-    void writeNumber(int id, int value) const;
+    void writeNumber(int id, int value);
 
  public:
     ArduinoTest(UFC::FlightConnector* flightConnector);
