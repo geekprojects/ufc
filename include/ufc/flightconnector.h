@@ -6,6 +6,8 @@
 #define FLIGHTCONNECTOR_H
 
 #include <thread>
+#include <mutex>
+#include <vector>
 
 #include <ufc/datasource.h>
 
