@@ -2,6 +2,7 @@
 // Created by Ian Parker on 27/05/2024.
 //
 
+#include <fstream>
 #include <unistd.h>
 #include <ufc/flightconnector.h>
 
@@ -136,9 +137,11 @@ void FlightConnector::updateDataSourceMain()
 
 void FlightConnector::loadConfig(const Config& config)
 {
+    bool writeConfig = false;
     if (config.configPath.empty())
     {
         m_config.configPath = string(getenv("HOME")) + "/.config/ufc.yml";
+        writeConfig = true;
     }
     else
     {
@@ -188,6 +191,7 @@ void FlightConnector::loadConfig(const Config& config)
                 m_config.arduinoDevice = arduinoNode["device"].as<string>();
             }
         }
+        writeConfig = false;
     }
 
     // Now override with any command line config
@@ -210,6 +214,26 @@ void FlightConnector::loadConfig(const Config& config)
     if (config.arduinoDevice.empty())
     {
         m_config.arduinoDevice = config.arduinoDevice;
+    }
+
+    if (writeConfig)
+    {
+        YAML::Node configNode;
+        configNode["dataDir"] = m_config.dataDir;
+        configNode["dataSource"] = m_config.dataSource;
+
+        YAML::Node xplaneNode;
+        xplaneNode["host"] = m_config.xplaneHost;
+        xplaneNode["port"] = m_config.xplanePort;
+        configNode["xplane"] = xplaneNode;
+
+        YAML::Node arduinoNode;
+        arduinoNode["device"] = m_config.arduinoDevice;
+        configNode["arduino"] = arduinoNode;
+
+        ofstream configStream(m_config.configPath);
+        configStream << configNode;
+        configStream.close();
     }
 
     m_config.dump();
