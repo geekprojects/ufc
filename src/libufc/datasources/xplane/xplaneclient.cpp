@@ -1,6 +1,7 @@
 #include <string>
 #include <cstdio>
 #include <csignal>
+#include <cstring>
 
 #include <sys/socket.h>
 #include <sys/select.h>

@@ -8,6 +8,9 @@
 #include <sys/fcntl.h>
 #include <sys/termios.h>
 
+#include <cstring>
+#include <algorithm>
+
 #include <ufc/flightconnector.h>
 
 UFC_DEVICE(ArduinoTest, ArduinoTest)

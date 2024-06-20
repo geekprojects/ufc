@@ -4,7 +4,10 @@
 
 #ifndef USBHIDDEVICE_H
 #define USBHIDDEVICE_H
+
 #include "device.h"
+
+#include <vector>
 
 #include <hidapi/hidapi.h>
 
