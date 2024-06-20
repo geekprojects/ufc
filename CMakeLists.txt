@@ -56,7 +56,11 @@ add_library(ufc
         src/libufc/devices/winwingfcu.h
         src/libufc/datasources/xplane/datadefs.h
 )
+
+if(UNIX AND APPLE)
 target_link_options(ufc PUBLIC -all_load)
+endif()
+
 target_compile_definitions(ufc PUBLIC -DDATADIR=${DATADIR})
 target_link_libraries(ufc
         ${libgeek_LDFLAGS}
