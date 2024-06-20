@@ -5,7 +5,14 @@ set(CMAKE_CXX_STANDARD 17)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(yamlcpp REQUIRED yaml-cpp)
+
+if(UNIX AND NOT APPLE)
+pkg_check_modules(hidapi REQUIRED hidapi-libusb)
+elseif(UNIX AND APPLE)
 pkg_check_modules(hidapi REQUIRED hidapi)
+else()
+message(FATAL_ERROR "Unsupported platform")
+endif()
 
 pkg_check_modules(libgeek libgeek)
 pkg_check_modules(glm glm)
