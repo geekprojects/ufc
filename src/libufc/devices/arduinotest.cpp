@@ -191,7 +191,7 @@ void ArduinoTest::readMain()
             buffer += string(buf, res);
 
             string::size_type idx;
-            while ((idx = buffer.find('\n')) != -1)
+            while ((idx = buffer.find('\n')) != string::npos)
             {
                 string line = buffer.substr(0, idx);
                 trim(line);
