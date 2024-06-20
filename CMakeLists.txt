@@ -26,7 +26,8 @@ set(DATADIR ${CMAKE_INSTALL_PREFIX}/share/ufc)
 
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
-add_definitions(-I/usr/local/include ${sdl2_CFLAGS} ${libgeek_CFLAGS} ${yamlcpp_CFLAGS} ${glm_CFLAGS} ${hidapi_CFLAGS})
+#add_definitions(-I/usr/local/include ${sdl2_CFLAGS} ${libgeek_CFLAGS} ${yamlcpp_CFLAGS} ${glm_CFLAGS} ${hidapi_CFLAGS})
+add_definitions(-I/usr/local/include ${yamlcpp_CFLAGS} ${hidapi_CFLAGS})
 
 add_library(ufc
         src/libufc/aircraftstate.cpp
@@ -63,7 +64,6 @@ endif()
 
 target_compile_definitions(ufc PUBLIC -DDATADIR=${DATADIR})
 target_link_libraries(ufc
-        ${libgeek_LDFLAGS}
         ${yamlcpp_LDFLAGS}
         ${hidapi_LDFLAGS}
 )
@@ -87,6 +87,7 @@ add_executable(xpfd
 )
 
 target_include_directories(xpfd PUBLIC ${CMAKE_SOURCE_DIR}/src)
+target_compile_options(xpfd PUBLIC ${libgeek_CFLAGS} ${sdl2_CFLAGS})
 
 target_link_libraries(xpfd
         -Wl,-rpath -Wl,/usr/local/lib
