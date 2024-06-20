@@ -286,7 +286,8 @@ bool XPlaneClient::sendRREF(std::vector<std::pair<int, std::string>> datarefs, i
             string dataref = datarefs[i + j].second;
             drefRequest.dref_freq = freq;
             drefRequest.dref_sender_index = idx;
-            strncpy(drefRequest.dref_string, dataref.c_str(), 400);
+            strncpy(drefRequest.dref_string, dataref.c_str(), 399);
+            drefRequest.dref_string[399] = 0;
             bool res = send(&drefRequest, sizeof(drefRequest));
             if (!res)
             {
