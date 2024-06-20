@@ -29,7 +29,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 add_definitions(-I/usr/local/include ${sdl2_CFLAGS} ${libgeek_CFLAGS} ${yamlcpp_CFLAGS} ${glm_CFLAGS} ${hidapi_CFLAGS})
 
 add_library(ufc
-        src/libufc/AircraftState.cpp
+        src/libufc/aircraftstate.cpp
         src/libufc/flightconnector.cpp
         src/libufc/data.cpp
         src/libufc/logger.cpp
@@ -42,7 +42,7 @@ add_library(ufc
         src/libufc/devices/consoleoutput.cpp
         src/libufc/devices/consoleoutput.h
         src/libufc/devices/device.cpp
-        include/ufc/AircraftState.h
+        include/ufc/aircraftstate.h
         include/ufc/datasource.h
         include/ufc/device.h
         include/ufc/flightconnector.h
