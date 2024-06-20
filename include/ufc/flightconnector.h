@@ -8,6 +8,7 @@
 #include <thread>
 #include <mutex>
 #include <vector>
+#include <memory>
 
 #include <ufc/datasource.h>
 
