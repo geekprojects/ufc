@@ -273,9 +273,9 @@ bool XPlaneClient::streamDataRefs(
 
 bool XPlaneClient::sendRREF(std::vector<std::pair<int, std::string>> datarefs, int freq)
 {
-    for (int i = 0; i < datarefs.size(); i += 100)
+    for (unsigned int i = 0; i < datarefs.size(); i += 100)
     {
-        for (int j = 0; (i + j) < datarefs.size(); j++)
+        for (unsigned int j = 0; (i + j) < datarefs.size(); j++)
         {
             dref_struct_in drefRequest;
 
