@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(yamlcpp REQUIRED yaml-cpp)
+pkg_check_modules(lua REQUIRED lua)
 
 if(UNIX AND NOT APPLE)
 pkg_check_modules(hidapi REQUIRED hidapi-libusb)
@@ -19,16 +20,17 @@ pkg_check_modules(libgeek libgeek)
 pkg_check_modules(glm glm)
 pkg_check_modules(sdl2 sdl2)
 
+# Third Party Modules
+add_subdirectory(luacpp/Source)
+
+set(DATADIR ${CMAKE_INSTALL_PREFIX}/share/ufc)
 SET(FLAGS_COMMON "-Wall -Werror")
 SET(CMAKE_CXX_FLAGS_DEBUG "${FLAGS_COMMON} -O0 -g -fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer")
 SET(CMAKE_CXX_FLAGS_RELEASE  "${FLAGS_COMMON} -O3")
 
-set(DATADIR ${CMAKE_INSTALL_PREFIX}/share/ufc)
-
-
-include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/luacpp/Source)
 #add_definitions(-I/usr/local/include ${sdl2_CFLAGS} ${libgeek_CFLAGS} ${yamlcpp_CFLAGS} ${glm_CFLAGS} ${hidapi_CFLAGS})
-add_definitions(-I/usr/local/include ${yamlcpp_CFLAGS} ${hidapi_CFLAGS})
+add_definitions(-I/usr/local/include ${yamlcpp_CFLAGS} ${hidapi_CFLAGS} ${lua_CFLAGS})
 
 add_library(ufc SHARED
         src/libufc/aircraftstate.cpp
@@ -73,8 +75,10 @@ endif()
 
 target_compile_definitions(ufc PUBLIC -DDATADIR=${DATADIR})
 target_link_libraries(ufc
+        luacpp_static
         ${yamlcpp_LDFLAGS}
         ${hidapi_LDFLAGS}
+        ${lua_LDFLAGS}
 )
 
 install(TARGETS ufc DESTINATION lib)
@@ -119,6 +123,7 @@ target_link_libraries(xpfd
         ${hidapi_LDFLAGS}
 )
 endif()
+
 
 install(DIRECTORY include/ufc DESTINATION include FILES_MATCHING PATTERN "*.h" )
 
