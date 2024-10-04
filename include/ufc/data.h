@@ -91,6 +91,7 @@ class Data final : public Logger
     std::string cstr();
     std::string readString(int max);
     std::string readLine();
+    std::wstring readWLine();
 
     bool append8(uint8_t data);
     bool append16(uint16_t data);

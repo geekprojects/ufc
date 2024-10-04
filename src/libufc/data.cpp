@@ -4,9 +4,9 @@
 #include <cstdint>
 #include <zlib.h>
 #include <cassert>
-#include "utf8.h"
 
 #include <ufc/data.h>
+#include <ufc/utils.h>
 
 using namespace std;
 using namespace UFC;
@@ -301,6 +301,11 @@ string Data::readLine()
     return line;
 }
 
+std::wstring Data::readWLine()
+{
+    return utf82wstring(readLine().c_str());
+}
+
 bool Data::append8(uint8_t data)
 {
     return append(&data, 1);
@@ -403,35 +408,6 @@ bool Data::append(uint8_t* data, int length)
 bool Data::appendString(string str)
 {
     return append((uint8_t*) str.c_str(), str.length());
-}
-
-static string wstring2utf8(wstring str)
-{
-    string result;
-
-    for (unsigned int pos = 0; pos < str.length(); pos++)
-    {
-        wchar_t c = str.at(pos);
-        char buffer[6] = {0, 0, 0, 0, 0, 0};
-
-        char* end;
-        try
-        {
-            end = utf8::append(c, buffer);
-        }
-        catch (...)
-        {
-            result += '?';
-            continue;
-        }
-
-        char* p;
-        for (p = buffer; p < end; p++)
-        {
-            result += *p;
-        }
-    }
-    return result;
 }
 
 bool Data::appendString(const wstring& str)
