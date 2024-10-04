@@ -1,13 +1,18 @@
 UFC - Universal Flight Connector
 ==
 
-^ [!WARNING]
-^ This is a very early work in progress!
+> [!WARNING]
+> This is a very early work in progress!
 
 UFC is a cross-platform library and tool that connects devices and other tools to flight
 simulators, and provides a simple cross-sim library for making connecting to flight
 simulators easy. UFC defines its own Sim/Aircraft-agnostic data and command sets
 that mean device and aircraft definitions will work with everything else.
+
+
+### Work in progress
+UFC will also (eventually!) provide access to navigation data provided by the simulator
+such as airport, fixes and procedures.
 
 
 # Installation
