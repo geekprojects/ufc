@@ -113,7 +113,7 @@ void WinWingFCU::handleInput()
     {
         m_inputReport.reportId = 0x01;
         int res = hid_read(getDevice(), reinterpret_cast<unsigned char*>(&m_inputReport), sizeof(m_inputReport));
-        if (res < sizeof(m_inputReport))
+        if (res < static_cast<int>(sizeof(m_inputReport)))
         {
             break;
         }
@@ -189,20 +189,20 @@ void WinWingFCU::updateLCD(UFC::AircraftState state)
     data.heading3 = getDigit(heading, 0);
     data.latSign = true;
 
-if (!state.autopilot.headingTrkMode)
-{
-    data.headingSign = true;
-    data.headingSign2 = true;
-    data.trkSign = false;
-    data.trkSign2 = false;
-}
-else
-{
-    data.headingSign = false;
-    data.headingSign2 = false;
-    data.trkSign = true;
-    data.trkSign2 = true;
-}
+    if (!state.autopilot.headingTrkMode)
+    {
+        data.headingSign = true;
+        data.headingSign2 = true;
+        data.trkSign = false;
+        data.trkSign2 = false;
+    }
+    else
+    {
+        data.headingSign = false;
+        data.headingSign2 = false;
+        data.trkSign = true;
+        data.trkSign2 = true;
+    }
 
     int altitude = (int) state.autopilot.altitude;
     data.altitude1 = getDigit(altitude, 4);
@@ -215,18 +215,17 @@ else
 
     data.vsNegative = true;
     if (state.autopilot.verticalSpeed < 0)
-{
-    data.vsPositive = false;
-}
-else
-{
-    data.vsPositive = true;
-}
+    {
+        data.vsPositive = false;
+    }
+    else
+    {
+        data.vsPositive = true;
+    }
 
-
-        int vs = abs((int)state.autopilot.verticalSpeed);
-        data.vs1 = getDigit(vs, 3);
-        data.vs2 = getDigit(vs, 2);
+    int vs = abs((int) state.autopilot.verticalSpeed);
+    data.vs1 = getDigit(vs, 3);
+    data.vs2 = getDigit(vs, 2);
     if (!state.autopilot.verticalSpeedFPAMode)
     {
         data.vsSign = true;
@@ -244,9 +243,9 @@ else
         data.fpaSign = true;
         data.fpaSign2 = true;
 
-    data.vs2Dot = true;
-    data.vs3 = 0x00;
-    data.vs4 = 0x00;
+        data.vs2Dot = true;
+        data.vs3 = 0x00;
+        data.vs4 = 0x00;
     }
 
     data.lvlChSign1 = true;
@@ -264,7 +263,7 @@ else
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     };
     m_featureReport.reportId = 0xf0;
-    for (int i = 0; i < sizeof(data5); i++)
+    for (unsigned int i = 0; i < sizeof(data5); i++)
     {
         m_featureReport.vendor_data[i] = data5[i];
     }
@@ -284,7 +283,8 @@ void WinWingFCU::setLED(WinWingFCULED led, int state)
 {
     uint8_t data[] =
     {
-        0x02, 0x10, 0xbb, 0x00, 0x00, 0x03, 0x49, static_cast<uint8_t>(led), (uint8_t)state, 0x00, 0x00, 0x00, 0x00, 0x00
+        0x02, 0x10, 0xbb, 0x00, 0x00, 0x03, 0x49, static_cast<uint8_t>(led), (uint8_t) state, 0x00, 0x00, 0x00, 0x00,
+        0x00
     };
     hid_write(getDevice(), data, sizeof(data));
 }
