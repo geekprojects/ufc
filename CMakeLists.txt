@@ -21,7 +21,7 @@ pkg_check_modules(glm glm)
 pkg_check_modules(sdl2 sdl2)
 
 # Third Party Modules
-add_subdirectory(luacpp/Source)
+add_subdirectory(luacpp/Source EXCLUDE_FROM_ALL)
 
 set(DATADIR ${CMAKE_INSTALL_PREFIX}/share/ufc)
 SET(FLAGS_COMMON "-Wall -Werror")
