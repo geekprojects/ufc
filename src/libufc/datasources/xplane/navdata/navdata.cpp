@@ -6,6 +6,8 @@
 
 #include <ufc/utils.h>
 
+#include <cstring>
+
 using namespace std;
 
 vector<wstring> NavData::splitLine(wstring line)

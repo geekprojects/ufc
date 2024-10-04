@@ -8,6 +8,7 @@
 #include <memory>
 #include <vector>
 #include <set>
+#include <functional>
 
 namespace UFC
 {

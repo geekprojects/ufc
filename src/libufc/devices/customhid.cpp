@@ -3,8 +3,9 @@
 //
 
 #include "customhid.h"
-
 #include "ufc/flightconnector.h"
+
+#include <cmath>
 
 using namespace std;
 using namespace UFC;

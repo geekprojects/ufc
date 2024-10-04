@@ -6,6 +6,8 @@
 
 #include "ufc/flightconnector.h"
 
+#include <cmath>
+
 UFC_DEVICE(WinWingFCU, WinWingFCU)
 
 #if 0

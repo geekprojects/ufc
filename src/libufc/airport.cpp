@@ -3,6 +3,8 @@
 //
 
 #include <float.h>
+#include <cmath>
+
 #include <ufc/airports.h>
 #include <ufc/geoutils.h>
 

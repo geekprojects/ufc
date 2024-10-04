@@ -5,6 +5,8 @@
 #ifndef XPFD_DATASOURCE_H
 #define XPFD_DATASOURCE_H
 
+#include <memory>
+
 #include <ufc/aircraftstate.h>
 #include <ufc/commands.h>
 

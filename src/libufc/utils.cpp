@@ -6,6 +6,8 @@
 
 #include "utf8.h"
 
+#include <cstring>
+
 using namespace std;
 using namespace UFC;
 
