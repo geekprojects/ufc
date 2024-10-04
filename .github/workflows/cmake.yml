@@ -23,7 +23,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Install dependencies
-      run: sudo apt-get update && sudo apt-get install libyaml-cpp-dev libhidapi-dev
+      run: sudo apt-get update && sudo apt-get install libyaml-cpp-dev libhidapi-dev lua5.4 liblua5.4-dev
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
