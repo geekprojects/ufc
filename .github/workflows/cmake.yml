@@ -22,6 +22,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Fetch submodules
+      run: git submodule init && git submodule update
+
     - name: Install dependencies
       run: sudo apt-get update && sudo apt-get install libyaml-cpp-dev libhidapi-dev lua5.4 liblua5.4-dev
 
