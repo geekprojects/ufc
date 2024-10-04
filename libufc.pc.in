@@ -1,0 +1,16 @@
+# libufc pkg-config source file
+
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+bindir=${prefix}/bin
+libdir=${exec_prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+
+Name: libufc
+Description: Universal Flight Connector library
+Version: 1.0.0
+Requires:
+Conflicts:
+Libs: @PKGCONFIG_LDFLAGS@
+Cflags: @PKGCONFIG_CFLAGS@
+

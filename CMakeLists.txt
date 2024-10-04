@@ -14,6 +14,7 @@ else()
 message(FATAL_ERROR "Unsupported platform")
 endif()
 
+# Optional dependencies, used for the PFD display
 pkg_check_modules(libgeek libgeek)
 pkg_check_modules(glm glm)
 pkg_check_modules(sdl2 sdl2)
@@ -76,6 +77,15 @@ target_link_libraries(ufc
         ${hidapi_LDFLAGS}
 )
 
+install(TARGETS ufc DESTINATION lib)
+
+add_executable(ufctool src/ufctool/main.cpp)
+target_link_libraries(ufctool
+        -Wl,-rpath -Wl,/usr/local/lib
+        -L/usr/local/lib
+        ufc
+)
+
 if (${libgeek_FOUND})
 add_executable(xpfd
         src/pfd/main.cpp
@@ -110,12 +120,13 @@ target_link_libraries(xpfd
 )
 endif()
 
-add_executable(ufctool src/ufctool/main.cpp)
-target_link_libraries(ufctool
-        -Wl,-rpath -Wl,/usr/local/lib
-        -L/usr/local/lib
-        ufc
-)
-
 install(DIRECTORY include/ufc DESTINATION include FILES_MATCHING PATTERN "*.h" )
+
+set(PKGCONFIG_CFLAGS_LIST -I${CMAKE_INSTALL_PREFIX}/include ${yamlcpp_CFLAGS} ${hidapi_CFLAGS})
+string(REPLACE ";" " " PKGCONFIG_CFLAGS "${PKGCONFIG_CFLAGS_LIST}")
+set(PKGCONFIG_LDFLAGS_LIST -L${CMAKE_INSTALL_PREFIX}/lib -lufc ${yamlcpp_LDFLAGS} ${hidapi_LDFLAGS})
+string(REPLACE ";" " " PKGCONFIG_LDFLAGS "${PKGCONFIG_LDFLAGS_LIST}")
+
+configure_file(libufc.pc.in libufc.pc @ONLY)
+install(FILES ${CMAKE_BINARY_DIR}/libufc.pc DESTINATION "lib${LIB_SUFFIX}/pkgconfig")
 
