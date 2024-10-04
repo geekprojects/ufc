@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.13)
 project(UniversalFlightConnector VERSION 0.0.1)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(yamlcpp REQUIRED yaml-cpp)
@@ -29,7 +29,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 #add_definitions(-I/usr/local/include ${sdl2_CFLAGS} ${libgeek_CFLAGS} ${yamlcpp_CFLAGS} ${glm_CFLAGS} ${hidapi_CFLAGS})
 add_definitions(-I/usr/local/include ${yamlcpp_CFLAGS} ${hidapi_CFLAGS})
 
-add_library(ufc
+add_library(ufc SHARED
         src/libufc/aircraftstate.cpp
         src/libufc/flightconnector.cpp
         src/libufc/data.cpp
@@ -56,6 +56,14 @@ add_library(ufc
         src/libufc/devices/winwingfcu.cpp
         src/libufc/devices/winwingfcu.h
         src/libufc/datasources/xplane/datadefs.h
+        include/ufc/utils.h
+        src/libufc/utils.cpp
+        include/ufc/airports.h
+        src/libufc/airport.cpp
+        include/ufc/geoutils.h
+        src/libufc/geoutils.cpp
+        src/libufc/datasources/xplane/navdata/airports.cpp
+        src/libufc/datasources/xplane/navdata/navdata.cpp
 )
 
 if(UNIX AND APPLE)
