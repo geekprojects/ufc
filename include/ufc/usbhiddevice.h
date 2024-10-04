@@ -36,6 +36,9 @@ class USBHIDDevice : public Device
 
     hid_device* m_device = nullptr;
 
+ protected:
+    hid_device* getDevice() { return m_device; }
+
  public:
     USBHIDDevice(FlightConnector* flightConnector, const std::string &name, uint16_t vendorId, uint16_t productId);
     ~USBHIDDevice() override;
