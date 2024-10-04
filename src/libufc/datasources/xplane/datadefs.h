@@ -45,7 +45,7 @@ static const DataDefinition g_dataRefsInit[] =
 
     {"autopilot/displayVerticalSpeed", BOOLEAN, offsetof(AircraftState, autopilot.displayVerticalSpeed)},
     {"autopilot/verticalSpeed", FLOAT, offsetof(AircraftState, autopilot.verticalSpeed)},
-    {"autopilot/veriticalSpeedFPAMode", INTEGER, offsetof(AircraftState, autopilot.veriticalSpeedFPAMode)},
+    {"autopilot/veriticalSpeedFPAMode", INTEGER, offsetof(AircraftState, autopilot.verticalSpeedFPAMode)},
 
     {"autopilot/locMode", INTEGER, offsetof(AircraftState, autopilot.locMode)},
     {"autopilot/ap1Mode", INTEGER, offsetof(AircraftState, autopilot.ap1Mode)},
