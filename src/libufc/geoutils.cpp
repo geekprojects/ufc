@@ -15,7 +15,7 @@ float degreesToRadians(float degrees)
 
 double GeoUtils::distance(Coordinate c1, Coordinate c2)
 {
-    const float earthRadiusKm = 6371;
+    constexpr float earthRadiusKm = 6371;
 
     const auto dLat = degreesToRadians(c2.latitude-c1.latitude);
     const auto dLon = degreesToRadians(c2.longitude-c1.longitude);
@@ -55,7 +55,7 @@ bool QuadTreeNode::insert(const shared_ptr<Locationable> &object)
         return false;
     }
 
-    if (m_objects.size() < QT_NODE_CAPACITY && m_children.empty())
+    if ((int)m_objects.size() < QT_NODE_CAPACITY && m_children.empty())
     {
        // printf("XXX: QuadTree::insert: %ls: Adding as object: %ls\n", m_boundary.toString().c_str(), object->toString().c_str());
         m_objects.push_back(object);
@@ -67,7 +67,7 @@ bool QuadTreeNode::insert(const shared_ptr<Locationable> &object)
         subdivide();
     }
 
-    for (auto child : m_children)
+    for (const auto& child : m_children)
     {
         if (child->insert(object))
         {
