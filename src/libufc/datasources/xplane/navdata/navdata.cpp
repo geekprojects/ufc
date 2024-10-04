@@ -81,7 +81,7 @@ vector<string> NavData::splitLine(string line)
 std::wstring NavData::joinToEnd(vector<wstring> parts, int startPos)
 {
     std::wstring result;
-    for (int i = startPos; i < parts.size(); i++)
+    for (unsigned int i = startPos; i < parts.size(); i++)
     {
         if (!result.empty())
         {
@@ -95,7 +95,7 @@ std::wstring NavData::joinToEnd(vector<wstring> parts, int startPos)
 std::string NavData::joinToEnd(vector<string> parts, int startPos)
 {
     std::string result;
-    for (int i = startPos; i < parts.size(); i++)
+    for (unsigned int i = startPos; i < parts.size(); i++)
     {
         if (!result.empty())
         {
@@ -109,7 +109,11 @@ std::string NavData::joinToEnd(vector<string> parts, int startPos)
 wstring NavData::readLine(FILE* fd)
 {
     char lineBuffer[2048];
-    fgets(lineBuffer, 2048, fd);
+    char const* res = fgets(lineBuffer, 2048, fd);
+    if (res == nullptr)
+    {
+        return L"";
+    }
 
     int len = (int)strnlen(lineBuffer, 2048);
     if (len == 0)
