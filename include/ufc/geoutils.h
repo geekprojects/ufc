@@ -7,7 +7,6 @@
 
 #include <memory>
 #include <vector>
-#include <format>
 #include <set>
 
 namespace UFC
@@ -25,7 +24,7 @@ struct Coordinate
 
     std::wstring toString() const
     {
-        return std::format(L"{}, {}, {}", latitude, longitude, altitude);
+        return std::to_wstring(latitude) + L", " + std::to_wstring(longitude) + L", " + std::to_wstring(altitude);
     }
 };
 
@@ -60,7 +59,11 @@ struct Box
 
     std::wstring toString() const
     {
-        return std::format(L"{}, {} -> {}, {}", minLatitude(), minLongitude(), maxLatitude(), maxLongitude());
+        return
+            std::to_wstring(minLatitude()) + L", " +
+            std::to_wstring(minLongitude()) + L" -> " +
+            std::to_wstring(maxLatitude()) + L", " +
+            std::to_wstring(maxLongitude());
     }
 
     float minLatitude() const
@@ -100,7 +103,6 @@ struct Box
             c.latitude < position.latitude + size &&
             c.longitude >= position.longitude &&
             c.longitude < position.longitude + size);
-        //printf("Box::contains: %ls in %ls = %d\n", c.toString().c_str(), toString().c_str(), res);
         return res;
     }
 
@@ -166,11 +168,10 @@ class QuadTreeNode : public std::enable_shared_from_this<QuadTreeNode>
 
     std::wstring toString() const
     {
-        return std::format(
-            L"[QuadTreeNode: {}, children={}, objects={}]",
-            m_boundary.toString(),
-            m_children.size(),
-            m_objects.size());
+        return
+            L"[QuadTreeNode: " + m_boundary.toString() +
+            L", children=" + std::to_wstring(m_children.size()) +
+            L", objects=" + std::to_wstring(m_objects.size()) + L"]";
     }
 };
 

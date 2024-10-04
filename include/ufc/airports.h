@@ -79,15 +79,13 @@ class Airport : public Locationable
 
     std::wstring toString() const override
     {
-        return std::format(L"{} ({:c}{:c}{:c}{:c}) [{}]",
-            m_name,
-            (wchar_t)m_icaoCode[0],
-            (wchar_t)m_icaoCode[1],
-            (wchar_t)m_icaoCode[2],
-            (wchar_t)m_icaoCode[3],
-            m_location.toString());
+        return m_name + L" " +
+            (wchar_t)m_icaoCode[0] +
+            (wchar_t)m_icaoCode[1] +
+            (wchar_t)m_icaoCode[2] +
+            (wchar_t)m_icaoCode[3] +
+            L" [" + m_location.toString() + L"]";
     }
-
 };
 
 class Airports
