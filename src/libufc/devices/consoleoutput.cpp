@@ -20,5 +20,5 @@ void ConsoleOutput::update(const AircraftState state)
         printf("ConsoleOutput::update: Not connected\n");
         return;
     }
-    printf("ConsoleOutput::update altitude=%0.2f\n", state.altitude);
+    //printf("ConsoleOutput::update altitude=%0.2f\n", state.altitude);
 }

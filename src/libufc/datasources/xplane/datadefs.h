@@ -30,18 +30,22 @@ static const DataDefinition g_dataRefsInit[] =
     {"flightDirector/roll", FLOAT, offsetof(AircraftState, flightDirector.roll)},
     {"flightDirector/mode", INTEGER, offsetof(AircraftState, flightDirector.mode)},
 
+    {"autopilot/displaySpeed", BOOLEAN, offsetof(AircraftState, autopilot.displaySpeed)},
     {"autopilot/speedMach", BOOLEAN, offsetof(AircraftState, autopilot.speedMach)},
     {"autopilot/speed", FLOAT, offsetof(AircraftState, autopilot.speed)},
     {"autopilot/speedWindowOpen", BOOLEAN, offsetof(AircraftState, autopilot.speedWindowOpen)},
 
     {"autopilot/headingWindowOpen", BOOLEAN, offsetof(AircraftState, autopilot.headingWindowOpen)},
+    {"autopilot/heading", FLOAT, offsetof(AircraftState, autopilot.heading)},
+    {"autopilot/headingTrkMode", INTEGER, offsetof(AircraftState, autopilot.headingTrkMode)},
     {"autopilot/gpssStatus", INTEGER, offsetof(AircraftState, autopilot.gpssStatus)},
 
     {"autopilot/altitude", FLOAT, offsetof(AircraftState, autopilot.altitude)},
     {"autopilot/fmsVnav", BOOLEAN, offsetof(AircraftState, autopilot.fmsVnav)},
 
-    {"autopilot/heading", BOOLEAN, offsetof(AircraftState, autopilot.heading)},
-    {"autopilot/verticalSpeed", BOOLEAN, offsetof(AircraftState, autopilot.verticalSpeed)},
+    {"autopilot/displayVerticalSpeed", BOOLEAN, offsetof(AircraftState, autopilot.displayVerticalSpeed)},
+    {"autopilot/verticalSpeed", FLOAT, offsetof(AircraftState, autopilot.verticalSpeed)},
+    {"autopilot/veriticalSpeedFPAMode", INTEGER, offsetof(AircraftState, autopilot.veriticalSpeedFPAMode)},
 
     {"autopilot/locMode", INTEGER, offsetof(AircraftState, autopilot.locMode)},
     {"autopilot/ap1Mode", INTEGER, offsetof(AircraftState, autopilot.ap1Mode)},

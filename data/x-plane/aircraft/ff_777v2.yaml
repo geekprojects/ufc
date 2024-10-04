@@ -8,16 +8,40 @@ data:
     speed: 1-sim/output/mcp/spd
     altitude: 1-sim/output/mcp/alt
     verticalSpeed: 1-sim/output/mcp/vs
-
     fmsVnav: 1-sim/ckpt/lamps/mcpVNAV
+    headingTrkMode: 1-sim/output/mcp/isHdgTrg
+    verticalSpeedFPAMode: 1-sim/output/mcp/isVsTrg
 
 commands:
   autopilot:
-    altitudeUp: 1-sim/command/mcpAltRotary_rotary+
-    altitudeDown: 1-sim/command/mcpAltRotary_rotary-
-    airspeedUp: 1-sim/command/mcpSpdRotary_rotary+
-    airspeedDown: 1-sim/command/mcpSpdRotary_rotary-
-    headingUp: 1-sim/command/mcpHdgRotary_rotary+
-    headingDown: 1-sim/command/mcpHdgRotary_rotary-
-
+    ap1:
+      toggle: 1-sim/command/mcpApLButton_button
+    autoThrust:
+      toggle: 1-sim/command/mcpAtButton_button
+    localiser:
+      toggle: 1-sim/command/mcpLocButton_button
+    approach:
+      toggle: 1-sim/command/mcpAppButton_button
+    altitude:
+      up: 1-sim/command/mcpAltRotary_rotary+
+      down: 1-sim/command/mcpAltRotary_rotary-
+      manage: 1-sim/command/mcpAltRotary_push
+    airspeed:
+      up: 1-sim/command/mcpSpdRotary_rotary+
+      down: 1-sim/command/mcpSpdRotary_rotary-
+      manage: 1-sim/command/mcpSpdRotary_push
+    heading:
+      up: 1-sim/command/mcpHdgRotary_rotary+
+      down: 1-sim/command/mcpHdgRotary_rotary-
+      manage: 1-sim/command/mcpHdgCelButton_button
+    verticalSpeed:
+      up: 1-sim/command/mcpVsRotary_rotary+
+      down: 1-sim/command/mcpVsRotary_rotary-
+      manage: 1-sim/command/mcpAltHoldButton_button
+    spdMach:
+      toggle: 1-sim/command/mcpIasMachButton_button
+    hdkTrk:
+      toggle: 1-sim/command/mcpHdgTrkButton_button
+    vsFpa:
+      toggle: 1-sim/command/mcpVsFpaButton_button
 

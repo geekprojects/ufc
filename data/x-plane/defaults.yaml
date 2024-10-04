@@ -9,7 +9,7 @@ data:
     indicatedMach: sim/cockpit2/gauges/indicators/mach_pilot
     magHeading: sim/flightmodel/position/mag_psi
     barometerHG: sim/cockpit2/gauges/actuators/barometer_setting_in_hg_pilot
-  
+
   flightDirector:
     pitch: sim/cockpit/autopilot/flight_director_pitch
     roll: sim/cockpit/autopilot/flight_director_roll
@@ -27,12 +27,13 @@ data:
 
   autopilot:
     # Speed
+    displaySpeed: 'false'
     speedMach: sim/cockpit/autopilot/airspeed_is_mach
     speed: sim/cockpit2/autopilot/airspeed_dial_kts_mach
     speedWindowOpen: sim/cockpit2/autopilot/vnav_speed_window_open
 
     # Heading
-    heading: 
+    heading: sim/cockpit/autopilot/heading_mag
     headingWindowOpen: # No default
     gpssStatus: sim/cockpit2/autopilot/gpss_status
 
@@ -40,23 +41,46 @@ data:
     altitude: sim/cockpit2/autopilot/altitude_dial_ft
 
     # Vertical Speed
-    verticalSpeed: 
-
+    verticalSpeed: sim/cockpit/autopilot/vertical_velocity
 
     fmsVnav: sim/cockpit2/autopilot/sim/cockpit2/autopilot/fms_vnav
 
-    locMode: # No defaulr
-    ap1Mode: # No defaulr
-    ap2Mode: # No defaulr
-    autoThrottleMode: # No defaulr
-    approachMode: # No defaulr
+    locMode: # No default
+    ap1Mode: # No default
+    ap2Mode: # No default
+    autoThrottleMode: # No default
+    approachMode: # No default
 
 commands:
   autopilot:
-    altitudeUp: sim/autopilot/altitude_up
-    altitudeDown: sim/autopilot/altitude_down
-    airspeedUp: sim/autopilot/airspeed_up
-    airspeedDown: sim/autopilot/airspeed_down
-    headingUp: sim/autopilot/heading_up
-    headingDown: sim/autopilot/heading_down
+    altitude:
+      up: sim/autopilot/altitude_up
+      down: sim/autopilot/altitude_down
+    airspeed:
+      up: sim/autopilot/airspeed_up
+      down: sim/autopilot/airspeed_down
+    heading:
+      up: sim/autopilot/heading_up
+      down: sim/autopilot/heading_down
+    verticalSpeed:
+      up: sim/autopilot/vertical_speed_up
+      down: sim/autopilot/vertical_speed_down
+    localiser/toggle: sim/autopilot/NAV
+    spdMach/toggle: sim/autopilot/knots_mach_toggle
+    ap1/toggle: sim/autopilot/servos_toggle
+    ap2/toggle: sim/autopilot/servos2_toggle
+    approach:
+      toggle: sim/autopilot/approach
+    autoThrust:
+      toggle: sim/autopilot/autothrottle_toggle
+  comms:
+    com1:
+      standby:
+        up:
+          coarse: sim/radios/stby_com1_coarse_up
+          fine: sim/radios/stby_com1_fine_up
+        down:
+          coarse: sim/radios/stby_com1_coarse_down
+          fine: sim/radios/stby_com1_fine_down
+      swap: sim/radios/com1_standy_flip
 

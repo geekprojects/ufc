@@ -3,6 +3,7 @@
 //
 
 #include <fstream>
+#include <signal.h>
 #include <unistd.h>
 #include <ufc/flightconnector.h>
 
@@ -16,23 +17,50 @@ using namespace UFC;
 #define STRINGIFY(x) XSTRINGIFY(x)
 #define XSTRINGIFY(x) #x
 
+static void exitHandler(int signal)
+{
+    FlightConnector::exit();
+}
+
+vector<FlightConnector*> g_flightConnectors;
+
 FlightConnector::FlightConnector() :
     Logger("FlightConnector")
 {
     Config config = {};
     loadConfig(config);
+    g_flightConnectors.push_back(this);
 }
 
 FlightConnector::FlightConnector(const Config& config) :
     Logger("FlightConnector")
 {
     loadConfig(config);
+    g_flightConnectors.push_back(this);
 }
 
-FlightConnector::~FlightConnector() = default;
+FlightConnector::~FlightConnector()
+{
+    for (auto it = g_flightConnectors.begin(); it != g_flightConnectors.end(); it++)
+    {
+        if (*it == this)
+        {
+            g_flightConnectors.erase(it);
+            break;
+        }
+    }
+}
 
 bool FlightConnector::init()
 {
+    struct sigaction sigIntHandler = {};
+    sigIntHandler.sa_handler = exitHandler;
+    sigemptyset(&sigIntHandler.sa_mask);
+    sigIntHandler.sa_flags = 0;
+
+    sigaction(SIGINT, &sigIntHandler, nullptr);
+    sigaction(SIGTERM, &sigIntHandler, nullptr);
+
     DeviceRegistry* deviceRegistry = DeviceRegistry::getDeviceRegistry();
     for (const auto& dev : deviceRegistry->getDevices())
     {
@@ -99,7 +127,13 @@ void FlightConnector::start()
 
 void FlightConnector::stop()
 {
+    log(INFO, "Stopping data source...");
     m_running = false;
+    if (m_dataSource != nullptr)
+    {
+        m_dataSource->disconnect();
+    }
+    log(INFO, "Stopped");
 }
 
 void FlightConnector::wait() const
@@ -114,6 +148,14 @@ void FlightConnector::wait() const
     m_updateDataSourceThread->join();
 }
 
+void FlightConnector::exit()
+{
+    for (auto fc : g_flightConnectors)
+    {
+        fc->stop();
+    }
+}
+
 void FlightConnector::updateDeviceMain()
 {
     auto dataSource = getDataSource();
@@ -125,7 +167,7 @@ void FlightConnector::updateDeviceMain()
         {
             device->update(state);
         }
-        usleep(200000);
+        usleep(20000);
     }
 }
 
@@ -173,6 +215,10 @@ void FlightConnector::loadConfig(const Config& config)
         if (configNode["xplane"])
         {
             auto xplaneNode = configNode["xplane"];
+            if (xplaneNode["path"])
+            {
+                m_config.xplanePath = xplaneNode["path"].as<string>();
+            }
             if (xplaneNode["host"])
             {
                 m_config.xplaneHost = xplaneNode["host"].as<string>();
@@ -223,6 +269,7 @@ void FlightConnector::loadConfig(const Config& config)
         configNode["dataSource"] = m_config.dataSource;
 
         YAML::Node xplaneNode;
+        xplaneNode["path"] = m_config.xplanePath;
         xplaneNode["host"] = m_config.xplaneHost;
         xplaneNode["port"] = m_config.xplanePort;
         configNode["xplane"] = xplaneNode;

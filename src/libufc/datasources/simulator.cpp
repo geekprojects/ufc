@@ -14,7 +14,7 @@ SimulatorDataSource::SimulatorDataSource(FlightConnector* flightConnector) : Dat
 
 }
 
-bool SimulatorDataSource::init()
+bool SimulatorDataSource::connect()
 {
     AircraftState state = m_flightConnector->getState();
     state.connected = true;
@@ -22,8 +22,10 @@ bool SimulatorDataSource::init()
     return true;
 }
 
-void SimulatorDataSource::close()
+void SimulatorDataSource::disconnect()
 {
+    printf("SimulatorDataSource::disconnect: Stopping...\n");
+    m_running = false;
 }
 
 bool SimulatorDataSource::update()
@@ -38,6 +40,9 @@ bool SimulatorDataSource::update()
     state.flightDirector.mode = 1;
     state.flightDirector.pitch = 0.0f;
     state.flightDirector.roll = 0.0f;
+
+    state.comms.com1Hz = 234.432;
+    state.comms.com1StandbyHz = 123.123;
 
     m_flightConnector->updateState(state);
 
@@ -77,8 +82,32 @@ bool SimulatorDataSource::update()
                 pitchDir = 1;
             }
         }
+        state.autopilot = m_autopilot;
         m_flightConnector->updateState(state);
         usleep(50000);
     }
     return true;
+}
+
+void SimulatorDataSource::command(std::string command)
+{
+    printf("SimulatorDataSource::command: %s\n", command.c_str());
+    AutopilotState autopilot = m_autopilot;
+    if (command == AUTOPILOT_HEADING_UP)
+    {
+        autopilot.heading += 1.0f;
+        if (autopilot.heading >= 360.0f)
+        {
+            autopilot.heading = 1.0f;
+        }
+    }
+    else if (command == AUTOPILOT_HEADING_DOWN)
+    {
+        autopilot.heading -= 1.0f;
+        if (autopilot.heading <= 1.0f)
+        {
+            autopilot.heading = 365.0f;
+        }
+    }
+    m_autopilot = autopilot;
 }

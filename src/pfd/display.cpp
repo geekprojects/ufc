@@ -73,7 +73,7 @@ bool XPFlightDisplay::init()
     m_widgets.push_back(make_shared<HeadingIndicatorWidget>(this, adiX, instrumentAreaY + (instrumentAreaHeight - headingHeight), adiWidth, headingHeight));
 
     m_dataSource = m_flightConnector.openDefaultDataSource();
-    m_dataSource->init();
+    m_dataSource->connect();
 
     m_running = true;
     m_updateThread = new thread(&XPFlightDisplay::updateMain, this);
@@ -83,7 +83,7 @@ bool XPFlightDisplay::init()
 
 void XPFlightDisplay::close()
 {
-    m_dataSource->close();
+    m_dataSource->disconnect();
 
     SDL_DestroyWindow(m_window);
 

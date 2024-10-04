@@ -12,14 +12,19 @@ namespace UFC
 
 class SimulatorDataSource : public DataSource
 {
+private:
+    AutopilotState m_autopilot;
+
  public:
     explicit SimulatorDataSource(FlightConnector* flightConnector);
     ~SimulatorDataSource() override = default;
 
-    bool init() override;
-    void close() override;
+    bool connect() override;
+    void disconnect() override;
 
     bool update() override;
+
+    void command(std::string command) override;
 };
 
 }

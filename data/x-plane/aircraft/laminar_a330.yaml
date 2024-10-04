@@ -4,7 +4,7 @@ icao: A333
 
 data:
   autopilot:
-    headingWindowOpen: laminar/A333/autopilot/hdg_window_open
+#    headingWindowOpen: laminar/A333/autopilot/hdg_window_open
     locMode: laminar/A333/annun/autopilot/loc_mode
     ap1Mode: laminar/A333/annun/autopilot/ap1_mode
     ap2Mode: laminar/A333/annun/autopilot/ap2_mode
@@ -13,4 +13,6 @@ data:
 
 commands:
   autopilot:
+    autoThrust:
+      toggle: laminar/A333/autopilot/a_thr_toggle
 

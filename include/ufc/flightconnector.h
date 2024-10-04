@@ -13,12 +13,14 @@
 #include <ufc/datasource.h>
 
 #include "logger.h"
+#include "LuaContext.hpp"
 
 namespace UFC
 {
 
 class DataSource;
 class Device;
+class Airports;
 
 struct Config
 {
@@ -28,9 +30,9 @@ struct Config
     std::string dataSource;
 
     // X-Plane specific
+    std::string xplanePath;
     std::string xplaneHost;
     int xplanePort = 0;
-
 
     // Arduino specific
     std::string arduinoDevice;
@@ -40,6 +42,7 @@ struct Config
         printf("Config::dump: configPath=%s\n", configPath.c_str());
         printf("Config::dump: dataPath=%s\n", dataDir.c_str());
         printf("Config::dump: dataSource=%s\n", dataSource.c_str());
+        printf("Config::dump: X-Plane path=%s\n", xplanePath.c_str());
         printf("Config::dump: X-Plane host=%s\n", xplaneHost.c_str());
         printf("Config::dump: X-Plane port=%d\n", xplanePort);
         printf("Config::dump: Arduino device=%s\n", arduinoDevice.c_str());
@@ -53,12 +56,16 @@ class FlightConnector final : public Logger
     std::shared_ptr<DataSource> m_dataSource;
     std::vector<Device*> m_devices;
 
+    std::shared_ptr<Airports> m_airports;
+
     std::mutex m_stateMutex;
     AircraftState m_state;
 
     bool m_running = false;
     std::shared_ptr<std::thread> m_updateDeviceThread;
     std::shared_ptr<std::thread> m_updateDataSourceThread;
+
+    LuaCpp::LuaContext m_luaContext;
 
     static void updateDeviceThread(FlightConnector* flightConnector);
     void updateDeviceMain();
@@ -96,6 +103,8 @@ class FlightConnector final : public Logger
         std::scoped_lock lock(m_stateMutex);
         m_state = state;
     }
+
+    static void exit();
 };
 
 }

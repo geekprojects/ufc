@@ -16,12 +16,6 @@ using namespace UFC;
 
 std::vector<XPlaneClient*> XPlaneClient::g_clients;
 
-static void exitHandler(int signal)
-{
-    printf("exitHandler: signal=%d\n", signal);
-    XPlaneClient::disconnectAll();
-}
-
 void XPlaneClient::disconnectAll()
 {
     for (auto client : g_clients)
@@ -86,13 +80,6 @@ bool XPlaneClient::connect()
         return false;
     }
 
-    struct sigaction sigIntHandler = {};
-    sigIntHandler.sa_handler = exitHandler;
-    sigemptyset(&sigIntHandler.sa_mask);
-    sigIntHandler.sa_flags = 0;
-
-    sigaction(SIGINT, &sigIntHandler, nullptr);
-    sigaction(SIGTERM, &sigIntHandler, nullptr);
 
     m_connected = true;
 

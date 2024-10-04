@@ -54,6 +54,7 @@ class XPlaneDataSource : public DataSource
     void loadDefinitionsForAircraft(const std::string &author, const std::string &icaoType);
     void loadDefinitions(const std::string &file);
     void loadDefinitions(YAML::Node config);
+    void loadCommands(YAML::Node node, std::string id);
 
     void update(const std::map<int, float>& values);
 
@@ -61,8 +62,10 @@ class XPlaneDataSource : public DataSource
     explicit XPlaneDataSource(FlightConnector* flightConnector);
     ~XPlaneDataSource() override = default;
 
-    bool init() override;
-    void close() override;
+    std::shared_ptr<Airports> loadAirports() override;
+
+    bool connect() override;
+    void disconnect() override;
 
     bool update() override;
 

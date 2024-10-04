@@ -25,7 +25,7 @@ XPlaneDataSource::XPlaneDataSource(FlightConnector* flightConnector) : DataSourc
         flightConnector->getConfig().xplanePort);
 }
 
-bool XPlaneDataSource::init()
+bool XPlaneDataSource::connect()
 {
     bool res = m_client->connect();
     if (!res)
@@ -69,7 +69,7 @@ bool XPlaneDataSource::init()
     return true;
 }
 
-void XPlaneDataSource::close()
+void XPlaneDataSource::disconnect()
 {
     m_client->disconnect();
 }
@@ -158,16 +158,29 @@ void XPlaneDataSource::loadDefinitions(YAML::Node config)
         }
     }
 
-    YAML::Node commandsNode = config["commands"];
+    loadCommands(config["commands"], "");
+}
+
+void XPlaneDataSource::loadCommands(YAML::Node commandsNode, std::string id)
+{
+    printf("loadCommands: %s...\n", id.c_str());
     for (YAML::const_iterator it=commandsNode.begin();it!=commandsNode.end();++it)
     {
-        auto categoryName = it->first.as<string>();
-        for (YAML::const_iterator dataIt=it->second.begin();dataIt!=it->second.end();++dataIt)
+        string categoryName;
+        if (!id.empty())
         {
-            auto name = dataIt->first.as<string>();
-            auto command = dataIt->second.as<string>();
-            auto id = categoryName + "/" + name;
-            m_commandsById.insert_or_assign(id, command);
+            categoryName = id + "/";
+        }
+        categoryName += it->first.as<string>();
+        if (it->second.Type() == YAML::NodeType::Map)
+        {
+            loadCommands(it->second, categoryName);
+        }
+        else
+        {
+            auto command = it->second.as<string>();
+            printf("XPLANE: Loading command %s -> %s\n", command.c_str(), categoryName.c_str());
+            m_commandsById.insert_or_assign(categoryName, command);
         }
     }
 }
@@ -220,6 +233,7 @@ void XPlaneDataSource::command(string command)
         log(WARN, "command: Unknown command: %s", command.c_str());
         return;
     }
+    printf("XPlaneDataSource::command: %s -> %s\n", command.c_str(), it->second.c_str());
 
     m_client->sendCommand(it->second);
 }

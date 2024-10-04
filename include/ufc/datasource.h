@@ -6,20 +6,14 @@
 #define XPFD_DATASOURCE_H
 
 #include <ufc/aircraftstate.h>
+#include <ufc/commands.h>
 
 #include "logger.h"
 
 namespace UFC
 {
-
+class Airports;
 class FlightConnector;
-
-const std::string AUTOPILOT_AIRSPEED_UP = "autopilot/airspeedUp";
-const std::string AUTOPILOT_AIRSPEED_DOWN = "autopilot/airspeedDown";
-const std::string AUTOPILOT_HEADING_UP = "autopilot/headingUp";
-const std::string AUTOPILOT_HEADING_DOWN = "autopilot/headingDown";
-const std::string AUTOPILOT_ALTITUDE_UP = "autopilot/altitudeUp";
-const std::string AUTOPILOT_ALTITUDE_DOWN = "autopilot/altitudeDown";
 
 const std::string SOURCE_SIMULATOR = "Simulator";
 const std::string SOURCE_XPLANE = "XPlane";
@@ -39,12 +33,14 @@ class DataSource : public Logger
     {}
     ~DataSource() override = default;
 
+    virtual std::shared_ptr<Airports> loadAirports() { return nullptr; }
 
-    virtual bool init() = 0;
-    virtual void close() = 0;
+    virtual bool connect() = 0;
+    virtual void disconnect() = 0;
     virtual bool update() = 0;
 
     virtual void command(std::string command) {}
+
 };
 
 }

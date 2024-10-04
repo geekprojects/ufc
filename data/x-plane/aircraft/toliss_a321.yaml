@@ -1,1 +1,37 @@
-icao: A32*
+name: Toliss A321
+author: Gliding Kiwi
+icao: A321
+
+data:
+  autopilot:
+    headingTrkMode: AirbusFBW/HDGTRKmode
+    verticalSpeedFPAMode: AirbusFBW/HDGTRKmode
+
+commands:
+  autopilot:
+    ap1:
+      toggle: toliss_airbus/ap1_push
+    ap2:
+      toggle: toliss_airbus/ap2_push
+    localiser:
+      toggle: toliss_airbus/loc_push
+    approach:
+      toggle: toliss_airbus/activate_appr_phase
+    autoThrust:
+      toggle: AirbusFBW/ATHRbutton
+    expedite:
+      toggle: AirbusFBW/EXPEDbutton
+    airspeed:
+      manage: AirbusFBW/spd_push
+    heading:
+      manage: AirbusFBW/PushHDGSel
+      guidance: AirbusFBW/PullHDGSel
+    altitude:
+      manage: AirbusFBW/PushAltitude
+      guidance: AirbusFBW/PullAltitude
+    hdkTrk:
+      toggle: toliss_airbus/hdgtrk_button_push
+
+    verticalSpeed:
+      manage: AirbusFBW/vs_push
+
