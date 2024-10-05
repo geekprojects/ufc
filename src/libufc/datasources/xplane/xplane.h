@@ -22,12 +22,18 @@ enum DataRefType
     INTEGER,
 };
 
+struct DataMapping
+{
+    std::string dataRef;
+    bool negate = false;
+};
+
 struct DataDefinition
 {
     std::string id;
     DataRefType type;
     int pos;
-    std::string dataRef;
+    DataMapping mapping;
     int idx;
 };
 
@@ -55,6 +61,8 @@ class XPlaneDataSource : public DataSource
     void loadDefinitions(const std::string &file);
     void loadDefinitions(YAML::Node config);
     void loadCommands(YAML::Node node, std::string id);
+
+    DataMapping parseMapping(std::string mapping);
 
     void update(const std::map<int, float>& values);
 

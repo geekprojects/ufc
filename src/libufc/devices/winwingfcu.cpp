@@ -61,6 +61,9 @@ bool WinWingFCU::init()
     // Set brightness
     setLED(WinWingFCULED::LCD, 0xff);
 
+    UFC::AircraftState aircraftState = {};
+    updateLCD(aircraftState);
+
     return true;
 }
 
@@ -147,6 +150,8 @@ void WinWingFCU::handleInput()
         checkInput(altitudeUp, UFC::AUTOPILOT_ALTITUDE_UP)
         checkInput(altitudePush, UFC::AUTOPILOT_ALTITUDE_MANAGE)
         checkInput(altitudePull, UFC::AUTOPILOT_ALTITUDE_GUIDANCE)
+        checkInput(altitude100, UFC::AUTOPILOT_ALTITUDE_STEP_100);
+        checkInput(altitude1000, UFC::AUTOPILOT_ALTITUDE_STEP_1000);
 
         checkInput(vsDown, UFC::AUTOPILOT_VERTICAL_SPEED_DOWN)
         checkInput(vsUp, UFC::AUTOPILOT_VERTICAL_SPEED_UP)
@@ -160,33 +165,52 @@ void WinWingFCU::handleInput()
 void WinWingFCU::updateLCD(UFC::AircraftState state)
 {
     WinWingFCULCDData data;
-    int speed;
-    if (!state.autopilot.speedMach)
+    if (state.autopilot.displaySpeed)
     {
-        speed = (int) state.autopilot.speed;
-        data.speed2Point = false;
-        data.speed1 = getDigit(speed, 2);
-        data.speed2 = getDigit(speed, 1);
-        data.speed3 = getDigit(speed, 0);
+        int speed;
+        if (!state.autopilot.speedMach)
+        {
+            speed = (int) state.autopilot.speed;
+            data.speed2Point = false;
+            data.speed1 = getDigit(speed, 2);
+            data.speed2 = getDigit(speed, 1);
+            data.speed3 = getDigit(speed, 0);
+        }
+        else
+        {
+            speed = (int) (state.autopilot.speed * 1000.0f);
+            data.speed1 = getDigit(0, 0);
+            data.speed2 = getDigit(speed, 2);
+            data.speed3 = getDigit(speed, 1);
+        }
     }
     else
     {
-        speed = (int) (state.autopilot.speed * 1000.0f);
-        data.speed1 = getDigit(0, 0);
-        data.speed2 = getDigit(speed, 2);
-        data.speed3 = getDigit(speed, 1);
+        data.speed1 = 2;
+        data.speed2 = 2;
+        data.speed3 = 2;
     }
 
     data.speed1Point = 0;
     data.speed3Point = 0;
-    data.speedDot = 0;
+    data.speedDot = state.autopilot.speedManaged;
     data.machSign = state.autopilot.speedMach;
     data.spdSign = !state.autopilot.speedMach;
 
-    int heading = (int) ceil(state.autopilot.heading);
-    data.heading1 = getDigit(heading, 2);
-    data.heading2 = getDigit(heading, 1);
-    data.heading3 = getDigit(heading, 0);
+    if (state.autopilot.displayHeading)
+    {
+        int heading = (int) ceil(state.autopilot.heading);
+        data.heading1 = getDigit(heading, 2);
+        data.heading2 = getDigit(heading, 1);
+        data.heading3 = getDigit(heading, 0);
+    }
+    else
+    {
+        data.heading1 = 2;
+        data.heading2 = 2;
+        data.heading3 = 2;
+    }
+    data.headingDot = state.autopilot.headingManaged;
     data.latSign = true;
 
     if (!state.autopilot.headingTrkMode)
@@ -204,37 +228,68 @@ void WinWingFCU::updateLCD(UFC::AircraftState state)
         data.trkSign2 = true;
     }
 
-    int altitude = (int) state.autopilot.altitude;
-    data.altitude1 = getDigit(altitude, 4);
-    data.altitude2 = getDigit(altitude, 3);
-    data.altitude3 = getDigit(altitude, 2);
-    data.altitude4 = getDigit(altitude, 1);
-    data.altitude5 = getDigit(altitude, 0);
-    data.altSign = true;
-    data.altitudeDot = 0;
-
-    data.vsNegative = true;
-    if (state.autopilot.verticalSpeed < 0)
+    if (state.autopilot.displayAltitude)
     {
-        data.vsPositive = false;
+        int altitude = (int) state.autopilot.altitude;
+        data.altitude1 = getDigit(altitude, 4);
+        data.altitude2 = getDigit(altitude, 3);
+        data.altitude3 = getDigit(altitude, 2);
+        data.altitude4 = getDigit(altitude, 1);
+        data.altitude5 = getDigit(altitude, 0);
     }
     else
     {
-        data.vsPositive = true;
+        data.altitude1 = 2;
+        data.altitude2 = 2;
+        data.altitude3 = 2;
+        data.altitude4 = 2;
+        data.altitude5 = 2;
+    }
+    data.altSign = true;
+    data.altitudeDot = state.autopilot.altitudeManaged;
+
+    data.vsNegative = true;
+    if (state.autopilot.displayVerticalSpeed)
+    {
+        if (state.autopilot.verticalSpeed < 0)
+        {
+            data.vsPositive = false;
+        }
+        else
+        {
+            data.vsPositive = true;
+        }
+
+        int vs = abs((int) state.autopilot.verticalSpeed);
+        data.vs1 = getDigit(vs, 3);
+        data.vs2 = getDigit(vs, 2);
+
+        if (!state.autopilot.verticalSpeedFPAMode)
+        {
+            data.vs3 = 0x1b;
+            data.vs4 = 0x1b;
+        }
+        else
+        {
+            data.vs3 = 0x00;
+            data.vs4 = 0x00;
+        }
+    }
+    else
+    {
+        data.vs1 = 2;
+        data.vs2 = 2;
+        data.vs3 = 2;
+        data.vs4 = 2;
     }
 
-    int vs = abs((int) state.autopilot.verticalSpeed);
-    data.vs1 = getDigit(vs, 3);
-    data.vs2 = getDigit(vs, 2);
     if (!state.autopilot.verticalSpeedFPAMode)
     {
         data.vsSign = true;
         data.vsSign2 = true;
         data.fpaSign = false;
         data.fpaSign2 = false;
-
-        data.vs3 = 0x1b;
-        data.vs4 = 0x1b;
+        data.vs2Dot = false;
     }
     else
     {
@@ -242,10 +297,7 @@ void WinWingFCU::updateLCD(UFC::AircraftState state)
         data.vsSign2 = false;
         data.fpaSign = true;
         data.fpaSign2 = true;
-
         data.vs2Dot = true;
-        data.vs3 = 0x00;
-        data.vs4 = 0x00;
     }
 
     data.lvlChSign1 = true;

@@ -85,6 +85,8 @@ class XPlaneClient : Logger
 
     void sendCommand(const std::string &command);
 
+    void setDataRef(const std::string& string, float value);
+
     static void disconnectAll();
 };
 

@@ -4,8 +4,22 @@ icao: A321
 
 data:
   autopilot:
+    ap1Mode: AirbusFBW/AP1Engage
+    ap2Mode: AirbusFBW/AP2Engage
+    autoThrottleMode: AirbusFBW/ATHRmode
+    approachMode: AirbusFBW/APPRilluminated
     headingTrkMode: AirbusFBW/HDGTRKmode
     verticalSpeedFPAMode: AirbusFBW/HDGTRKmode
+
+    displaySpeed: "!AirbusFBW/SPDdashed"
+    speedManaged: AirbusFBW/SPDmanaged
+
+    displayHeading: "!AirbusFBW/HDGdashed"
+    headingManaged: AirbusFBW/HDGmanaged
+
+    altitudeManaged: AirbusFBW/ALTmanaged
+
+    displayVerticalSpeed: "!AirbusFBW/VSdashed"
 
 commands:
   autopilot:
@@ -16,7 +30,7 @@ commands:
     localiser:
       toggle: toliss_airbus/loc_push
     approach:
-      toggle: toliss_airbus/activate_appr_phase
+      toggle: AirbusFBW/APPRbutton
     autoThrust:
       toggle: AirbusFBW/ATHRbutton
     expedite:
@@ -29,9 +43,12 @@ commands:
     altitude:
       manage: AirbusFBW/PushAltitude
       guidance: AirbusFBW/PullAltitude
+      step:
+        100: AirbusFBW/ALT100_1000=0
+        1000: AirbusFBW/ALT100_1000=1
     hdkTrk:
       toggle: toliss_airbus/hdgtrk_button_push
-
     verticalSpeed:
       manage: AirbusFBW/vs_push
+    
 

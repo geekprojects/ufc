@@ -59,7 +59,7 @@ bool XPlaneDataSource::connect()
 
     for (const auto& dataRef : m_dataRefs)
     {
-        log(DEBUG, "DataRef: %s -> %s", dataRef->id.c_str(), dataRef->dataRef.c_str());
+        log(DEBUG, "DataRef: %s -> %s", dataRef->id.c_str(), dataRef->mapping.dataRef.c_str());
     }
     for (const auto& [id, command] : m_commandsById)
     {
@@ -81,10 +81,10 @@ bool XPlaneDataSource::update()
     int idx = 1;
     for (const auto& dataRef : m_dataRefs)
     {
-        if (!dataRef->dataRef.empty() && dataRef->dataRef != "null")
+        if (!dataRef->mapping.dataRef.empty() && dataRef->mapping.dataRef != "null")
         {
             dataRef->idx = idx;
-            datarefs.emplace_back(idx, dataRef->dataRef);
+            datarefs.emplace_back(idx, dataRef->mapping.dataRef);
         }
         idx++;
     }
@@ -143,12 +143,12 @@ void XPlaneDataSource::loadDefinitions(YAML::Node config)
             if (dataIt->second)
             {
                 auto name = dataIt->first.as<string>();
-                auto dataRef = dataIt->second.as<string>();
+                auto value = dataIt->second.as<string>();
                 auto id = categoryName + "/" + name;
                 auto dataRefIt = m_dataRefsById.find(id);
                 if (dataRefIt != m_dataRefsById.end())
                 {
-                    dataRefIt->second->dataRef = dataRef;
+                    dataRefIt->second->mapping = parseMapping(value);
                 }
                 else
                 {
@@ -185,6 +185,18 @@ void XPlaneDataSource::loadCommands(YAML::Node commandsNode, std::string id)
     }
 }
 
+DataMapping XPlaneDataSource::parseMapping(std::string mappingStr)
+{
+    DataMapping mapping;
+    if (mappingStr.at(0) == '!')
+    {
+        mapping.negate = true;
+        mappingStr = mappingStr.substr(1);
+    }
+    mapping.dataRef = mappingStr;
+    return mapping;
+}
+
 void XPlaneDataSource::update(const map<int, float>& values)
 {
     AircraftState state = m_flightConnector->getState();
@@ -216,7 +228,13 @@ void XPlaneDataSource::update(const map<int, float>& values)
             case BOOLEAN:
             {
                 auto b = (bool*)((char*)&state + dataRef->pos);
-                *b = (bool)value;
+
+                bool boolValue = value;
+                if (dataRef->mapping.negate)
+                {
+                    boolValue = !boolValue;
+                }
+                *b = boolValue;
                 break;
             }
         }
@@ -233,9 +251,21 @@ void XPlaneDataSource::command(string command)
         log(WARN, "command: Unknown command: %s", command.c_str());
         return;
     }
-    printf("XPlaneDataSource::command: %s -> %s\n", command.c_str(), it->second.c_str());
+    string xcommand = it->second;
+    printf("XPlaneDataSource::command: %s -> %s\n", command.c_str(), xcommand.c_str());
 
-    m_client->sendCommand(it->second);
+    int idx = xcommand.find("=");
+    if (idx == xcommand.npos)
+    {
+        m_client->sendCommand(xcommand);
+    }
+    else
+    {
+        string dataref = xcommand.substr(0, idx);
+        float value = atof(xcommand.substr(idx + 1).c_str());
+        log(INFO, "command: Setting data ref: %s = %0.2f", dataref.c_str(), value);
+        m_client->setDataRef(dataref, value);
+    }
 }
 
 void XPlaneDataSource::addDataRef(const DataDefinition& dataRef)

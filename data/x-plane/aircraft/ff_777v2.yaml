@@ -26,6 +26,9 @@ commands:
       up: 1-sim/command/mcpAltRotary_rotary+
       down: 1-sim/command/mcpAltRotary_rotary-
       manage: 1-sim/command/mcpAltRotary_push
+      step:
+        100: 1-sim/command/mcpAltModeSwitch_switch-
+        1000: 1-sim/command/mcpAltModeSwitch_switch+
     airspeed:
       up: 1-sim/command/mcpSpdRotary_rotary+
       down: 1-sim/command/mcpSpdRotary_rotary-

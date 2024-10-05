@@ -31,21 +31,27 @@ static const DataDefinition g_dataRefsInit[] =
     {"flightDirector/mode", INTEGER, offsetof(AircraftState, flightDirector.mode)},
 
     {"autopilot/displaySpeed", BOOLEAN, offsetof(AircraftState, autopilot.displaySpeed)},
+    {"autopilot/speedManaged", BOOLEAN, offsetof(AircraftState, autopilot.speedManaged)},
     {"autopilot/speedMach", BOOLEAN, offsetof(AircraftState, autopilot.speedMach)},
     {"autopilot/speed", FLOAT, offsetof(AircraftState, autopilot.speed)},
     {"autopilot/speedWindowOpen", BOOLEAN, offsetof(AircraftState, autopilot.speedWindowOpen)},
 
+    {"autopilot/displayHeading", BOOLEAN, offsetof(AircraftState, autopilot.displayHeading)},
+    {"autopilot/headingManaged", BOOLEAN, offsetof(AircraftState, autopilot.headingManaged)},
     {"autopilot/headingWindowOpen", BOOLEAN, offsetof(AircraftState, autopilot.headingWindowOpen)},
     {"autopilot/heading", FLOAT, offsetof(AircraftState, autopilot.heading)},
     {"autopilot/headingTrkMode", INTEGER, offsetof(AircraftState, autopilot.headingTrkMode)},
     {"autopilot/gpssStatus", INTEGER, offsetof(AircraftState, autopilot.gpssStatus)},
 
+    {"autopilot/displayAltitude", BOOLEAN, offsetof(AircraftState, autopilot.displayAltitude)},
+    {"autopilot/altitudeManaged", BOOLEAN, offsetof(AircraftState, autopilot.altitudeManaged)},
+    {"autopilot/altitudeStep1000", BOOLEAN, offsetof(AircraftState, autopilot.altitudeStep1000)},
     {"autopilot/altitude", FLOAT, offsetof(AircraftState, autopilot.altitude)},
     {"autopilot/fmsVnav", BOOLEAN, offsetof(AircraftState, autopilot.fmsVnav)},
 
     {"autopilot/displayVerticalSpeed", BOOLEAN, offsetof(AircraftState, autopilot.displayVerticalSpeed)},
     {"autopilot/verticalSpeed", FLOAT, offsetof(AircraftState, autopilot.verticalSpeed)},
-    {"autopilot/veriticalSpeedFPAMode", INTEGER, offsetof(AircraftState, autopilot.verticalSpeedFPAMode)},
+    {"autopilot/verticalSpeedFPAMode", INTEGER, offsetof(AircraftState, autopilot.verticalSpeedFPAMode)},
 
     {"autopilot/locMode", INTEGER, offsetof(AircraftState, autopilot.locMode)},
     {"autopilot/ap1Mode", INTEGER, offsetof(AircraftState, autopilot.ap1Mode)},

@@ -13,15 +13,19 @@ namespace UFC
 struct AutopilotState
 {
     bool displaySpeed = true;
+    bool speedManaged = false;
     float speed = 0.0f;
     bool speedMach = false;
 
     bool displayHeading = true;
+    bool headingManaged = false;
     bool headingTrkMode = false;
-    float heading = 0.0f;
     bool headingWindowOpen = false;
+    float heading = 0.0f;
 
     bool displayAltitude = true;
+    bool altitudeManaged = false;
+    bool altitudeStep1000 = false;
     float altitude = 0.0f;
 
     bool displayVerticalSpeed = true;

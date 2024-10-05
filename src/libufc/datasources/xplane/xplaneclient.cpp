@@ -301,6 +301,18 @@ void XPlaneClient::sendCommand(const std::string& command)
     send(buffer, len);
 }
 
+void XPlaneClient::setDataRef(const std::string& dataRef, float value)
+{
+    int len = 5 + 4 + 500;
+    char buffer[len];
+    memset(buffer, 0, 5 + 4 + 500);
+    const auto cmnd = "DREF\00";
+    memcpy(buffer, cmnd, 5);
+    memcpy(buffer + 5, &value, 4);
+    memcpy(buffer + 9, dataRef.c_str(), dataRef.length());
+    send(buffer, len);
+}
+
 bool XPlaneClient::readString(const std::string& dataref, int len, string& value)
 {
     vector<pair<int, string>> datarefs;
