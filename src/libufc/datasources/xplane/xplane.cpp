@@ -254,7 +254,7 @@ void XPlaneDataSource::command(string command)
     string xcommand = it->second;
     printf("XPlaneDataSource::command: %s -> %s\n", command.c_str(), xcommand.c_str());
 
-    int idx = xcommand.find("=");
+    unsigned int idx = xcommand.find("=");
     if (idx == xcommand.npos)
     {
         m_client->sendCommand(xcommand);
