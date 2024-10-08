@@ -41,8 +41,14 @@ bool SimulatorDataSource::update()
     state.flightDirector.pitch = 0.0f;
     state.flightDirector.roll = 0.0f;
 
-    state.comms.com1Hz = 234.432;
-    state.comms.com1StandbyHz = 123.123;
+    state.comms.com1Hz = 234432;
+    state.comms.com1StandbyHz = 123123;
+
+    m_autopilot.speed = 100.0f;
+    m_autopilot.altitude = 1000.0f;
+    m_autopilot.heading = 90.0f;
+
+    state.autopilot = m_autopilot;
 
     m_flightConnector->updateState(state);
 
@@ -91,7 +97,6 @@ bool SimulatorDataSource::update()
 
 void SimulatorDataSource::command(std::string command)
 {
-    printf("SimulatorDataSource::command: %s\n", command.c_str());
     AutopilotState autopilot = m_autopilot;
     if (command == AUTOPILOT_HEADING_UP)
     {
@@ -109,5 +114,64 @@ void SimulatorDataSource::command(std::string command)
             autopilot.heading = 365.0f;
         }
     }
+    else if (command == AUTOPILOT_AIRSPEED_UP)
+    {
+        if (autopilot.speed <= 400)
+        {
+            autopilot.speed += 1.0f;
+        }
+    }
+    else if (command == AUTOPILOT_AIRSPEED_DOWN)
+    {
+        if (autopilot.speed > 100.0)
+        {
+            autopilot.speed -= 1.0f;
+        }
+    }
+    else if (command == AUTOPILOT_ALTITUDE_UP)
+    {
+        if (m_autopilot.altitudeStep1000)
+        {
+            autopilot.altitude += 1000.0f;
+        }
+        else
+        {
+            autopilot.altitude += 100.0f;
+
+        }
+    }
+    else if (command == AUTOPILOT_ALTITUDE_DOWN)
+    {
+        if (m_autopilot.altitudeStep1000)
+        {
+            autopilot.altitude -= 1000.0f;
+        }
+        else
+        {
+            autopilot.altitude -= 100.0f;
+        }
+    }
+    else if (command == AUTOPILOT_ALTITUDE_STEP_100)
+    {
+        autopilot.altitudeStep1000 = false;
+    }
+    else if (command == AUTOPILOT_ALTITUDE_STEP_1000)
+    {
+        autopilot.altitudeStep1000 = true;
+    }
+    else if (command == AUTOPILOT_AP1_TOGGLE)
+    {
+        autopilot.ap1Mode = !autopilot.ap1Mode;
+    }
+    else if (command == AUTOPILOT_AP2_TOGGLE)
+    {
+        autopilot.ap2Mode = !autopilot.ap2Mode;
+    }
+    else
+    {
+        printf("SimulatorDataSource::command: Unknown command: %s\n", command.c_str());
+    }
+
+
     m_autopilot = autopilot;
 }
