@@ -67,8 +67,8 @@ add_library(ufc SHARED
         src/libufc/geoutils.cpp
         src/libufc/datasources/xplane/navdata/airports.cpp
         src/libufc/datasources/xplane/navdata/navdata.cpp
-        src/libufc/devices/customhid.cpp
-        src/libufc/devices/customhid.h
+        src/libufc/devices/customradiohid.cpp
+        src/libufc/devices/customradiohid.h
 )
 
 if(UNIX AND APPLE)

@@ -45,14 +45,14 @@ struct AutopilotState
 
 struct CommunicationState
 {
-    float com1Hz = 0.0;
-    float com1StandbyHz = 0.0;
-    float com2Hz = 0.0;
-    float com2StandbyHz = 0.0;
-    float nav1Hz = 0.0;
-    float nav1StandbyHz = 0.0;
-    float nav2Hz = 0.0;
-    float nav2StandbyHz = 0.0;
+    uint32_t com1Hz = 0.0;
+    uint32_t com1StandbyHz = 0.0;
+    uint32_t com2Hz = 0.0;
+    uint32_t com2StandbyHz = 0.0;
+    uint32_t nav1Hz = 0.0;
+    uint32_t nav1StandbyHz = 0.0;
+    uint32_t nav2Hz = 0.0;
+    uint32_t nav2StandbyHz = 0.0;
 };
 
 struct FlightDirectorState

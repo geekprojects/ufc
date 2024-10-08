@@ -16,8 +16,8 @@ data:
     mode: sim/cockpit2/autopilot/flight_director_mode
 
   comms:
-    com1Hz: sim/cockpit/radios/com1_freq_hz
-    com1StandbyHz: sim/cockpit/radios/com1_stdby_freq_hz
+    com1Hz: sim/cockpit2/radios/actuators/com1_frequency_hz_833
+    com1StandbyHz: sim/cockpit2/radios/actuators/com1_standby_frequency_hz_833
     com2Hz: sim/cockpit/radios/com2_freq_hz
     com2StandbyHz: sim/cockpit/radios/com2_stdby_freq_hz
     nav1Hz: sim/cockpit/radios/nav1_freq_hz
@@ -75,11 +75,11 @@ commands:
   comms:
     com1:
       standby:
-        up:
-          coarse: sim/radios/stby_com1_coarse_up
-          fine: sim/radios/stby_com1_fine_up
-        down:
-          coarse: sim/radios/stby_com1_coarse_down
-          fine: sim/radios/stby_com1_fine_down
+        coarse:
+          up: sim/radios/stby_com1_coarse_up
+          down: sim/radios/stby_com1_coarse_down
+        fine:
+          up: sim/radios/stby_com1_fine_up
+          down: sim/radios/stby_com1_fine_down
       swap: sim/radios/com1_standy_flip
 
