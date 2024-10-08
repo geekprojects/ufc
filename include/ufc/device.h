@@ -81,7 +81,7 @@ class Device : public Logger
 
     virtual std::string getName() { return m_name; }
 
-    virtual void update(AircraftState state) = 0;
+    virtual void update(const AircraftState& state) = 0;
 };
 
 }

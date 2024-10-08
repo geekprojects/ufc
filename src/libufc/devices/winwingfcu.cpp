@@ -3,12 +3,22 @@
 //
 
 #include "winwingfcu.h"
-
 #include "ufc/flightconnector.h"
 
 #include <cmath>
 
+using namespace std;
+using namespace UFC;
+
 UFC_DEVICE(WinWingFCU, WinWingFCU)
+
+const static uint8_t LCD_MAGIC_DATA[] =
+{
+    0x00, 0x06, 0x11, 0x10, 0xbb, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x1d, 0x12, 0x20, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
 
 #if 0
 static void hexdump(const char* pos, int len)
@@ -36,7 +46,7 @@ static void hexdump(const char* pos, int len)
 }
 #endif
 
-WinWingFCU::WinWingFCU(UFC::FlightConnector* flightConnector) : USBHIDDevice(
+WinWingFCU::WinWingFCU(FlightConnector* flightConnector) : USBHIDDevice(
     flightConnector,
     "WinWingFCU",
     0x4098,
@@ -54,20 +64,20 @@ bool WinWingFCU::init()
 
     wchar_t serialNumber[32];
     hid_get_serial_number_string(getDevice(), serialNumber, 32);
-    printf("%ls\n", serialNumber);
+    log(INFO, "Serial Number: %ls", serialNumber);
 
     hid_set_nonblocking(getDevice(), true);
 
     // Set brightness
     setLED(WinWingFCULED::LCD, 0xff);
 
-    UFC::AircraftState aircraftState = {};
+    const AircraftState aircraftState = {};
     updateLCD(aircraftState);
 
     return true;
 }
 
-void WinWingFCU::update(UFC::AircraftState state)
+void WinWingFCU::update(const AircraftState& state)
 {
     handleInput();
     updateLCD(state);
@@ -75,16 +85,21 @@ void WinWingFCU::update(UFC::AircraftState state)
 }
 
 /*
+ * LCD number segments:
  *    --40--
  *  04|    |20
  *    --02--
  *  01|    |10
  *    --08--
  */
-
 uint8_t WinWingFCU::getDigit(int number, int digit)
 {
-    number /= powl(10, digit);
+    int div = 1;
+    for (int i = 0; i < digit; i++)
+    {
+        div *= 10;
+    }
+    number /= div;
     number %= 10;
 
     switch (number)
@@ -103,12 +118,6 @@ uint8_t WinWingFCU::getDigit(int number, int digit)
     }
 }
 
-#define checkInput(_field, _command) \
-    if (m_inputReport._field != m_previousInputReport._field && m_inputReport._field) \
-    { \
-        m_flightConnector->getDataSource()->command(_command); \
-    }
-
 void WinWingFCU::handleInput()
 {
     // Read button/rotary state
@@ -125,44 +134,44 @@ void WinWingFCU::handleInput()
             continue;
         }
 
-        checkInput(spdMachButton, UFC::AUTOPILOT_SPD_MACH_TOGGLE)
-        checkInput(ap1Button, UFC::AUTOPILOT_AP1_TOGGLE)
-        checkInput(ap2Button, UFC::AUTOPILOT_AP2_TOGGLE)
-        checkInput(athrButton, UFC::AUTOPILOT_AUTO_THRUST_TOGGLE)
-        checkInput(locButton, UFC::AUTOPILOT_LOCALISER_TOGGLE)
-        checkInput(expedButton, UFC::AUTOPILOT_EXPEDITE_TOGGLE)
-        checkInput(apprButton, UFC::AUTOPILOT_APPROACH_TOGGLE)
+        checkInput(spdMachButton, AUTOPILOT_SPD_MACH_TOGGLE)
+        checkInput(ap1Button, AUTOPILOT_AP1_TOGGLE)
+        checkInput(ap2Button, AUTOPILOT_AP2_TOGGLE)
+        checkInput(athrButton, AUTOPILOT_AUTO_THRUST_TOGGLE)
+        checkInput(locButton, AUTOPILOT_LOCALISER_TOGGLE)
+        checkInput(expedButton, AUTOPILOT_EXPEDITE_TOGGLE)
+        checkInput(apprButton, AUTOPILOT_APPROACH_TOGGLE)
 
-        checkInput(hdgVsButton, UFC::AUTOPILOT_HDG_TRK_TOGGLE)
-        checkInput(hdgVsButton, UFC::AUTOPILOT_VS_FPA_TOGGLE)
+        checkInput(hdgVsButton, AUTOPILOT_HDG_TRK_TOGGLE)
+        checkInput(hdgVsButton, AUTOPILOT_VS_FPA_TOGGLE)
 
-        checkInput(speedDown, UFC::AUTOPILOT_AIRSPEED_DOWN)
-        checkInput(speedUp, UFC::AUTOPILOT_AIRSPEED_UP)
-        checkInput(speedPush, UFC::AUTOPILOT_AIRSPEED_MANAGE)
-        checkInput(speedPull, UFC::AUTOPILOT_AIRSPEED_GUIDANCE)
+        checkInput(speedDown, AUTOPILOT_AIRSPEED_DOWN)
+        checkInput(speedUp, AUTOPILOT_AIRSPEED_UP)
+        checkInput(speedPush, AUTOPILOT_AIRSPEED_MANAGE)
+        checkInput(speedPull, AUTOPILOT_AIRSPEED_GUIDANCE)
 
-        checkInput(headingDown, UFC::AUTOPILOT_HEADING_DOWN)
-        checkInput(headingUp, UFC::AUTOPILOT_HEADING_UP)
-        checkInput(headingPush, UFC::AUTOPILOT_HEADING_MANAGE)
-        checkInput(headingPull, UFC::AUTOPILOT_HEADING_GUIDANCE)
+        checkInput(headingDown, AUTOPILOT_HEADING_DOWN)
+        checkInput(headingUp, AUTOPILOT_HEADING_UP)
+        checkInput(headingPush, AUTOPILOT_HEADING_MANAGE)
+        checkInput(headingPull, AUTOPILOT_HEADING_GUIDANCE)
 
-        checkInput(altitudeDown, UFC::AUTOPILOT_ALTITUDE_DOWN)
-        checkInput(altitudeUp, UFC::AUTOPILOT_ALTITUDE_UP)
-        checkInput(altitudePush, UFC::AUTOPILOT_ALTITUDE_MANAGE)
-        checkInput(altitudePull, UFC::AUTOPILOT_ALTITUDE_GUIDANCE)
-        checkInput(altitude100, UFC::AUTOPILOT_ALTITUDE_STEP_100);
-        checkInput(altitude1000, UFC::AUTOPILOT_ALTITUDE_STEP_1000);
+        checkInput(altitudeDown, AUTOPILOT_ALTITUDE_DOWN)
+        checkInput(altitudeUp, AUTOPILOT_ALTITUDE_UP)
+        checkInput(altitudePush, AUTOPILOT_ALTITUDE_MANAGE)
+        checkInput(altitudePull, AUTOPILOT_ALTITUDE_GUIDANCE)
+        checkInput(altitude100, AUTOPILOT_ALTITUDE_STEP_100);
+        checkInput(altitude1000, AUTOPILOT_ALTITUDE_STEP_1000);
 
-        checkInput(vsDown, UFC::AUTOPILOT_VERTICAL_SPEED_DOWN)
-        checkInput(vsUp, UFC::AUTOPILOT_VERTICAL_SPEED_UP)
-        checkInput(vsPush, UFC::AUTOPILOT_VERTICAL_SPEED_MANAGE)
-        checkInput(vsPull, UFC::AUTOPILOT_VERTICAL_SPEED_GUIDANCE)
+        checkInput(vsDown, AUTOPILOT_VERTICAL_SPEED_DOWN)
+        checkInput(vsUp, AUTOPILOT_VERTICAL_SPEED_UP)
+        checkInput(vsPush, AUTOPILOT_VERTICAL_SPEED_MANAGE)
+        checkInput(vsPull, AUTOPILOT_VERTICAL_SPEED_GUIDANCE)
 
         m_previousInputReport = m_inputReport;
     }
 }
 
-void WinWingFCU::updateLCD(UFC::AircraftState state)
+void WinWingFCU::updateLCD(const AircraftState& state)
 {
     WinWingFCULCDData data;
     if (state.autopilot.displaySpeed)
@@ -305,24 +314,19 @@ void WinWingFCU::updateLCD(UFC::AircraftState state)
     data.lvlChSign3 = true;
 
     hid_write(getDevice(), reinterpret_cast<unsigned char*>(&data), sizeof(data));
+    //m_previousLCDData = data;
 
     // I'm not sure what this does but the LCD won't update without these magic bytes
-    uint8_t data5[] =
+    WinWingFCUFeatureReport featureReport = {};
+    featureReport.reportId = 0xf0;
+    for (unsigned int i = 0; i < sizeof(LCD_MAGIC_DATA); i++)
     {
-        0x00, 0x06, 0x11, 0x10, 0xbb, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x1d, 0x12, 0x20, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-    };
-    m_featureReport.reportId = 0xf0;
-    for (unsigned int i = 0; i < sizeof(data5); i++)
-    {
-        m_featureReport.vendor_data[i] = data5[i];
+        featureReport.vendor_data[i] = LCD_MAGIC_DATA[i];
     }
-    hid_write(getDevice(), reinterpret_cast<unsigned char*>(&m_featureReport), sizeof(m_featureReport));
+    hid_write(getDevice(), reinterpret_cast<unsigned char*>(&featureReport), sizeof(featureReport));
 }
 
-void WinWingFCU::updateLEDs(UFC::AircraftState state)
+void WinWingFCU::updateLEDs(const AircraftState& state)
 {
     setLED(WinWingFCULED::LOC, state.autopilot.locMode);
     setLED(WinWingFCULED::AP1, state.autopilot.ap1Mode);

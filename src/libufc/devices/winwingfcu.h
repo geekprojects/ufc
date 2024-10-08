@@ -140,6 +140,66 @@ struct WinWingFCULCDData
     unsigned char padding9 : 1;
 
     uint8_t unknown[21] = {};
+
+    friend bool operator==(const WinWingFCULCDData& lhs, const WinWingFCULCDData& rhs)
+    {
+        return lhs.featureId == rhs.featureId
+               && lhs.speed1Point == rhs.speed1Point
+               && lhs.speed1 == rhs.speed1
+               && lhs.speed2Point == rhs.speed2Point
+               && lhs.speed2 == rhs.speed2
+               && lhs.speed3Point == rhs.speed3Point
+               && lhs.speed3 == rhs.speed3
+               && lhs.padding1 == rhs.padding1
+               && lhs.speedDot == rhs.speedDot
+               && lhs.machSign == rhs.machSign
+               && lhs.spdSign == rhs.spdSign
+               && lhs.heading1Point == rhs.heading1Point
+               && lhs.heading1 == rhs.heading1
+               && lhs.heading2Point == rhs.heading2Point
+               && lhs.heading2 == rhs.heading2
+               && lhs.heading3Point == rhs.heading3Point
+               && lhs.heading3 == rhs.heading3
+               && lhs.headingDot == rhs.headingDot
+               && lhs.latSign == rhs.latSign
+               && lhs.trkSign == rhs.trkSign
+               && lhs.headingSign == rhs.headingSign
+               && lhs.fpaSign == rhs.fpaSign
+               && lhs.trkSign2 == rhs.trkSign2
+               && lhs.vsSign == rhs.vsSign
+               && lhs.headingSign2 == rhs.headingSign2
+               && lhs.altitude1Dot == rhs.altitude1Dot
+               && lhs.altitude1 == rhs.altitude1
+               && lhs.altSign == rhs.altSign
+               && lhs.altitude2 == rhs.altitude2
+               && lhs.lvlChSign1 == rhs.lvlChSign1
+               && lhs.altitude3 == rhs.altitude3
+               && lhs.lvlChSign2 == rhs.lvlChSign2
+               && lhs.altitude4 == rhs.altitude4
+               && lhs.lvlChSign3 == rhs.lvlChSign3
+               && lhs.altitude5 == rhs.altitude5
+               && lhs.vsNegative == rhs.vsNegative
+               && lhs.vs1 == rhs.vs1
+               && lhs.vs2Dot == rhs.vs2Dot
+               && lhs.vs2 == rhs.vs2
+               && lhs.vsPositive == rhs.vsPositive
+               && lhs.vs3 == rhs.vs3
+               && lhs.altitudeDot == rhs.altitudeDot
+               && lhs.vs4 == rhs.vs4
+               && lhs.padding2 == rhs.padding2
+               && lhs.padding3 == rhs.padding3
+               && lhs.vsSign2 == rhs.vsSign2
+               && lhs.fpaSign2 == rhs.fpaSign2
+               && lhs.padding6 == rhs.padding6
+               && lhs.padding7 == rhs.padding7
+               && lhs.padding8 == rhs.padding8
+               && lhs.padding9 == rhs.padding9;
+    }
+
+    friend bool operator!=(const WinWingFCULCDData& lhs, const WinWingFCULCDData& rhs)
+    {
+        return !(lhs == rhs);
+    }
 } __attribute__((packed));
 
 class WinWingFCU : public UFC::USBHIDDevice
@@ -148,10 +208,12 @@ class WinWingFCU : public UFC::USBHIDDevice
     WinWingFCUInputReport m_previousInputReport = {};
     WinWingFCUInputReport m_inputReport = {};
     //WinWingFCUOutputReport m_outputReport = {};
-    WinWingFCUFeatureReport m_featureReport = {};
 
-    void updateLCD(UFC::AircraftState state);
-    void updateLEDs(UFC::AircraftState state);
+
+    WinWingFCULCDData m_previousLCDData = {};
+
+    void updateLCD(const UFC::AircraftState& state);
+    void updateLEDs(const UFC::AircraftState& state);
     void setLED(WinWingFCULED led, int state);
 
     static uint8_t getDigit(int number, int digit);
@@ -164,7 +226,7 @@ class WinWingFCU : public UFC::USBHIDDevice
 
     void handleInput();
 
-    void update(UFC::AircraftState state) override;
+    void update(const UFC::AircraftState& state) override;
 };
 
 #endif //WINWINGFCU_H

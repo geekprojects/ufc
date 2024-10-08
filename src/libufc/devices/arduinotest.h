@@ -29,7 +29,7 @@ class ArduinoTest : public UFC::Device
 
     std::string getName() override;
 
-    void update(UFC::AircraftState state) override;
+    void update(const UFC::AircraftState& state) override;
 
     void readMain();
 };

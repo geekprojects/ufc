@@ -25,7 +25,7 @@ static void updateThread(ArduinoTest* arduinoTest)
 
 int set_interface_attribs(int fd, int speed, int parity)
 {
-    termios tty;
+    termios tty = {};
     if (tcgetattr(fd, &tty) != 0)
     {
         printf("error %d from tcgetattr\n", errno);
@@ -64,7 +64,7 @@ int set_interface_attribs(int fd, int speed, int parity)
 
 void set_blocking(int fd, int should_block)
 {
-    termios tty;
+    termios tty = {};
     memset(&tty, 0, sizeof tty);
     if (tcgetattr(fd, &tty) != 0)
     {
@@ -154,7 +154,7 @@ std::string ArduinoTest::getName()
     return "ArduinoDevice";
 }
 
-void ArduinoTest::update(UFC::AircraftState state)
+void ArduinoTest::update(const AircraftState& state)
 {
     if (m_fd == -1)
     {
