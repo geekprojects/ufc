@@ -6,6 +6,7 @@
 #define XPFD_STATE_H
 
 #include <string>
+#include <cstdint>
 
 namespace UFC
 {
