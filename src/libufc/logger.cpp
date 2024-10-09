@@ -21,6 +21,7 @@
 
 #include <cstdio>
 #include <cstdarg>
+#include <ctime>
 #include <ufc/logger.h>
 
 using namespace std;
