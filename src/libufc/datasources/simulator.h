@@ -12,7 +12,6 @@ namespace UFC
 
 class SimulatorDataSource : public DataSource
 {
-private:
     AutopilotState m_autopilot;
 
  public:

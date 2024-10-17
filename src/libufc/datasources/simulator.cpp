@@ -9,7 +9,9 @@
 
 using namespace UFC;
 
-SimulatorDataSource::SimulatorDataSource(FlightConnector* flightConnector) : DataSource(flightConnector, "Simulator")
+UFC_DATA_SOURCE(Simulator, SimulatorDataSource)
+
+SimulatorDataSource::SimulatorDataSource(FlightConnector* flightConnector) : DataSource(flightConnector, "Simulator", 0)
 {
 
 }

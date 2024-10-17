@@ -3,7 +3,7 @@
 //
 
 #include <fstream>
-#include <signal.h>
+#include <csignal>
 #include <unistd.h>
 #include <ufc/flightconnector.h>
 
@@ -17,7 +17,7 @@ using namespace UFC;
 #define STRINGIFY(x) XSTRINGIFY(x)
 #define XSTRINGIFY(x) #x
 
-static void exitHandler(int signal)
+static void exitHandler([[maybe_unused]] int signal)
 {
     FlightConnector::exit();
 }
@@ -93,19 +93,19 @@ shared_ptr<DataSource> FlightConnector::openDefaultDataSource()
 std::shared_ptr<DataSource> FlightConnector::openDataSource(const std::string& name)
 {
     log(DEBUG, "openDataSource: Opening %s", name.c_str());
-    if (name == SOURCE_XPLANE)
+
+    auto dataSourceInit = DataSourceRegistry::getDataSourceRegistry()->find(name);
+
+    if (dataSourceInit != nullptr)
     {
-        m_dataSource = make_shared<XPlaneDataSource>(this);
-    }
-    else if (name == SOURCE_SIMULATOR)
-    {
-        m_dataSource = make_shared<SimulatorDataSource>(this);
+        m_dataSource = dataSourceInit->create(this);
     }
     else
     {
         log(ERROR, "openDataSource: Unrecognised data source: %s", name.c_str());
         m_dataSource = nullptr;
     }
+
     return m_dataSource;
 }
 
