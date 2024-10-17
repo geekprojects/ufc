@@ -6,7 +6,7 @@
 
 using namespace UFC;
 
-UFC_DEVICE(ConsoleOutput, Consoleoutput)
+UFC_DEVICE(Console, ConsoleOutput)
 
 ConsoleOutput::ConsoleOutput(FlightConnector* flightConnector) : Device(flightConnector, "Console")
 {
@@ -15,9 +15,10 @@ ConsoleOutput::ConsoleOutput(FlightConnector* flightConnector) : Device(flightCo
 
 void ConsoleOutput::update(const AircraftState& state)
 {
-    if (!state.connected)
+    if (!state.connected && m_connected)
     {
         printf("ConsoleOutput::update: Not connected\n");
+        m_connected = false;
         return;
     }
     //printf("ConsoleOutput::update altitude=%0.2f\n", state.altitude);

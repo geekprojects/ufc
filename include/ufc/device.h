@@ -59,9 +59,9 @@ class DeviceRegistry
         { \
             return #_name; \
         } \
-        _name* create(UFC::FlightConnector* app) override \
+        _class* create(UFC::FlightConnector* app) override \
         { \
-            return new _name(app); \
+            return new _class(app); \
         } \
     }; \
     _name##Init* const _name##Init::init = new _name##Init();

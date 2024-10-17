@@ -11,6 +11,8 @@ namespace UFC
 {
 class ConsoleOutput : public Device
 {
+ private:
+    bool m_connected = true;
  public:
     explicit ConsoleOutput(FlightConnector* flightConnector);
     ~ConsoleOutput() override = default;

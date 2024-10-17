@@ -8,7 +8,7 @@
 using namespace std;
 using namespace UFC;
 
-UFC_DEVICE(CustomRadioHidDevice, CustomRadioHidDevice)
+UFC_DEVICE(CustomRadio, CustomRadioHidDevice)
 
 CustomRadioHidDevice::CustomRadioHidDevice(FlightConnector* flightConnector) :
     USBHIDDevice(flightConnector, "CustomRadioHidDevice", 0x1209, 0xd200)
