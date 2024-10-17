@@ -34,6 +34,13 @@ struct Position
     float Rrad = 0.0;			// yah rate in radians per second
 };// __attribute__((packed));
 
+enum class XPlaneResult
+{
+    SUCCESS,
+    TIMEOUT,
+    FAIL
+};
+
 class XPlaneClient : Logger
 {
     private:
@@ -48,12 +55,12 @@ class XPlaneClient : Logger
 
     std::vector<std::pair<int, std::string>> m_currentDataRefs;
 
-    bool send(void* buffer, int len);
-    std::shared_ptr<Data> receive();
+    XPlaneResult send(void* buffer, int len);
+    XPlaneResult receive(std::shared_ptr<Data>& data);
 
-    bool sendConnection();
+    XPlaneResult sendConnection();
 
-    bool sendRREF(std::vector<std::pair<int, std::string>> datarefs, int freq);
+    XPlaneResult sendRREF(std::vector<std::pair<int, std::string>> datarefs, int freq);
 
  public:
     XPlaneClient();
@@ -61,31 +68,31 @@ class XPlaneClient : Logger
 
     ~XPlaneClient() override;
 
-    bool connect();
+    XPlaneResult connect();
     bool disconnect();
 
-    bool getPosition(Position& position);
+    XPlaneResult getPosition(Position& position);
 
-    bool readString(const std::string &dataref, int len, std::string& value);
-    bool read(const std::string& dataref, double& returnValue);
-    bool readInt(std::string dataref, int& value)
+    XPlaneResult readString(const std::string &dataref, int len, std::string& value);
+    XPlaneResult read(const std::string& dataref, double& returnValue);
+    XPlaneResult readInt(const std::string& dataref, int& value)
     {
         double d;
-        bool res = read(dataref, d);
-        if (!res)
+        auto res = read(dataref, d);
+        if (res != XPlaneResult::SUCCESS)
         {
-            return false;
+            return res;
         }
         value = (int)d;
-        return true;
+        return XPlaneResult::SUCCESS;
     }
 
-    bool streamDataRefs(const std::vector<std::pair<int, std::string>> &datarefs, const std::function<void(std::map<int, float>)> &, int count = 0);
+    XPlaneResult streamDataRefs(const std::vector<std::pair<int, std::string>> &datarefs, const std::function<void(std::map<int, float>)> &, int count = 0);
     void stopDataRefs();
 
-    void sendCommand(const std::string &command);
+    XPlaneResult sendCommand(const std::string &command);
 
-    void setDataRef(const std::string& string, float value);
+    XPlaneResult setDataRef(const std::string& string, float value);
 
     static void disconnectAll();
 };

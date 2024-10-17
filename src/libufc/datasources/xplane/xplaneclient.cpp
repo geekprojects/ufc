@@ -1,5 +1,4 @@
 #include <string>
-#include <cstdio>
 #include <csignal>
 #include <cstring>
 
@@ -42,7 +41,7 @@ XPlaneClient::XPlaneClient(const string &host, const int port) :
 
 XPlaneClient::~XPlaneClient() = default;
 
-bool XPlaneClient::connect()
+XPlaneResult XPlaneClient::connect()
 {
     m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
@@ -59,7 +58,7 @@ bool XPlaneClient::connect()
     if (res == -1)
     {
         log(ERROR, "connect: Failed to bind to port %d", m_port);
-        return false;
+        return XPlaneResult::FAIL;
     }
 
     struct sockaddr_in name = {};
@@ -77,13 +76,12 @@ bool XPlaneClient::connect()
     if (res < 0)
     {
         log(ERROR, "Failed to set timeout");
-        return false;
+        return XPlaneResult::FAIL;
     }
-
 
     m_connected = true;
 
-    return true;
+    return XPlaneResult::SUCCESS;
 }
 
 bool XPlaneClient::disconnect()
@@ -93,18 +91,18 @@ bool XPlaneClient::disconnect()
     return true;
 }
 
-bool XPlaneClient::send(void* buffer, int len)
+XPlaneResult XPlaneClient::send(void* buffer, int len)
 {
     ssize_t result = sendto(m_socket, buffer, len, 0, (const struct sockaddr*)&m_serverAddr, sizeof(m_serverAddr));
     if (result < 0)
     {
         log(ERROR, "XPlaneClient::send: Failed to send data: %z", result);
-        return false;
+        return XPlaneResult::FAIL;
     }
-    return true;
+    return XPlaneResult::SUCCESS;
 }
 
-shared_ptr<Data> XPlaneClient::receive()
+XPlaneResult XPlaneClient::receive(shared_ptr<Data>& data)
 {
     fd_set stReadFDS;
     fd_set stExceptFDS;
@@ -116,20 +114,19 @@ shared_ptr<Data> XPlaneClient::receive()
     FD_ZERO(&stExceptFDS);
     FD_SET(m_socket, &stExceptFDS);
 
-    // 50 milliseconds
-    timeout.tv_sec = 5;
+    timeout.tv_sec = 2;
     timeout.tv_usec = 0;
 
     int res = select(m_socket + 1, &stReadFDS, nullptr, &stExceptFDS, &timeout);
     if (res < 0)
     {
         log(ERROR, "receive: Failed to select");
-        return nullptr;
+        return XPlaneResult::FAIL;
     }
     else if (res == 0)
     {
         log(WARN, "receive: Timeout");
-        return nullptr;
+        return XPlaneResult::TIMEOUT;
     }
 
     char buffer[4096];
@@ -137,42 +134,43 @@ shared_ptr<Data> XPlaneClient::receive()
     if (len <= 0)
     {
         log(ERROR, "receive: Failed to read data?");
-        return nullptr;
+        return XPlaneResult::FAIL;
     }
 
-    auto data = make_shared<Data>(len);
+    data = make_shared<Data>(len);
     memcpy(data->getData(), buffer, len);
 
-    return data;
+    return XPlaneResult::SUCCESS;
 }
 
-bool XPlaneClient::getPosition(Position& position)
+XPlaneResult XPlaneClient::getPosition(Position& position)
 {
     char buffer[8] = "RPOS\001\0";
 
-    bool res = send(buffer, 8);
-    if (!res)
+    auto res = send(buffer, 8);
+    if (res != XPlaneResult::SUCCESS)
     {
-        return false;
+        return res;
     }
 
-    shared_ptr<Data> data = receive();
-    if (!data)
+    shared_ptr<Data> data;
+    res = receive(data);
+    if (res != XPlaneResult::SUCCESS)
     {
-        return false;
+        return res;
     }
     if (data->getLength() < sizeof(Position))
     {
         log(ERROR, "getPosition: not received enough data!");
-        return false;
+        return XPlaneResult::FAIL;
     }
 
     // Turn off updates
     buffer[6] = '0';
     res = send(buffer, 8);
-    if (!res)
+    if (res != XPlaneResult::SUCCESS)
     {
-        return false;
+        return res;
     }
 
     data->readString(4);
@@ -192,15 +190,16 @@ bool XPlaneClient::getPosition(Position& position)
     position.Prad = data->readFloat();
     position.Qrad = data->readFloat();
     position.Rrad = data->readFloat();
-    return true;
+
+    return XPlaneResult::SUCCESS;
 }
 
-bool XPlaneClient::sendConnection()
+XPlaneResult XPlaneClient::sendConnection()
 {
     char buffer[32] = "CONN ";
     memcpy(&buffer[5], &m_clientPort, 2);
 
-    return false;
+    return XPlaneResult::SUCCESS;
 }
 
 struct dref_struct_in
@@ -212,25 +211,28 @@ struct dref_struct_in
     char dref_string[400] = {};
 } __attribute__((packed));
 
-bool XPlaneClient::streamDataRefs(
+XPlaneResult XPlaneClient::streamDataRefs(
     const vector<pair<int, string>>& datarefs,
     const function<void(map<int, float>)>& callback,
     const int count)
 {
     m_currentDataRefs = datarefs;
-    bool res = sendRREF(datarefs, 20);
-    if (!res)
+    auto res = sendRREF(datarefs, 20);
+    if (res != XPlaneResult::SUCCESS)
     {
-        return false;
+        return res;
     }
 
     int c = 0;
+    XPlaneResult result = XPlaneResult::SUCCESS;
     while (m_connected && (count == 0 || c < count))
     {
-        auto packet = receive();
-        if (!packet)
+        shared_ptr<Data> packet;
+        res = receive(packet);
+        if (res != XPlaneResult::SUCCESS)
         {
             // Unable to receive data
+            result = res;
             break;
         }
         if (packet->getLength() == 0)
@@ -255,10 +257,10 @@ bool XPlaneClient::streamDataRefs(
         c++;
     }
     stopDataRefs();
-    return true;
+    return result;
 }
 
-bool XPlaneClient::sendRREF(std::vector<std::pair<int, std::string>> datarefs, int freq)
+XPlaneResult XPlaneClient::sendRREF(std::vector<std::pair<int, std::string>> datarefs, int freq)
 {
     for (unsigned int i = 0; i < datarefs.size(); i += 100)
     {
@@ -275,14 +277,14 @@ bool XPlaneClient::sendRREF(std::vector<std::pair<int, std::string>> datarefs, i
             drefRequest.dref_sender_index = idx;
             strncpy(drefRequest.dref_string, dataref.c_str(), 399);
             drefRequest.dref_string[399] = 0;
-            bool res = send(&drefRequest, sizeof(drefRequest));
-            if (!res)
+            auto res = send(&drefRequest, sizeof(drefRequest));
+            if (res != XPlaneResult::SUCCESS)
             {
-                return false;
+                return res;
             }
         }
     }
-    return true;
+    return XPlaneResult::SUCCESS;
 }
 
 void XPlaneClient::stopDataRefs()
@@ -291,17 +293,17 @@ void XPlaneClient::stopDataRefs()
     m_currentDataRefs.clear();
 }
 
-void XPlaneClient::sendCommand(const std::string& command)
+XPlaneResult XPlaneClient::sendCommand(const std::string& command)
 {
     const int len = 5 + command.length();
     char buffer[len];
     const auto cmnd = "CMND\00";
     memcpy(buffer, cmnd, 5);
     memcpy(buffer + 5, command.c_str(), command.length());
-    send(buffer, len);
+    return send(buffer, len);
 }
 
-void XPlaneClient::setDataRef(const std::string& dataRef, float value)
+XPlaneResult XPlaneClient::setDataRef(const std::string& dataRef, float value)
 {
     int len = 5 + 4 + 500;
     char buffer[len];
@@ -310,10 +312,10 @@ void XPlaneClient::setDataRef(const std::string& dataRef, float value)
     memcpy(buffer, cmnd, 5);
     memcpy(buffer + 5, &value, 4);
     memcpy(buffer + 9, dataRef.c_str(), dataRef.length());
-    send(buffer, len);
+    return send(buffer, len);
 }
 
-bool XPlaneClient::readString(const std::string& dataref, int len, string& value)
+XPlaneResult XPlaneClient::readString(const std::string& dataref, int len, string& value)
 {
     vector<pair<int, string>> datarefs;
     for (int i = 0; i < len; i++)
@@ -323,7 +325,7 @@ bool XPlaneClient::readString(const std::string& dataref, int len, string& value
 
     char buffer[len + 1];
     memset(buffer, 0, len + 1);
-    streamDataRefs(datarefs, [&buffer, &len](map<int, float> const& values)
+    auto res = streamDataRefs(datarefs, [&buffer, &len](map<int, float> const& values)
     {
         for (const auto& [idx, value] : values)
         {
@@ -334,12 +336,15 @@ bool XPlaneClient::readString(const std::string& dataref, int len, string& value
         }
     }, 1);
 
-    value = string(buffer);
+    if (res == XPlaneResult::SUCCESS)
+    {
+        value = string(buffer);
+    }
 
-    return true;
+    return res;
 }
 
-bool XPlaneClient::read(const std::string& dataref, double& returnValue)
+XPlaneResult XPlaneClient::read(const std::string& dataref, double& returnValue)
 {
     vector<pair<int, string>> datarefs;
     datarefs.emplace_back(0, dataref);

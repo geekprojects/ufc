@@ -7,6 +7,8 @@
 
 #include "xplane.h"
 
+namespace UFC
+{
 static const DataDefinition g_dataRefsInit[] =
 {
     {"aircraft/indicatedAirspeed", FLOAT, offsetof(AircraftState, indicatedAirspeed)},
@@ -59,5 +61,6 @@ static const DataDefinition g_dataRefsInit[] =
     {"autopilot/autoThrottleMode", INTEGER, offsetof(AircraftState, autopilot.autoThrottleMode)},
     {"autopilot/approachMode", INTEGER, offsetof(AircraftState, autopilot.approachMode)},
 };
+}
 
 #endif //DATADEFS_H

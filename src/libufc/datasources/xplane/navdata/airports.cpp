@@ -99,4 +99,3 @@ shared_ptr<Airports> XPlaneDataSource::loadAirports()
     //printf("Found %zu airports\n", airportData->m_airports.size());
     return nullptr;
 }
-

@@ -3,17 +3,20 @@
 //
 
 #include "xplane.h"
+#include "datadefs.h"
+
 #include <ufc/flightconnector.h>
 
 #include <filesystem>
 #include <fnmatch.h>
+#include <unistd.h>
 
 using namespace std;
 using namespace UFC;
 
-#include "datadefs.h"
+UFC_DATA_SOURCE(XPlane, XPlaneDataSource)
 
-XPlaneDataSource::XPlaneDataSource(FlightConnector* flightConnector) : DataSource(flightConnector, "XPlane")
+XPlaneDataSource::XPlaneDataSource(FlightConnector* flightConnector) : DataSource(flightConnector, "XPlane", 10)
 {
     for (const auto& dataRef : g_dataRefsInit)
     {
@@ -27,17 +30,27 @@ XPlaneDataSource::XPlaneDataSource(FlightConnector* flightConnector) : DataSourc
 
 bool XPlaneDataSource::connect()
 {
-    bool res = m_client->connect();
-    if (!res)
+    auto res = m_client->connect();
+    if (res != XPlaneResult::SUCCESS)
     {
         return false;
     }
 
-    log(INFO, "init: Requesting details from X-Plane...");
     AircraftState state = m_flightConnector->getState();
-    res = m_client->readInt("sim/version/xplane_internal_version", m_xPlaneVersion);
 
-    if (!res || m_xPlaneVersion == 0)
+    log(INFO, "init: Requesting details from X-Plane...");
+    while (true)
+    {
+        res = m_client->readInt("sim/version/xplane_internal_version", m_xPlaneVersion);
+        if (res != XPlaneResult::TIMEOUT)
+        {
+            break;
+        }
+
+        // Timeout! Try again in a second
+        sleep(1);
+    }
+    if (res == XPlaneResult::FAIL || m_xPlaneVersion == 0)
     {
         log(ERROR, "init: Unable to connect to X-Plane");
         return false;
@@ -89,10 +102,12 @@ bool XPlaneDataSource::update()
         idx++;
     }
 
-    return m_client->streamDataRefs(datarefs, [this](map<int, float> const& values)
+    auto res = m_client->streamDataRefs(datarefs, [this](map<int, float> const& values)
     {
         update(values);
     });
+
+    return res == XPlaneResult::SUCCESS;
 }
 
 void XPlaneDataSource::loadDefinitionsForAircraft(const string& author, const string& icaoType)
@@ -254,7 +269,7 @@ void XPlaneDataSource::command(string command)
     string xcommand = it->second;
     printf("XPlaneDataSource::command: %s -> %s\n", command.c_str(), xcommand.c_str());
 
-    unsigned int idx = xcommand.find("=");
+    auto idx = xcommand.find("=");
     if (idx == xcommand.npos)
     {
         m_client->sendCommand(xcommand);
