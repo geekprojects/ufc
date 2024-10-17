@@ -69,6 +69,9 @@ add_library(ufc SHARED
         src/libufc/datasources/xplane/navdata/navdata.cpp
         src/libufc/devices/customradiohid.cpp
         src/libufc/devices/customradiohid.h
+        src/libufc/datasources/datasource.cpp
+        src/libufc/datasources/clock.cpp
+        src/libufc/datasources/clock.h
 )
 
 if(UNIX AND APPLE)
