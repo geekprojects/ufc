@@ -7,12 +7,15 @@
 
 #include <ufc/datasource.h>
 
+#include "ufc/flightconnector.h"
+
 namespace UFC
 {
 
 class SimulatorDataSource : public DataSource
 {
     AutopilotState m_autopilot;
+    CommunicationState m_communication;
 
  public:
     explicit SimulatorDataSource(FlightConnector* flightConnector);

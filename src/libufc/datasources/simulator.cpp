@@ -43,14 +43,15 @@ bool SimulatorDataSource::update()
     state.flightDirector.pitch = 0.0f;
     state.flightDirector.roll = 0.0f;
 
-    state.comms.com1Hz = 234432;
-    state.comms.com1StandbyHz = 123123;
+    m_communication.com1Hz = 118900;
+    m_communication.com1StandbyHz = 136125;
 
     m_autopilot.speed = 100.0f;
     m_autopilot.altitude = 1000.0f;
     m_autopilot.heading = 90.0f;
 
     state.autopilot = m_autopilot;
+    state.comms = m_communication;
 
     m_flightConnector->updateState(state);
 
@@ -91,6 +92,7 @@ bool SimulatorDataSource::update()
             }
         }
         state.autopilot = m_autopilot;
+        state.comms = m_communication;
         m_flightConnector->updateState(state);
         usleep(50000);
     }
@@ -168,6 +170,28 @@ void SimulatorDataSource::command(std::string command)
     else if (command == AUTOPILOT_AP2_TOGGLE)
     {
         autopilot.ap2Mode = !autopilot.ap2Mode;
+    }
+    else if (command == COMMS_COM1_STANDBY_UP_COARSE)
+    {
+        m_communication.com1StandbyHz += 1000;
+    }
+    else if (command == COMMS_COM1_STANDBY_DOWN_COARSE)
+    {
+        m_communication.com1StandbyHz -= 1000;
+    }
+    else if (command == COMMS_COM1_STANDBY_UP_FINE)
+    {
+        m_communication.com1StandbyHz += 25;
+    }
+    else if (command == COMMS_COM1_STANDBY_DOWN_FINE)
+    {
+        m_communication.com1StandbyHz -= 25;
+    }
+    else if (command == COMMS_COM1_SWAP)
+    {
+        uint32_t tmp = m_communication.com1Hz;
+        m_communication.com1Hz = m_communication.com1StandbyHz;
+        m_communication.com1StandbyHz = tmp;
     }
     else
     {
