@@ -13,7 +13,11 @@
 #include <ufc/datasource.h>
 
 #include "logger.h"
-#include "LuaContext.hpp"
+
+namespace LuaCpp
+{
+    class LuaContext;
+}
 
 namespace UFC
 {
@@ -65,7 +69,7 @@ class FlightConnector final : public Logger
     std::shared_ptr<std::thread> m_updateDeviceThread;
     std::shared_ptr<std::thread> m_updateDataSourceThread;
 
-    LuaCpp::LuaContext m_luaContext;
+    std::shared_ptr<LuaCpp::LuaContext> m_luaContext;
 
     static void updateDeviceThread(FlightConnector* flightConnector);
     void updateDeviceMain();
