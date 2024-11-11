@@ -52,13 +52,27 @@ Airports::Airports()
 
 Airports::~Airports() = default;
 
-void Airports::addAirport(const std::shared_ptr<Airport>& shared)
+void Airports::addAirport(std::shared_ptr<Airport> shared)
 {
     if (fabs(shared->getLocation().latitude) < DBL_EPSILON && fabs(shared->getLocation().longitude) < DBL_EPSILON)
     {
         return;
     }
     m_airports->insert(shared);
-    m_airportList.push_back(shared);
+    //m_airportList.push_back(shared);
+    if (!shared->getICAOCode().empty())
+    {
+        m_airportsByCode.try_emplace(shared->getICAOCode(), shared);
+    }
+}
+
+std::shared_ptr<Airport> Airports::findByCode(const std::string& code)
+{
+    auto it = m_airportsByCode.find(code);
+    if (it != m_airportsByCode.end())
+    {
+        return it->second;
+    }
+    return nullptr;
 }
 

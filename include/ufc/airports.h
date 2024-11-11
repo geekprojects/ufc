@@ -6,6 +6,7 @@
 #define AIRPORTS_H
 
 #include <string>
+#include <map>
 
 #include "geoutils.h"
 
@@ -93,16 +94,17 @@ class Airports
  private:
     std::shared_ptr<QuadTree> m_airports;
     std::vector<std::shared_ptr<Airport>> m_airportList;
+    std::map<std::string, std::shared_ptr<Airport>, std::less<>> m_airportsByCode;
 
  public:
     Airports();
     ~Airports();
 
-    void addAirport(const std::shared_ptr<Airport>& shared);
+    void addAirport(std::shared_ptr<Airport> airport);
 
     void dump()
     {
-        printf("Airports: Loaded %lu airports\n", m_airportList.size());
+        //printf("Airports: Loaded %lu airports\n", m_airportList.size());
         //m_airports->dump();
     }
 
@@ -114,6 +116,8 @@ class Airports
             return airport->isHasRunway();
         });
     }
+
+    std::shared_ptr<Airport> findByCode(const std::string& code);
 };
 
 }

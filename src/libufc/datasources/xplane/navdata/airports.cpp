@@ -42,10 +42,13 @@ shared_ptr<Airports> XPlaneDataSource::loadAirports()
             case 16:
             case 17:
                 // New airport
+
+                // Flush the current airport
                 if (currentAirport != nullptr)
                 {
                     airportData->addAirport(currentAirport);
                 }
+
                 currentAirport = make_shared<Airport>();
                 currentLat = 0.0;
                 currentAirport->setName(utf82wstring(NavData::joinToEnd(parts, 5).c_str()));
@@ -74,6 +77,7 @@ shared_ptr<Airports> XPlaneDataSource::loadAirports()
                 }
                 else if (parts.at(1) == "icao_code")
                 {
+                    //printf("Adding icao_code: %s\n", parts.at(2).c_str());
                     currentAirport->setICAOCode(parts.at(2));
                 }
             break;
@@ -88,14 +92,14 @@ shared_ptr<Airports> XPlaneDataSource::loadAirports()
         airportData->addAirport(currentAirport);
     }
 
-    airportData->dump();
+    //airportData->dump();
 
     //auto point = Coordinate(51.1987, 0.2764); // Tonbridge, UK
     //auto point = Coordinate(40.748333, -73.985278); // Empire State Building
-    auto point = Coordinate(40.69880370388995, -73.86135782941997);
+    //auto point = Coordinate(40.69880370388995, -73.86135782941997);
     //auto point = Coordinate(51.836826507016895, -0.18500002245520308);
-    airportData->findNearest(point);
+    //airportData->findNearest(point);
 
     //printf("Found %zu airports\n", airportData->m_airports.size());
-    return nullptr;
+    return airportData;
 }
