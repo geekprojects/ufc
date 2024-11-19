@@ -72,6 +72,9 @@ add_library(ufc SHARED
         src/libufc/datasources/datasource.cpp
         src/libufc/datasources/clock.cpp
         src/libufc/datasources/clock.h
+        include/ufc/navaids.h
+        src/libufc/datasources/xplane/XPMapping.cpp
+        src/libufc/datasources/xplane/XPMapping.h
 )
 
 if(UNIX AND APPLE)
@@ -94,6 +97,36 @@ target_link_libraries(ufctool
         -L/usr/local/lib
         ufc
 )
+
+if (DEFINED ENV{XPLANE_SDK})
+    message("Building XPlane plugin: $ENV{XPLANE_SDK}")
+
+    if(UNIX AND APPLE)
+        set(XPLM_LDFLAGS $ENV{XPLANE_SDK}/Libraries/Mac/XPLM.framework)
+        set(XPLM_CFLAGS -DAPL=1)
+    elseif (UNIX AND NOT APPLE)
+        # TODO!
+    endif()
+
+    set(XPLANE_INC $ENV{XPLANE_SDK}/CHeaders/XPLM)
+
+    message("XPLM_LDFLAGS: ${XPLM_LDFLAGS}")
+    message("XPLANE_INC: ${XPLANE_INC}")
+
+    add_library(ufc-plugin SHARED
+            src/ufc-plugin/ufcplugin.cpp
+            src/ufc-plugin/xpplugindatasource.cpp
+            src/ufc-plugin/xpplugindatasource.h)
+
+    target_compile_definitions(ufc-plugin PUBLIC ${XPLM_CFLAGS})
+    target_include_directories(ufc-plugin PUBLIC ${XPLANE_INC})
+    target_link_libraries(ufc-plugin
+            -Wl,-rpath -Wl,/usr/local/lib
+            -L/usr/local/lib
+            ufc
+            ${XPLM_LDFLAGS}
+    )
+endif()
 
 if (${libgeek_FOUND})
 add_executable(xpfd
