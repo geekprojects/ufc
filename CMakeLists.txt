@@ -115,8 +115,10 @@ if (DEFINED ENV{XPLANE_SDK})
 
     add_library(ufc-plugin SHARED
             src/ufc-plugin/ufcplugin.cpp
+            src/ufc-plugin/ufcplugin.h
             src/ufc-plugin/xpplugindatasource.cpp
-            src/ufc-plugin/xpplugindatasource.h)
+            src/ufc-plugin/xpplugindatasource.h
+    )
 
     target_compile_definitions(ufc-plugin PUBLIC ${XPLM_CFLAGS})
     target_include_directories(ufc-plugin PUBLIC ${XPLANE_INC})

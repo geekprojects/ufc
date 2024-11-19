@@ -6,7 +6,6 @@
 #define XPPLUGINDATASOURCE_H
 
 #include <ufc/datasource.h>
-
 #include "../libufc/datasources/xplane/xpmapping.h"
 
 #define XPLM200 1
