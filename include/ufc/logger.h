@@ -33,11 +33,21 @@ enum LoggerLevel_t
     ERROR
 };
 
+class LogPrinter
+{
+ public:
+    virtual void printf(const char* message, ...);
+};
+
 class Logger
 {
  private:
+    static LogPrinter* m_logPrinter;
+
     std::string m_name;
     int m_depth;
+
+ protected:
 
  public:
     explicit Logger(const std::string &name);
@@ -55,6 +65,8 @@ class Logger
     // Not thread safe!
     void pushDepth() { m_depth++; }
     void popDepth()  { m_depth--; }
+
+    static void setLogPrinter(LogPrinter* printer) { m_logPrinter = printer; }
 };
 
 };

@@ -27,6 +27,8 @@
 using namespace std;
 using namespace UFC;
 
+LogPrinter* Logger::m_logPrinter = new LogPrinter();
+
 Logger::Logger(const std::string& name)
 {
     m_depth = 0;
@@ -101,10 +103,10 @@ void Logger::logv(LoggerLevel_t level, const char* msg, va_list va)
             levelStr = "DEBUG";
             break;
         case INFO:
-            levelStr = "INFO";
+            levelStr = "INFO ";
             break;
         case WARN:
-            levelStr = "WARN";
+            levelStr = "WARN ";
             break;
         case ERROR:
             levelStr = "ERROR";
@@ -130,6 +132,16 @@ void Logger::logv(LoggerLevel_t level, const char* msg, va_list va)
 
     strftime(timeStr, 256, "%Y/%m/%d %H:%M:%S", &tm);
 
-    printf("%s: %s: %s: %s%s\n", timeStr, levelStr.c_str(), m_name.c_str(), spaces.c_str(), buf);
+    m_logPrinter->printf("%s: %s: %s: %s%s\n", timeStr, levelStr.c_str(), m_name.c_str(), spaces.c_str(), buf);
+}
+
+void LogPrinter::printf(const char* message, ...)
+{
+    va_list va;
+    va_start(va, message);
+
+    vprintf(message, va);
+
+    va_end(va);
 }
 
