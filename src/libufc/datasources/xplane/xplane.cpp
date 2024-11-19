@@ -3,7 +3,6 @@
 //
 
 #include "xplane.h"
-#include "datadefs.h"
 
 #include <ufc/flightconnector.h>
 
@@ -16,13 +15,8 @@ using namespace UFC;
 
 UFC_DATA_SOURCE(XPlane, XPlaneDataSource)
 
-XPlaneDataSource::XPlaneDataSource(FlightConnector* flightConnector) : DataSource(flightConnector, "XPlane", 10)
+XPlaneDataSource::XPlaneDataSource(FlightConnector* flightConnector) : DataSource(flightConnector, "XPlane", 10), m_mapping("../data/x-plane")
 {
-    for (const auto& dataRef : g_dataRefsInit)
-    {
-        addDataRef(dataRef);
-    }
-
     m_client = make_shared<XPlaneClient>(
         flightConnector->getConfig().xplaneHost,
         flightConnector->getConfig().xplanePort);
@@ -67,17 +61,8 @@ bool XPlaneDataSource::connect()
     log(INFO, "Author: %s", state.aircraftAuthor.c_str());
     log(INFO, "Aircraft ICAO type: %s", state.aircraftICAO.c_str());
 
-    loadDefinitions("../data/x-plane/defaults.yaml");
-    loadDefinitionsForAircraft(state.aircraftAuthor, state.aircraftICAO);
-
-    for (const auto& dataRef : m_dataRefs)
-    {
-        log(DEBUG, "DataRef: %s -> %s", dataRef->id.c_str(), dataRef->mapping.dataRef.c_str());
-    }
-    for (const auto& [id, command] : m_commandsById)
-    {
-        log(DEBUG, "Command: %s -> %s", id.c_str(), command.c_str());
-    }
+    m_mapping.loadDefinitions("defaults.yaml");
+    m_mapping.loadDefinitionsForAircraft(state.aircraftAuthor, state.aircraftICAO);
 
     return true;
 }
@@ -92,7 +77,7 @@ bool XPlaneDataSource::update()
     vector<pair<int, string>> datarefs;
 
     int idx = 1;
-    for (const auto& dataRef : m_dataRefs)
+    for (const auto& dataRef : m_mapping.getDataRefs())
     {
         if (!dataRef->mapping.dataRef.empty() && dataRef->mapping.dataRef != "null")
         {
@@ -110,107 +95,6 @@ bool XPlaneDataSource::update()
     return res == XPlaneResult::SUCCESS;
 }
 
-void XPlaneDataSource::loadDefinitionsForAircraft(const string& author, const string& icaoType)
-{
-    for (const auto & entry : filesystem::directory_iterator("../data/x-plane/aircraft"))
-    {
-        if (entry.path().extension() == ".yaml")
-        {
-            auto aircraftFile = YAML::LoadFile(entry.path());
-            if (!aircraftFile["author"] || !aircraftFile["icao"])
-            {
-                log(ERROR, "%s: Not a valid aircraft definition", entry.path().c_str());
-                continue;
-            }
-            auto fileAuthor = aircraftFile["author"].as<string>();
-            auto fileICAO = aircraftFile["icao"].as<string>();
-
-            int match = fnmatch(fileAuthor.c_str(), author.c_str(), 0);
-            if (match != 0)
-            {
-                continue;
-            }
-            match = fnmatch(icaoType.c_str(), fileICAO.c_str(), 0);
-            if (match != 0)
-            {
-                continue;
-            }
-            log(INFO, "%s: Aircraft definition found!", entry.path().c_str());
-            loadDefinitions(aircraftFile);
-            break;
-        }
-    }
-}
-
-void XPlaneDataSource::loadDefinitions(const string&file)
-{
-    loadDefinitions(YAML::LoadFile(file));
-}
-
-void XPlaneDataSource::loadDefinitions(YAML::Node config)
-{
-    YAML::Node dataNode = config["data"];
-    for (YAML::const_iterator it=dataNode.begin();it!=dataNode.end();++it)
-    {
-        auto categoryName = it->first.as<string>();
-        for (YAML::const_iterator dataIt=it->second.begin();dataIt!=it->second.end();++dataIt)
-        {
-            if (dataIt->second)
-            {
-                auto name = dataIt->first.as<string>();
-                auto value = dataIt->second.as<string>();
-                auto id = categoryName + "/" + name;
-                auto dataRefIt = m_dataRefsById.find(id);
-                if (dataRefIt != m_dataRefsById.end())
-                {
-                    dataRefIt->second->mapping = parseMapping(value);
-                }
-                else
-                {
-                    log(WARN, "Unknown data ref: %s", id.c_str());
-                }
-            }
-        }
-    }
-
-    loadCommands(config["commands"], "");
-}
-
-void XPlaneDataSource::loadCommands(YAML::Node commandsNode, std::string id)
-{
-    printf("loadCommands: %s...\n", id.c_str());
-    for (YAML::const_iterator it=commandsNode.begin();it!=commandsNode.end();++it)
-    {
-        string categoryName;
-        if (!id.empty())
-        {
-            categoryName = id + "/";
-        }
-        categoryName += it->first.as<string>();
-        if (it->second.Type() == YAML::NodeType::Map)
-        {
-            loadCommands(it->second, categoryName);
-        }
-        else
-        {
-            auto command = it->second.as<string>();
-            printf("XPLANE: Loading command %s -> %s\n", command.c_str(), categoryName.c_str());
-            m_commandsById.insert_or_assign(categoryName, command);
-        }
-    }
-}
-
-DataMapping XPlaneDataSource::parseMapping(std::string mappingStr)
-{
-    DataMapping mapping;
-    if (mappingStr.at(0) == '!')
-    {
-        mapping.negate = true;
-        mappingStr = mappingStr.substr(1);
-    }
-    mapping.dataRef = mappingStr;
-    return mapping;
-}
 
 void XPlaneDataSource::update(const map<int, float>& values)
 {
@@ -225,7 +109,7 @@ void XPlaneDataSource::update(const map<int, float>& values)
             continue;
         }
 
-        const auto& dataRef = m_dataRefs[idx - 1];
+        const auto& dataRef = m_mapping.getDataRefs()[idx - 1];
         switch (dataRef->type)
         {
             case FLOAT:
@@ -259,14 +143,13 @@ void XPlaneDataSource::update(const map<int, float>& values)
 
 void XPlaneDataSource::command(string command)
 {
-    auto it = m_commandsById.find(command);
-
-    if (it == m_commandsById.end())
+    auto xpcommand = m_mapping.getCommand(command);
+    if (xpcommand.command.empty())
     {
-        log(WARN, "command: Unknown command: %s", command.c_str());
         return;
     }
-    string xcommand = it->second;
+
+    string xcommand = xpcommand.command;
     printf("XPlaneDataSource::command: %s -> %s\n", command.c_str(), xcommand.c_str());
 
     auto idx = xcommand.find("=");
@@ -283,9 +166,3 @@ void XPlaneDataSource::command(string command)
     }
 }
 
-void XPlaneDataSource::addDataRef(const DataDefinition& dataRef)
-{
-    auto dataRefShared = make_shared<DataDefinition>(dataRef);
-    m_dataRefs.push_back(dataRefShared);
-    m_dataRefsById.insert(make_pair(dataRef.id, dataRefShared));
-}

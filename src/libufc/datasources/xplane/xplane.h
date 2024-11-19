@@ -7,6 +7,7 @@
 
 #include <ufc/datasource.h>
 #include "xplaneclient.h"
+#include "xpmapping.h"
 
 #include <yaml-cpp/yaml.h>
 
@@ -15,58 +16,19 @@
 namespace UFC
 {
 
-enum DataRefType
-{
-    FLOAT,
-    BOOLEAN,
-    INTEGER,
-};
-
-struct DataMapping
-{
-    std::string dataRef;
-    bool negate = false;
-};
-
-struct DataDefinition
-{
-    std::string id;
-    DataRefType type;
-    int pos;
-    DataMapping mapping;
-    int idx;
-};
-
-struct CommandDefinition
-{
-    std::string id;
-    std::string command;
-};
 
 class XPlaneDataSource : public DataSource
 {
-    private:
+ private:
     std::shared_ptr<XPlaneClient> m_client;
+
+    XPMapping m_mapping;
 
     int m_xPlaneVersion = 0;
 
-    std::vector<std::shared_ptr<DataDefinition>> m_dataRefs;
-    std::map<std::string, std::shared_ptr<DataDefinition>> m_dataRefsById;
-
-    std::map<std::string, std::string> m_commandsById;
-
-    void addDataRef(const DataDefinition& dataRef);
-
-    void loadDefinitionsForAircraft(const std::string &author, const std::string &icaoType);
-    void loadDefinitions(const std::string &file);
-    void loadDefinitions(YAML::Node config);
-    void loadCommands(YAML::Node node, std::string id);
-
-    DataMapping parseMapping(std::string mapping);
-
     void update(const std::map<int, float>& values);
 
-    public:
+ public:
     explicit XPlaneDataSource(FlightConnector* flightConnector);
     ~XPlaneDataSource() override = default;
 
