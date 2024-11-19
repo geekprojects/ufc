@@ -53,13 +53,16 @@ FlightConnector::~FlightConnector()
 
 bool FlightConnector::init()
 {
-    struct sigaction sigIntHandler = {};
-    sigIntHandler.sa_handler = exitHandler;
-    sigemptyset(&sigIntHandler.sa_mask);
-    sigIntHandler.sa_flags = 0;
+    if (m_exitHandler)
+    {
+        struct sigaction sigIntHandler = {};
+        sigIntHandler.sa_handler = exitHandler;
+        sigemptyset(&sigIntHandler.sa_mask);
+        sigIntHandler.sa_flags = 0;
 
-    sigaction(SIGINT, &sigIntHandler, nullptr);
-    sigaction(SIGTERM, &sigIntHandler, nullptr);
+        sigaction(SIGINT, &sigIntHandler, nullptr);
+        sigaction(SIGTERM, &sigIntHandler, nullptr);
+    }
 
     DeviceRegistry* deviceRegistry = DeviceRegistry::getDeviceRegistry();
     for (const auto& dev : deviceRegistry->getDevices())
@@ -109,6 +112,11 @@ std::shared_ptr<DataSource> FlightConnector::openDataSource(const std::string& n
     return m_dataSource;
 }
 
+void FlightConnector::setDataSource(std::shared_ptr<DataSource> dataSource)
+{
+    m_dataSource = dataSource;
+}
+
 void FlightConnector::updateDeviceThread(FlightConnector* flightConnector)
 {
     flightConnector->updateDeviceMain();
@@ -117,6 +125,7 @@ void FlightConnector::updateDataSourceThread(FlightConnector* flightConnector)
 {
     flightConnector->updateDataSourceMain();
 }
+
 
 void FlightConnector::start()
 {
@@ -127,13 +136,25 @@ void FlightConnector::start()
 
 void FlightConnector::stop()
 {
-    log(INFO, "Stopping data source...");
+    log(INFO, "Stopping Data Source...");
     m_running = false;
     if (m_dataSource != nullptr)
     {
         m_dataSource->disconnect();
     }
-    log(INFO, "Stopped");
+    log(INFO, "Data Source stopped.");
+
+    log(INFO, "Stopping update threads...");
+    // Wait for the threads to die
+    if (m_updateDataSourceThread != nullptr)
+    {
+        m_updateDataSourceThread->join();
+    }
+    if (m_updateDataSourceThread != nullptr)
+    {
+        m_updateDeviceThread->join();
+    }
+    log(INFO, "Update threads stopped.");
 }
 
 void FlightConnector::wait() const
@@ -156,18 +177,21 @@ void FlightConnector::exit()
     }
 }
 
+void FlightConnector::updateDevices()
+{
+    const auto state = getState();
+    for (auto device : m_devices)
+    {
+        device->update(state);
+    }
+}
+
 void FlightConnector::updateDeviceMain()
 {
-    auto dataSource = getDataSource();
-
     while (m_running)
     {
-        const auto state = getState();
-        for (auto device : m_devices)
-        {
-            device->update(state);
-        }
-        usleep(20000);
+        updateDevices();
+        usleep(1000000 / 50);
     }
 }
 

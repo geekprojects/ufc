@@ -66,8 +66,9 @@ class FlightConnector final : public Logger
     AircraftState m_state;
 
     bool m_running = false;
-    std::shared_ptr<std::thread> m_updateDeviceThread;
-    std::shared_ptr<std::thread> m_updateDataSourceThread;
+    std::shared_ptr<std::thread> m_updateDeviceThread = nullptr;
+    std::shared_ptr<std::thread> m_updateDataSourceThread = nullptr;
+    bool m_exitHandler = true;
 
     std::shared_ptr<LuaCpp::LuaContext> m_luaContext;
 
@@ -89,6 +90,7 @@ class FlightConnector final : public Logger
     std::shared_ptr<DataSource> openDefaultDataSource();
     std::shared_ptr<DataSource> openDataSource(const std::string &name);
     std::shared_ptr<DataSource> getDataSource() { return m_dataSource; }
+    void setDataSource(std::shared_ptr<DataSource> dataSource);
 
     void start();
     void stop();
@@ -109,6 +111,11 @@ class FlightConnector final : public Logger
     }
 
     static void exit();
+
+    void updateDevices();
+    const std::vector<Device*>& getDevices() { return m_devices; }
+
+    void disableExitHandler() { m_exitHandler = false; }
 };
 
 }
