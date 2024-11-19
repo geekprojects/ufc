@@ -5,6 +5,7 @@
 #ifndef UFCPLUGIN_H
 #define UFCPLUGIN_H
 
+#include <XPLMMenus.h>
 #include <XPLMUtilities.h>
 
 #include <ufc/flightconnector.h>
@@ -36,8 +37,14 @@ class UFCPlugin : public UFC::Logger
     UFC::FlightConnector* m_flightConnector = nullptr;
     std::shared_ptr<XPPluginDataSource> m_dataSource = nullptr;
 
+    int m_menuContainer;
+    XPLMMenuID m_menuId;
+
     static float initCallback(float elapsedMe, float elapsedSim, int counter, void * refcon);
     float init(float elapsedMe, float elapsedSim, int counter);
+
+    static void menuCallback(void* menuRef, void* itemRef);
+    void menu(void* itemRef);
 
  public:
     UFCPlugin() : Logger("UFCPlugin") {}
@@ -46,6 +53,8 @@ class UFCPlugin : public UFC::Logger
     void stop();
     int enable();
     void disable();
+
+    void receiveMessage(XPLMPluginID inFrom, int inMsg, void * inParam);
 };
 
 #endif //UFCPLUGIN_H

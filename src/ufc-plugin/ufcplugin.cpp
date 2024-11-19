@@ -3,6 +3,9 @@
 #include "ufcplugin.h"
 
 #include <XPLMProcessing.h>
+#include <XPLMMenus.h>
+
+#include "ufc/device.h"
 
 using namespace std;
 using namespace UFC;
@@ -18,6 +21,11 @@ int UFCPlugin::start(char* outName, char* outSig, char* outDesc)
     strcpy(outSig, "com.geekprojects.ufc.plugin");
     strcpy(outDesc, "Universal Flight Connector");
 
+    m_menuContainer = XPLMAppendMenuItem(XPLMFindPluginsMenu(), "UFC", 0, 0);
+    m_menuId = XPLMCreateMenu("UFC", XPLMFindPluginsMenu(), m_menuContainer, menuCallback, this);
+    XPLMAppendMenuItem(m_menuId, "Settings", (void *)-1, 1);
+    XPLMAppendMenuSeparator(m_menuId);
+
     log(DEBUG, "UFC: XPluginStart: Creating Flight Connector...");
     m_flightConnector = new FlightConnector();
     m_flightConnector->disableExitHandler();
@@ -28,6 +36,12 @@ int UFCPlugin::start(char* outName, char* outSig, char* outDesc)
 
     log(DEBUG, "UFC: XPluginStart: Initialising Flight Connector...");
     m_flightConnector->init();
+
+    for (const auto& device : m_flightConnector->getDevices())
+    {
+        string name = "Device: " + device->getName();
+        XPLMAppendMenuItem(m_menuId, name.c_str(), device, 1);
+    }
 
     if (!m_flightConnector->getDevices().empty())
     {
@@ -61,6 +75,10 @@ void UFCPlugin::disable()
 {
 }
 
+void UFCPlugin::receiveMessage(XPLMPluginID inFrom, int inMsg, void* inParam)
+{
+}
+
 float UFCPlugin::initCallback(float elapsedMe, float elapsedSim, int counter, void * refcon)
 {
     return ((UFCPlugin*)refcon)->init(elapsedMe, elapsedSim, counter);
@@ -71,6 +89,19 @@ float UFCPlugin::init(float elapsedMe, float elapsedSim, int counter)
     m_dataSource->connect();
     m_flightConnector->start();
     return 0;
+}
+
+void UFCPlugin::menuCallback(void* menuRef, void* itemRef)
+{
+    if (menuRef != nullptr)
+    {
+        ((UFCPlugin*)menuRef)->menu(itemRef);
+    }
+}
+
+void UFCPlugin::menu(void* itemRef)
+{
+    log(DEBUG, "menu: itemRef=%p", itemRef);
 }
 
 PLUGIN_API int XPluginStart(char* outName, char* outSig, char* outDesc)
@@ -95,4 +126,5 @@ PLUGIN_API void XPluginDisable()
 
 PLUGIN_API void XPluginReceiveMessage(XPLMPluginID inFrom, int inMsg, void * inParam)
 {
+    g_ufcPlugin.receiveMessage(inFrom, inMsg, inParam);
 }
