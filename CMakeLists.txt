@@ -73,8 +73,8 @@ add_library(ufc SHARED
         src/libufc/datasources/clock.cpp
         src/libufc/datasources/clock.h
         include/ufc/navaids.h
-        src/libufc/datasources/xplane/XPMapping.cpp
-        src/libufc/datasources/xplane/XPMapping.h
+        src/libufc/datasources/xplane/xpmapping.cpp
+        src/libufc/datasources/xplane/xpmapping.h
 )
 
 if(UNIX AND APPLE)
