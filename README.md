@@ -23,8 +23,19 @@ such as airport, fixes and procedures.
 * hidapi (libusb version on Linux)
 * lua
 
+### Mac
+```
+$ brew install hidapi yaml-cpp lua
+```
+
+### Ubuntu
+```
+$ apt install libyaml-cpp-dev libhidapi-dev lua5.4 liblua5.4-dev
+```
+
 ## Build
 ```
+$ git submodule update --init
 $ cmake -B build
 $ cmake --build build
 ```
@@ -51,7 +62,24 @@ Usage: ufctool [OPTIONS]
 ```
 
 ### Configuration
-The configuration file uses YAML.
+The configuration file uses YAML. I'm removing the need for configuration slowly,
+it should figure out most things for itself, except for the X-Plane installation
+directory.
+
+The default path for the configuration is $HOME/.config/ufc.yaml
+
+```aiignore
+# Where is the data installed?
+dataDir: /usr/local/share/ufc
+# Default Data Source
+dataSource: XPlane
+
+# X-Plane specific 
+xplane:
+  path: "/Path/To/X-Plane 12"
+  host: 127.0.0.1
+  port: 49000
+```
 
 
 # Compatibility
@@ -70,16 +98,17 @@ At the moment there is only support for:
 ### X-Plane 12
 (And probably 11, but I haven't tested it)
 
-You can connect to X-Plane as a separate process using ufctool or using the plugin.
+You can connect to X-Plane as a separate process using ufctool or using the plugin. Using the ufctool, you can connect from a different machine which means devices connected to a different computer can still be used in X-Plane.
 
 Aircraft:
   * All aircraft using the default data refs and commands
   * Laminar Research A330
   * ToLiss (Only tested with the A321)
   * FlightFactor 777v2
+  * ... And more coming! (Insert another plea for Pull Requests!)
 
 ### Simulated Simulator
-A simple simulator is provided for testing.
+A simple simulator is provided for testing. It returns dummy data and responds to some commands.
 
 ### Clock
 Use your WinWing FCU as a clock :-)
@@ -95,6 +124,7 @@ a Windows machine available. (Again, Pull Requests are welcome!)
 * SDL display
   * A simple PF-style flight display
 * Console output
+  * For testing, disabled by default
 
 Coming soon:
 * Generic USB HID Devices
@@ -104,7 +134,9 @@ Coming soon:
 UFC defines its own abstract commands and data references. Each simulator/aircraft
 can then map these to their specific definitions.
 
-The ability to use Lua to transform data and commands to and from the common format
+Devices can then read from this common structure to present data and send commands without any simulator/aircraft specific changes.
+
+Note: The ability to use Lua to transform data and commands to and from the common format
 is coming soon!
 
 
