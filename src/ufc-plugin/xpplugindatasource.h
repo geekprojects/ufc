@@ -13,8 +13,10 @@
 #include <XPLMDataAccess.h>
 #include <XPLMUtilities.h>
 
-struct DataRefMapping
+struct DataRefInfo
 {
+    XPLMDataRef dataRef = nullptr;
+    XPLMDataTypeID types = 0;
 };
 
 class XPPluginDataSource : public UFC::DataSource
@@ -26,7 +28,7 @@ class XPPluginDataSource : public UFC::DataSource
     XPLMDataRef m_authorDataRef;
     XPLMDataRef m_studioDataRef;
 
-    std::map<std::string, XPLMDataRef> m_commandDataRefs;
+    std::map<std::string, DataRefInfo> m_commandDataRefs;
 
     std::string getString(XPLMDataRef ref);
 

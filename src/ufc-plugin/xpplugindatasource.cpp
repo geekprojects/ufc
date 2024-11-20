@@ -163,21 +163,32 @@ void XPPluginDataSource::command(std::string command)
         float value = atof(xcommand.substr(idx + 1).c_str());
         log(INFO, "command: Setting data ref: %s = %0.2f", dataRefName.c_str(), value);
 
-        XPLMDataRef dataRef;
+        DataRefInfo dataRefInfo;
         auto it = m_commandDataRefs.find(dataRefName);
         if (it == m_commandDataRefs.end())
         {
-            dataRef = XPLMFindDataRef(dataRefName.c_str());
-            m_commandDataRefs.try_emplace(dataRefName, dataRef);
+            dataRefInfo.dataRef = XPLMFindDataRef(dataRefName.c_str());
+            if (dataRefInfo.dataRef != nullptr)
+            {
+                dataRefInfo.types = XPLMGetDataRefTypes(dataRefInfo.dataRef);
+            }
+            m_commandDataRefs.try_emplace(dataRefName, dataRefInfo);
         }
         else
         {
-            dataRef = it->second;
+            dataRefInfo = it->second;
         }
 
-        if (dataRef != nullptr)
+        if (dataRefInfo.dataRef != nullptr)
         {
-            XPLMSetDataf(dataRef, value);
+            if (!!(dataRefInfo.types & xplmType_Float))
+            {
+                XPLMSetDataf(dataRefInfo.dataRef, value);
+            }
+            else if (!!(dataRefInfo.types & xplmType_Int))
+            {
+                XPLMSetDatai(dataRefInfo.dataRef, (int)value);
+            }
         }
     }
     //XPLMCommandOnce(commandDef.data);
