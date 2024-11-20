@@ -71,37 +71,6 @@ bool ClockDataSource::update()
         }
         state.autopilot.headingManaged = !(local_time.tm_sec % 2);
 
-        /*
-
-        state.autopilot.speed = local_time.tm_hour;
-
-        if (!m_24Hour && state.autopilot.speed > 12)
-        {
-            state.autopilot.speed -= 12;
-        }
-        else
-        {
-            state.autopilot.speedManaged = false;
-        }
-
-        if (m_showSeconds)
-        {
-            state.autopilot.heading = local_time.tm_sec;
-
-            time_t diff = timestamp - m_showSecondsTime;
-            if (diff >= 10)
-            {
-                m_showSeconds = false;
-            }
-            state.autopilot.headingManaged = false;
-        }
-        else
-        {
-            state.autopilot.heading = local_time.tm_min;
-            state.autopilot.headingManaged = local_time.tm_sec % 2;
-        }
-        */
-
         if (m_showYear)
         {
             state.autopilot.altitude = local_time.tm_year + 1900;
@@ -117,6 +86,9 @@ bool ClockDataSource::update()
             state.autopilot.altitude = local_time.tm_mday;
         }
         state.autopilot.verticalSpeed = (local_time.tm_mon + 1) * 100;
+
+        state.comms.com1Hz = (hour * 10000) + (minutes * 100) + (local_time.tm_sec);
+        state.comms.com1StandbyHz = (local_time.tm_mday * 10000) + ((local_time.tm_mon + 1) * 100) + ((local_time.tm_year + 1900) % 100);
 
         m_flightConnector->updateState(state);
 
