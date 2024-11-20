@@ -111,7 +111,12 @@ Aircraft:
 A simple simulator is provided for testing. It returns dummy data and responds to some commands.
 
 ### Clock
-Use your WinWing FCU as a clock :-)
+Use your radio or WinWing FCU as a clock :-)
+
+Try:
+```aiignore
+./ufctool --source Clock
+```
 
 ### Others
 UFC is designed so it can also work with MS Flight Simulator and P3D, but I don't have
@@ -128,6 +133,7 @@ a Windows machine available. (Again, Pull Requests are welcome!)
 
 Coming soon:
 * Generic USB HID Devices
+  * Map HID/Joystick devices using configuration files
 
 # How it works
 ## Data and Commands
@@ -135,6 +141,8 @@ UFC defines its own abstract commands and data references. Each simulator/aircra
 can then map these to their specific definitions.
 
 Devices can then read from this common structure to present data and send commands without any simulator/aircraft specific changes.
+
+For X-Plane, the aircraft configuration can be found [here](https://github.com/geekprojects/ufc/tree/main/data/x-plane/aircraft).
 
 Note: The ability to use Lua to transform data and commands to and from the common format
 is coming soon!
