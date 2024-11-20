@@ -35,7 +35,7 @@ $ cmake --build build
 ## X-Plane Plugin
 I will look in to packaging this up properly, but for now:
 * Create ${PATH_TO_XPLANE}/Resources/plugins/ufc
-* Copy the libufc-plugin.so/dylib to the plugin directory
+* Copy the libufc-plugin.so/dylib to the plugin directory as mac.xpl or lin.xpl (Depending on platform)
 * Copy the contents of the data/x-plane directory to the plugin directory
 * ... And that's it! No configuration is required
 
