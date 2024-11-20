@@ -2,13 +2,14 @@ UFC - Universal Flight Connector
 ==
 
 > [!WARNING]
-> This is a very early work in progress!
+> Universal Flight Connector in a beta stage!
 
 UFC is a cross-platform library and tool that connects devices and other tools to flight
 simulators, and provides a simple cross-sim library for making connecting to flight
 simulators easy. UFC defines its own Sim/Aircraft-agnostic data and command sets
 that mean device and aircraft definitions will work with everything else.
 
+UFC is also available as a plugin for X-Plane 12.
 
 ### Work in progress
 UFC will also (eventually!) provide access to navigation data provided by the simulator
@@ -30,6 +31,13 @@ $ cmake --build build
 
 
 # Usage
+
+## X-Plane Plugin
+I will look in to packaging this up properly, but for now:
+* Create ${PATH_TO_XPLANE}/Resources/plugins/ufc
+* Copy the libufc-plugin.so/dylib to the plugin directory
+* Copy the contents of the data/x-plane directory to the plugin directory
+* ... And that's it! No configuration is required
 
 ## ufctool
 ufctool is the main tool for using UFC.
@@ -62,8 +70,7 @@ At the moment there is only support for:
 ### X-Plane 12
 (And probably 11, but I haven't tested it)
 
-You can connect to X-Plane as a separate process using ufctool but I will also work
-on a plugin.
+You can connect to X-Plane as a separate process using ufctool or using the plugin.
 
 Aircraft:
   * All aircraft using the default data refs and commands
@@ -74,6 +81,9 @@ Aircraft:
 ### Simulated Simulator
 A simple simulator is provided for testing.
 
+### Clock
+Use your WinWing FCU as a clock :-)
+
 ### Others
 UFC is designed so it can also work with MS Flight Simulator and P3D, but I don't have
 a Windows machine available. (Again, Pull Requests are welcome!)
@@ -81,13 +91,13 @@ a Windows machine available. (Again, Pull Requests are welcome!)
 
 ## Devices and Connectors
 * WinWingSim FCU
+* An example USB HID radio panel
 * SDL display
   * A simple PF-style flight display
 * Console output
 
 Coming soon:
 * Generic USB HID Devices
-
 
 # How it works
 ## Data and Commands
