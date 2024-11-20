@@ -145,28 +145,37 @@ void FlightConnector::stop()
     log(INFO, "Data Source stopped.");
 
     log(INFO, "Stopping update threads...");
+
     // Wait for the threads to die
-    if (m_updateDataSourceThread != nullptr)
-    {
-        m_updateDataSourceThread->join();
-    }
-    if (m_updateDataSourceThread != nullptr)
-    {
-        m_updateDeviceThread->join();
-    }
+    wait();
+
     log(INFO, "Update threads stopped.");
 }
 
 void FlightConnector::wait() const
 {
-    if (!m_updateDeviceThread)
+    if (m_updateDeviceThread && m_updateDeviceThread->joinable())
     {
-        // Nothing to wait for
-        return;
+        try
+        {
+            m_updateDeviceThread->join();
+        }
+        catch (...)
+        {
+            // Ignore
+        }
     }
-
-    m_updateDeviceThread->join();
-    m_updateDataSourceThread->join();
+    if (m_updateDataSourceThread)
+    {
+        try
+        {
+            m_updateDataSourceThread->join();
+        }
+        catch (...)
+        {
+            // Ignore
+        }
+    }
 }
 
 void FlightConnector::exit()
