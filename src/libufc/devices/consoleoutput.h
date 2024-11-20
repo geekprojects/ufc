@@ -19,7 +19,7 @@ class ConsoleOutput : public Device
 
     void update(const AircraftState& state) override;
 
-    bool detect() override { return true; }
+    bool detect() override { return false; }
 };
 }
 
