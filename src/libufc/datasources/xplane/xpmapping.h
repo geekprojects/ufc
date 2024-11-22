@@ -13,6 +13,8 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include "ufc/aircraftstate.h"
+
 enum DataRefType
 {
     FLOAT,
@@ -71,6 +73,10 @@ class XPMapping : UFC::Logger
 
     std::vector<std::shared_ptr<DataDefinition>>& getDataRefs() { return m_dataRefs; }
     std::map<std::string, CommandDefinition>& getCommands() { return m_commands; }
+
+    void writeFloat(UFC::AircraftState& state, const std::shared_ptr<DataDefinition> &dataDef, float value);
+    void writeInt(UFC::AircraftState& state, const std::shared_ptr<DataDefinition> &dataDef, int32_t value);
+    void writeBoolean(UFC::AircraftState& state, const std::shared_ptr<DataDefinition> &dataDef, bool value);
 };
 
 #endif //MAPPING_H

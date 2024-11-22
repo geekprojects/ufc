@@ -7,7 +7,6 @@
 #include <ufc/flightconnector.h>
 
 #include <filesystem>
-#include <fnmatch.h>
 #include <unistd.h>
 
 using namespace std;
@@ -113,29 +112,14 @@ void XPlaneDataSource::update(const map<int, float>& values)
         switch (dataRef->type)
         {
             case FLOAT:
-            {
-                auto d = (float*)((char*)&state + dataRef->pos);
-                *d = value;
+                m_mapping.writeFloat(state, dataRef, value);
                 break;
-            }
             case INTEGER:
-            {
-                auto i = (int32_t*)((char*)&state + dataRef->pos);
-                *i = (int32_t)value;
+                m_mapping.writeInt(state, dataRef, (int32_t)value);
                 break;
-            }
             case BOOLEAN:
-            {
-                auto b = (bool*)((char*)&state + dataRef->pos);
-
-                bool boolValue = value;
-                if (dataRef->mapping.negate)
-                {
-                    boolValue = !boolValue;
-                }
-                *b = boolValue;
+                m_mapping.writeBoolean(state, dataRef, (bool)value);
                 break;
-            }
         }
     }
     m_flightConnector->updateState(state);

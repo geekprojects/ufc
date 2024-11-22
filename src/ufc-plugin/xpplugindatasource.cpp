@@ -69,7 +69,6 @@ bool XPPluginDataSource::connect()
 
     m_flightConnector->updateState(state);
 
-    //XPLMRegisterFlightLoopCallback(updateCallback, 0.1f, this);
     XPLMCreateFlightLoop_t createFlightLoop;
     createFlightLoop.structSize = sizeof(XPLMCreateFlightLoop_t);
     createFlightLoop.phase = xplm_FlightLoop_Phase_AfterFlightModel;
@@ -103,30 +102,14 @@ bool XPPluginDataSource::updateDataRefs()
         switch (mapping->type)
         {
             case FLOAT:
-            {
-                auto d = (float*)((char*)&state + mapping->pos);
-                *d = XPLMGetDataf(mapping->data);
+                m_dataMapping.writeFloat(state, mapping, XPLMGetDataf(mapping->data));
                 break;
-            }
-
             case BOOLEAN:
-            {
-                auto d = (bool*)((char*)&state + mapping->pos);
-
-                bool boolValue = XPLMGetDatai(mapping->data);
-                if (mapping->mapping.negate)
-                {
-                    boolValue = !boolValue;
-                }
-                *d = boolValue;
-            } break;
-
-            case INTEGER:
-            {
-                auto d = (int32_t*)((char*)&state + mapping->pos);
-                *d = XPLMGetDatai(mapping->data);
+                m_dataMapping.writeBoolean(state, mapping, XPLMGetDatai(mapping->data));
                 break;
-            }
+            case INTEGER:
+                m_dataMapping.writeInt(state, mapping, XPLMGetDatai(mapping->data));
+                break;
         }
     }
     m_flightConnector->updateState(state);

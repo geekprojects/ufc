@@ -158,3 +158,26 @@ const CommandDefinition& XPMapping::getCommand(std::string command)
 
     return it->second;
 }
+
+void XPMapping::writeFloat(AircraftState& state, const shared_ptr<DataDefinition> &dataDef, float value)
+{
+    auto d = (float*)((char*)&state + dataDef->pos);
+    *d = value;
+}
+
+void XPMapping::writeInt(AircraftState& state, const shared_ptr<DataDefinition> &dataDef, int32_t value)
+{
+    auto d = (int32_t*)((char*)&state + dataDef->pos);
+    *d = value;
+}
+
+void XPMapping::writeBoolean(AircraftState& state, const shared_ptr<DataDefinition> &dataDef, bool value)
+{
+    auto d = (bool*)((char*)&state + dataDef->pos);
+
+    if (dataDef->mapping.negate)
+    {
+        value = !value;
+    }
+    *d = value;
+}
