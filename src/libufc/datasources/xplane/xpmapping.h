@@ -55,6 +55,7 @@ class XPMapping : UFC::Logger
 
     std::map<std::string, CommandDefinition> m_commands;
 
+    void initDefinitions();
     void addDataRef(const DataDefinition& dataRef);
     DataMapping parseMapping(std::string mapping);
 
@@ -65,7 +66,6 @@ class XPMapping : UFC::Logger
     XPMapping(std::string baseDir);
 
     void loadDefinitionsForAircraft(const std::string &author, const std::string &icaoType);
-    void loadDefinitions(const std::string &file);
 
     void dump();
 
@@ -77,6 +77,7 @@ class XPMapping : UFC::Logger
     void writeFloat(UFC::AircraftState& state, const std::shared_ptr<DataDefinition> &dataDef, float value);
     void writeInt(UFC::AircraftState& state, const std::shared_ptr<DataDefinition> &dataDef, int32_t value);
     void writeBoolean(UFC::AircraftState& state, const std::shared_ptr<DataDefinition> &dataDef, bool value);
+    void writeString(UFC::AircraftState& state, const std::shared_ptr<DataDefinition> &dataDef, std::string value);
 };
 
 #endif //MAPPING_H

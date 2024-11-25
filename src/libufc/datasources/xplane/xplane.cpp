@@ -60,7 +60,6 @@ bool XPlaneDataSource::connect()
     log(INFO, "Author: %s", state.aircraftAuthor.c_str());
     log(INFO, "Aircraft ICAO type: %s", state.aircraftICAO.c_str());
 
-    m_mapping.loadDefinitions("defaults.yaml");
     m_mapping.loadDefinitionsForAircraft(state.aircraftAuthor, state.aircraftICAO);
 
     return true;

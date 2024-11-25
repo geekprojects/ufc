@@ -14,6 +14,14 @@ using namespace UFC;
 
 XPMapping::XPMapping(string baseDir) : Logger("XPMapping"), m_baseDir(baseDir)
 {
+}
+
+void XPMapping::initDefinitions()
+{
+    m_dataRefs.clear();
+    m_dataRefsById.clear();
+    m_commands.clear();
+
     for (const auto& dataRef : g_dataRefsInit)
     {
         addDataRef(dataRef);
@@ -22,6 +30,11 @@ XPMapping::XPMapping(string baseDir) : Logger("XPMapping"), m_baseDir(baseDir)
 
 void XPMapping::loadDefinitionsForAircraft(const string& author, const string& icaoType)
 {
+    // Load defaults
+    initDefinitions();
+    loadDefinitions(YAML::LoadFile(m_baseDir + "/defaults.yaml"));
+
+    // Try to find aircraft-specific definitions
     for (const auto & entry : filesystem::directory_iterator(m_baseDir + "/aircraft"))
     {
         if (entry.path().extension() == ".yaml")
@@ -52,11 +65,6 @@ void XPMapping::loadDefinitionsForAircraft(const string& author, const string& i
     }
 }
 
-void XPMapping::loadDefinitions(const string& file)
-{
-    loadDefinitions(YAML::LoadFile(m_baseDir + "/" + file));
-}
-
 void XPMapping::loadDefinitions(YAML::Node config)
 {
     YAML::Node dataNode = config["data"];
@@ -74,6 +82,7 @@ void XPMapping::loadDefinitions(YAML::Node config)
                 if (dataRefIt != m_dataRefsById.end())
                 {
                     dataRefIt->second->mapping = parseMapping(value);
+                    log(DEBUG, "loadDefinitions: %s -> %s", id.c_str(), value.c_str());
                 }
                 else
                 {
@@ -88,7 +97,6 @@ void XPMapping::loadDefinitions(YAML::Node config)
 
 void XPMapping::loadCommands(YAML::Node commandsNode, std::string id)
 {
-    log(DEBUG, "loadCommands: %s...", id.c_str());
     for (YAML::const_iterator it=commandsNode.begin();it!=commandsNode.end();++it)
     {
         string categoryName;
@@ -104,7 +112,7 @@ void XPMapping::loadCommands(YAML::Node commandsNode, std::string id)
         else
         {
             auto command = it->second.as<string>();
-            log(DEBUG, "loadCommands: command %s -> %s", command.c_str(), categoryName.c_str());
+            log(DEBUG, "loadCommands: command %s -> %s", categoryName.c_str(), command.c_str());
             CommandDefinition commandDefinition;
             commandDefinition.command = command;
             commandDefinition.id = id;
@@ -112,7 +120,6 @@ void XPMapping::loadCommands(YAML::Node commandsNode, std::string id)
         }
     }
 }
-
 
 DataMapping XPMapping::parseMapping(std::string mappingStr)
 {
@@ -137,11 +144,11 @@ void XPMapping::dump()
 {
     for (const auto& dataRef : m_dataRefs)
     {
-        log(DEBUG, "DataRef: %s -> %s", dataRef->id.c_str(), dataRef->mapping.dataRef.c_str());
+        log(DEBUG, "dump: DataRef: %s -> %s", dataRef->id.c_str(), dataRef->mapping.dataRef.c_str());
     }
     for (const auto& [id, command] : m_commands)
     {
-        log(DEBUG, "Command: %s -> %s", id.c_str(), command.command.c_str());
+        log(DEBUG, "dump: Command: %s -> %s", id.c_str(), command.command.c_str());
     }
 }
 
@@ -179,5 +186,11 @@ void XPMapping::writeBoolean(AircraftState& state, const shared_ptr<DataDefiniti
     {
         value = !value;
     }
+    *d = value;
+}
+
+void XPMapping::writeString(AircraftState& state, const shared_ptr<DataDefinition> &dataDef, string value)
+{
+    auto d = (string*)((char*)&state + dataDef->pos);
     *d = value;
 }
