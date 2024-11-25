@@ -4,6 +4,7 @@
 
 #include <XPLMProcessing.h>
 #include <XPLMMenus.h>
+#include <XPLMPlugin.h>
 
 #include "ufc/device.h"
 
@@ -77,6 +78,23 @@ void UFCPlugin::disable()
 
 void UFCPlugin::receiveMessage(XPLMPluginID inFrom, int inMsg, void* inParam)
 {
+#if 0
+    switch (inMsg)
+    {
+        case XPLM_MSG_PLANE_LOADED:
+        {
+            int index = (int)(intptr_t)inParam;
+            log(DEBUG, "receiveMessage: XPLM_MSG_PLANE_LOADED: index=%d", index);
+            if (index == 0)
+            {
+                m_dataSource->reloadAircraft();
+            }
+            break;
+        }
+        default:
+            log(DEBUG, "receiveMessage: Unhandled message: %d", inMsg);
+    }
+#endif
 }
 
 float UFCPlugin::initCallback(float elapsedMe, float elapsedSim, int counter, void * refcon)

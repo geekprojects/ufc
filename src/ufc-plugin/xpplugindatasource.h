@@ -30,7 +30,7 @@ class XPPluginDataSource : public UFC::DataSource
 
     std::map<std::string, DataRefInfo> m_commandDataRefs;
 
-    std::string getString(XPLMDataRef ref);
+    static std::string getString(XPLMDataRef ref);
 
     std::vector<XPLMCommandRef> m_commandQueue;
     std::mutex m_commandQueueMutex;
@@ -43,6 +43,7 @@ class XPPluginDataSource : public UFC::DataSource
 
     void disconnect() override;
 
+    bool reloadAircraft();
     bool update() override;
     bool updateDataRefs();
 

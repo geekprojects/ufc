@@ -26,48 +26,15 @@ XPPluginDataSource::XPPluginDataSource(UFC::FlightConnector* flightConnector) :
 {
 }
 
-XPPluginDataSource::~XPPluginDataSource()
-{
-}
+XPPluginDataSource::~XPPluginDataSource() = default;
 
 bool XPPluginDataSource::connect()
 {
-    AircraftState state = m_flightConnector->getState();
-
-    m_icaoDataRef = XPLMFindDataRef("sim/aircraft/view/acf_ICAO");
-    m_authorDataRef = XPLMFindDataRef("sim/aircraft/view/acf_author");
-    m_studioDataRef = XPLMFindDataRef("sim/aircraft/view/acf_studio");
-
-    state.aircraftICAO = getString(m_icaoDataRef);
-    state.aircraftAuthor = getString(m_studioDataRef);
-    if (state.aircraftAuthor.empty())
+    bool res = reloadAircraft();
+    if (!res)
     {
-        state.aircraftAuthor = getString(m_authorDataRef);
+        return false;
     }
-    log(DEBUG, "UFC: ICAO: %s, author: %s", state.aircraftICAO.c_str(), state.aircraftAuthor.c_str());
-
-    m_dataMapping.loadDefinitions("defaults.yaml");
-    m_dataMapping.loadDefinitionsForAircraft(state.aircraftAuthor, state.aircraftICAO);
-
-    for (auto& mapping : m_dataMapping.getDataRefs())
-    {
-        if (!mapping->mapping.dataRef.empty())
-        {
-            mapping->data = XPLMFindDataRef(mapping->mapping.dataRef.c_str());
-        }
-        else
-        {
-            log(DEBUG, "UFC: Unable to find data ref: %s", mapping->mapping.dataRef.c_str());
-            mapping->data = nullptr;
-        }
-    }
-
-    for (auto& commandMapping : m_dataMapping.getCommands())
-    {
-        commandMapping.second.data = XPLMFindCommand(commandMapping.second.command.c_str());
-    }
-
-    m_flightConnector->updateState(state);
 
     XPLMCreateFlightLoop_t createFlightLoop;
     createFlightLoop.structSize = sizeof(XPLMCreateFlightLoop_t);
@@ -80,9 +47,62 @@ bool XPPluginDataSource::connect()
     return true;
 }
 
+bool XPPluginDataSource::reloadAircraft()
+{
+    m_icaoDataRef = XPLMFindDataRef("sim/aircraft/view/acf_ICAO");
+    m_authorDataRef = XPLMFindDataRef("sim/aircraft/view/acf_author");
+    m_studioDataRef = XPLMFindDataRef("sim/aircraft/view/acf_studio");
+
+    string aircraftICAO = getString(m_icaoDataRef);
+    string aircraftAuthor = getString(m_studioDataRef);
+    if (aircraftAuthor.empty())
+    {
+        aircraftAuthor = getString(m_authorDataRef);
+    }
+
+    AircraftState state = m_flightConnector->getState();
+    if (aircraftICAO == state.aircraftICAO && aircraftAuthor == state.aircraftAuthor)
+    {
+        // Aircraft definitions are already loaded, noting to do!
+        return true;
+    }
+
+    state.aircraftICAO = aircraftICAO;
+    state.aircraftAuthor = aircraftAuthor;
+
+    log(DEBUG, "UFC: New Aircraft: ICAO: %s, author: %s", state.aircraftICAO.c_str(), state.aircraftAuthor.c_str());
+
+    m_dataMapping.loadDefinitionsForAircraft(state.aircraftAuthor, state.aircraftICAO);
+
+    for (auto& mapping : m_dataMapping.getDataRefs())
+    {
+        if (!mapping->mapping.dataRef.empty())
+        {
+            mapping->data = XPLMFindDataRef(mapping->mapping.dataRef.c_str());
+        }
+        else
+        {
+            log(WARN, "UFC: Unable to find data ref: %s", mapping->mapping.dataRef.c_str());
+            mapping->data = nullptr;
+        }
+        log(DEBUG, "UFC: Data: %s -> %s (%p)", mapping->id.c_str(), mapping->mapping.dataRef.c_str(), mapping->data);
+    }
+
+    for (auto& commandMapping : m_dataMapping.getCommands())
+    {
+        commandMapping.second.data = XPLMFindCommand(commandMapping.second.command.c_str());
+        log(DEBUG, "UFC: Command: %s -> %s (%p)", commandMapping.first.c_str(), commandMapping.second.command.c_str(), commandMapping.second.data);
+    }
+
+    m_flightConnector->updateState(state);
+
+    return true;
+}
+
 void XPPluginDataSource::disconnect()
 {
 }
+
 
 bool XPPluginDataSource::update()
 {
@@ -137,6 +157,7 @@ void XPPluginDataSource::command(std::string command)
             return;
         }
 
+        log(DEBUG, "UFC: command: %s -> %s (%p)", command.c_str(), commandDef.command.c_str(), commandDef.data);
         std::scoped_lock lock(m_commandQueueMutex);
         m_commandQueue.push_back(commandDef.data);
     }
@@ -174,10 +195,9 @@ void XPPluginDataSource::command(std::string command)
             }
         }
     }
-    //XPLMCommandOnce(commandDef.data);
 }
 
-std::string XPPluginDataSource::getString(XPLMDataRef ref)
+std::string XPPluginDataSource::getString(const XPLMDataRef ref)
 {
     int bytes = XPLMGetDatab(ref, nullptr, 0, 0);
     char buffer[bytes + 1];
