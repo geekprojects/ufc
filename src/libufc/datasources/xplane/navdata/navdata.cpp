@@ -104,7 +104,7 @@ void XPlaneDataSource::loadNavAids(const std::shared_ptr<NavData>& navData) cons
         double lng = atof(line[2].c_str());
         string id = line[7];
         //double elevation = atof(line[3].c_str());
-        printf("loadNavAids: type=%d -> %d, lat=%0.2f, lng=%0.2f, id=%s\n", type, navAidType, lat, lng, id.c_str());
+        // printf("loadNavAids: type=%d -> %d, lat=%0.2f, lng=%0.2f, id=%s\n", type, (int)navAidType, lat, lng, id.c_str());
         auto navAid = make_shared<NavAid>();
         navAid->setLocation(Coordinate(lat, lng));
         navAid->setId(id);
