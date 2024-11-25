@@ -9,6 +9,7 @@
 #include <vector>
 #include <set>
 #include <functional>
+#include <cmath>
 
 #ifdef DEBUG_QUADTREE
 #undef DEBUG_QUADTREE
