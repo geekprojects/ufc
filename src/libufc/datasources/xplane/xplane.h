@@ -13,6 +13,8 @@
 
 #include <map>
 
+#include "ufc/navdata.h"
+
 namespace UFC
 {
 
@@ -33,6 +35,11 @@ class XPlaneDataSource : public DataSource
     ~XPlaneDataSource() override = default;
 
     std::shared_ptr<Airports> loadAirports() override;
+
+    void loadFixes(const std::shared_ptr<NavData> &navData) const;
+    void loadNavAids(const std::shared_ptr<NavData>& shared) const;
+
+    std::shared_ptr<NavData> loadNavData() override;
 
     bool connect() override;
     void disconnect() override;

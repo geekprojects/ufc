@@ -17,7 +17,7 @@ Airport::Airport(wstring name, Coordinate location) : m_name(name), m_location(l
 
 Airports::Airports()
 {
-    m_airports = make_shared<QuadTree>(-180.0f, -180.0f, 360.0f);
+    m_airports = make_shared<QuadTree<Airport>>(-180.0f, -180.0f, 360.0f);
 /*
     auto airport1 = make_shared<Airport>(L"Gatwick", Coordinate( 51.148056, -0.190278));
     m_airports->insert(airport1);

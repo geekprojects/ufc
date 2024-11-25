@@ -12,6 +12,7 @@
 #include <ufc/commands.h>
 
 #include "logger.h"
+#include "navdata.h"
 
 namespace UFC
 {
@@ -98,6 +99,7 @@ class DataSource : public Logger
     ~DataSource() override = default;
 
     virtual std::shared_ptr<Airports> loadAirports() { return nullptr; }
+    virtual std::shared_ptr<NavData> loadNavData() { return nullptr; }
 
     virtual bool connect() = 0;
     virtual void disconnect() = 0;

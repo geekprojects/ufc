@@ -21,12 +21,12 @@ class Airport : public Locationable
     std::string m_icaoCode;
     bool m_hasRunway = false;
 
-    float m_elevation;
+    float m_elevation = 0.0f;
 
  public:
     Airport() = default;
     Airport(std::wstring name, Coordinate location);
-    ~Airport() = default;
+    ~Airport() override = default;
 
     [[nodiscard]] std::wstring getName() const
     {
@@ -92,7 +92,7 @@ class Airport : public Locationable
 class Airports
 {
  private:
-    std::shared_ptr<QuadTree> m_airports;
+    std::shared_ptr<QuadTree<Airport>> m_airports;
     std::vector<std::shared_ptr<Airport>> m_airportList;
     std::map<std::string, std::shared_ptr<Airport>, std::less<>> m_airportsByCode;
 
@@ -108,11 +108,10 @@ class Airports
         //m_airports->dump();
     }
 
-    std::shared_ptr<Locationable> findNearest(Coordinate point)
+    [[nodiscard]] std::shared_ptr<Airport> findNearest(Coordinate point) const
     {
-        return m_airports->findNearest(point, [](const std::shared_ptr<Locationable>& shared)
+        return m_airports->findNearest(point, [](const std::shared_ptr<Airport>& airport)
         {
-            Airport* airport = dynamic_cast<Airport*>(shared.get());
             return airport->isHasRunway();
         });
     }

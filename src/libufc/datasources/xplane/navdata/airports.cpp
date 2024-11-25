@@ -29,7 +29,7 @@ shared_ptr<Airports> XPlaneDataSource::loadAirports()
     while (!data->eof())
     {
         string line = data->readLine();
-        vector<string> parts = NavData::splitLine(line);
+        vector<string> parts = NavDataUtils::splitLine(line);
         if (parts.empty())
         {
             continue;
@@ -51,7 +51,7 @@ shared_ptr<Airports> XPlaneDataSource::loadAirports()
 
                 currentAirport = make_shared<Airport>();
                 currentLat = 0.0;
-                currentAirport->setName(utf82wstring(NavData::joinToEnd(parts, 5).c_str()));
+                currentAirport->setName(utf82wstring(NavDataUtils::joinToEnd(parts, 5).c_str()));
                 currentAirport->setElevation(stof(parts.at(1)));
                 if (type == 1 || type == 16)
                 {
