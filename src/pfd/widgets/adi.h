@@ -10,15 +10,15 @@
 class ADIWidget : public FlightWidget
 {
  private:
-    std::shared_ptr<Geek::Gfx::Surface> m_adiSurface = nullptr;
+    std::shared_ptr<Cairo::ImageSurface> m_adiSurface = nullptr;
 
-    int pitchToY(float pitch);
+    int pitchToY(float pitch) const;
 
  public:
     ADIWidget(XPFlightDisplay* display, int x, int y, int w, int h);
     ~ADIWidget() override = default;
 
-    void draw(UFC::AircraftState& state, std::shared_ptr<Geek::Gfx::Surface> surface) override;
+    void draw(UFC::AircraftState& state, std::shared_ptr<Cairo::Context> context) override;
 };
 
 

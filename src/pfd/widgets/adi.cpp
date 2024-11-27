@@ -3,79 +3,168 @@
 //
 
 #include "adi.h"
-#include "pfd/gfxutils.h"
+
+#include "pfd/display.h"
 
 using namespace std;
 using namespace UFC;
 using namespace glm;
-using namespace Geek;
-using namespace Geek::Gfx;
 
-//#define PITCH_SIZE 44.0
 #define PITCH_SIZE 60.0f
 
-ADIWidget::ADIWidget(XPFlightDisplay* display, int x, int y, int w, int h)
-    : FlightWidget(display, x, y, w, h)
+ADIWidget::ADIWidget(XPFlightDisplay* display, int x, int y, int ww, int wh)
+    : FlightWidget(display, x, y, ww, wh)
 {
-    m_adiSurface = make_shared<Surface>(getWidth(), getHeight(), 4);
+    int w = getWidth() * 2;
+    int h = getHeight() * 2;
+    m_adiSurface = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32, w, h);
+
+    auto context = Cairo::Context::create(m_adiSurface);
+
+    context->set_source_rgb(0, 0.5, 1.0);
+    context->rectangle(0, 0, w, h);
+    context->fill();
+
+    context->set_source_rgb(0.5, 0.2, 0);
+    context->rectangle(0, h / 2.0, w, h / 2.0);
+    context->fill();
+
+    context->set_source_rgb(1.0, 1.0, 1.0);
+    context->move_to(0, h / 2.0);
+    context->line_to(w, h / 2.0);
+    context->set_line_width(2);
+    context->stroke();
+
+    context->move_to((w / 2.0), (h / 2.0) - 5);
+    context->line_to((w / 2.0), (h / 2.0) + 5);
+    context->set_line_width(1);
+    context->stroke();
+
+
+    m_adiSurface->write_to_png("pfd.png");
 }
 
-void ADIWidget::draw(AircraftState& state, std::shared_ptr<Geek::Gfx::Surface> surface)
+void ADIWidget::draw(AircraftState& state, std::shared_ptr<Cairo::Context> context)
 {
-    m_adiSurface->clear(0xff0088FF);
-
     float roll = radians(state.roll);
     float pitch = state.pitch;
 
-    int halfWidth = getWidth() / 2;
-    int halfHeight = getHeight() / 2;
+    float halfWidth = getWidth() / 2.0;
+    float halfHeight = getHeight() / 2.0;
 
-    ivec2 centre(halfWidth, halfHeight);
+    int pitchY = pitchToY(pitch);
+    int diagonal = hypot(getWidth(), getHeight());
 
-    int pitchY = halfHeight + pitchToY(pitch);
+    context->save();
+    context->arc(halfWidth, halfHeight, halfHeight, 0, 2*M_PI);
+    context->clip();
 
-    auto horizonCentre = ivec2(halfWidth, pitchY);
-    ivec2 horizon0 = rotate(horizonCentre, ivec2(-halfWidth * 2, 0), roll);
-    ivec2 horizon1 = rotate(horizonCentre, ivec2(halfWidth * 2, 0), roll);
+    context->save();
+
+    // Translate and rotate so that the origin is correct for pitch and roll
+    context->translate(halfWidth, halfHeight);
+    context->rotate(-roll);
+    context->translate(0, pitchY);
 
     // Draw ground
-    {
-        vector<ivec2> points;
-        points.push_back(horizon0);
-        points.push_back(horizon1);
-        points.emplace_back(getWidth() - 1, getHeight() - 1);
-        points.emplace_back(0, getHeight() - 1);
-        drawFilledPolygon(m_adiSurface.get(), points, 0xff884400);
-    }
+    context->set_source_rgb(0.5, 0.2, 0);
+    context->rectangle(-diagonal, 0, 2 * diagonal, getHeight());
+    context->fill();
 
-    // Draw line at horizon
-    {
-        vector<ivec2> points;
-        points.push_back(horizon0 + ivec2(0, -1));
-        points.push_back(horizon1 + ivec2(0, -1));
-        points.push_back(horizon1 + ivec2(0, 1));
-        points.push_back(horizon0 + ivec2(0, 1));
-        drawFilledPolygon(m_adiSurface.get(), points, 0xffffffff);
-    }
+    // Draw sky
+    context->set_source_rgb(0, 0.5, 1.0);
+    context->rectangle(-diagonal, -getHeight(), 2 * diagonal, getHeight());
+    context->fill();
+
+    // Draw horizon
+    context->set_source_rgb(1.0, 1.0, 1.0);
+    context->move_to(-diagonal, 0);
+    context->line_to(diagonal, 0);
+    context->set_line_width(2);
+    context->stroke();
+
+    context->restore();
 
     // Draw pitch marks
+    context->save();
+    context->translate(halfWidth, halfHeight);
+    context->rotate(-roll);
+    context->set_source_rgb(1.0, 1.0, 1.0);
+
     for (float pitchMark = -20; pitchMark <= 20; pitchMark += 2.5f)
     {
+        bool print = false;
         int markWidth = 10;
-        if (fmod(fabs(pitchMark), 10.0f) < FLT_EPSILON)
+        float pitchMarkAbs = fabs(pitchMark);
+        if (fmod(pitchMarkAbs, 10.0f) < FLT_EPSILON)
         {
             markWidth = 50;
+
+            print = pitchMarkAbs >= FLT_EPSILON;
         }
-        else if (fmod(fabs(pitchMark), 5.0f) < FLT_EPSILON)
+        else if (fmod(pitchMarkAbs, 5.0f) < FLT_EPSILON)
         {
             markWidth = 30;
         }
-        int pitchMarkY = pitchToY(pitchMark);
-        auto markCentre = ivec2(0, pitchMarkY);
-        ivec2 mark0 = rotate(ivec2(halfWidth, pitchY), ivec2(-markWidth * 1, pitchMarkY), roll);
-        ivec2 mark1 = rotate(ivec2(halfWidth, pitchY), ivec2(+markWidth * 1, pitchMarkY), roll);
-        m_adiSurface->drawLine(mark0.x, mark0.y, mark1.x, mark1.y, 0xffffffff);
+        int pitchMarkY = pitchToY(pitchMark) + pitchY;
+        context->move_to(-markWidth, pitchMarkY);
+        context->line_to(markWidth, pitchMarkY);
+        context->set_line_width(1);
+        context->stroke();
+
+        if (print)
+        {
+            char buf[50];
+            snprintf(buf, 50, "%d", (int)abs(pitchMark));
+            context->set_source_rgb(1.0, 1.0, 1.0);
+            context->set_font_face(getDisplay()->getFont());
+            context->set_font_size(10);
+            context->move_to(-(markWidth + 20), pitchMarkY + 5);
+            context->show_text(buf);
+            context->move_to((markWidth + 5), pitchMarkY + 5);
+            context->show_text(buf);
+        }
     }
+    context->restore();
+
+#if 0
+    char buf[50];
+    snprintf(buf, 50, "Pitch: %0.2f, Roll: %0.2f\n", state.pitch, state.roll);
+    context->set_source_rgb(1.0, 1.0, 1.0);
+    context->set_font_face(getDisplay()->getFont());
+    context->set_font_size(12);
+    context->move_to(5, 12);
+    context->show_text(buf);
+#endif
+
+    // Draw wings
+    context->save();
+    context->translate(halfWidth, halfHeight);
+
+    context->move_to(-130, -0);
+    context->line_to(-40, 0);
+    context->line_to(-40, 15);
+    context->set_source_rgb(1.0, 1.0, 1.0);
+    context->set_line_width(5);
+    context->stroke_preserve();
+    context->set_source_rgb(0.0, 0.0, 0.0);
+    context->set_line_width(3);
+    context->stroke();
+
+    context->move_to(130, -0);
+    context->line_to(40, 0);
+    context->line_to(40, 15);
+    context->set_source_rgb(1.0, 1.0, 1.0);
+    context->set_line_width(5);
+    context->stroke_preserve();
+    context->set_source_rgb(0.0, 0.0, 0.0);
+    context->set_line_width(3);
+    context->stroke_preserve();
+
+    context->restore();
+
+
+#if 0
 
     if (state.flightDirector.mode > 0)
     {
@@ -85,38 +174,10 @@ void ADIWidget::draw(AircraftState& state, std::shared_ptr<Geek::Gfx::Surface> s
         m_adiSurface->drawLine(fdCentre.x - 20, fdCentre.y, fdCentre.x + 20, fdCentre.y, 0xffffff00);
         m_adiSurface->drawLine(fdCentre.x, fdCentre.y - 20, fdCentre.x, fdCentre.y + 20, 0xffffff00);
     }
-
-    // Draw wing thing
-    //int wwidth = adiWidth / 4;
-    {
-        vector<ivec2> points;
-        points.push_back(centre + ivec2(-130, -5));
-        points.push_back(centre + ivec2(-40, -5));
-        points.push_back(centre + ivec2(-40, 15));
-        points.push_back(centre + ivec2(-50, 15));
-        points.push_back(centre + ivec2(-50, 5));
-        points.push_back(centre + ivec2(-130, 5));
-        drawPolygon(m_adiSurface.get(), points, true, 0xffffffff, true, 0xff000000);
-    }
-    {
-        vector<ivec2> points;
-        points.push_back(centre + ivec2(130, -5));
-        points.push_back(centre + ivec2(40, -5));
-        points.push_back(centre + ivec2(40, 15));
-        points.push_back(centre + ivec2(50, 15));
-        points.push_back(centre + ivec2(50, 5));
-        points.push_back(centre + ivec2(130, 5));
-        drawPolygon(m_adiSurface.get(), points, true, 0xffffffff, true, 0xff000000);
-    }
-
-    m_adiSurface->drawRectFilled(centre.x - 2, centre.y - 2, 5, 5, 0xff000000);
-    m_adiSurface->drawRect(centre.x - 2, centre.y - 2, 5, 5, 0xffffffff);
-
-    surface->blit(getX(), getY(), m_adiSurface.get());
-
+#endif
 }
 
-int ADIWidget::pitchToY(float pitch)
+int ADIWidget::pitchToY(float pitch) const
 {
     return (int) ((float)getHeight() * (pitch / PITCH_SIZE));
 }

@@ -5,22 +5,17 @@
 #include "altitudeindicator.h"
 #include "pfd/display.h"
 
-#include <glm/glm.hpp>
-
 using namespace std;
 using namespace glm;
-using namespace Geek;
-using namespace Geek::Gfx;
 
 AltitudeIndicatorWidget::AltitudeIndicatorWidget(XPFlightDisplay* display, int x, int y, int w, int h)
     : FlightWidget( display, x, y, w, h)
 {
-    int surfaceHeight = getHeight() * 2;
-    m_altitudeSurface = make_shared<Surface>(getWidth(), surfaceHeight, 4);
 }
 
-void AltitudeIndicatorWidget::draw(UFC::AircraftState &state, std::shared_ptr<Geek::Gfx::Surface> surface)
+void AltitudeIndicatorWidget::draw(UFC::AircraftState &state, std::shared_ptr<Cairo::Context> context)
 {
+#if 0
     auto surfaceHeight = (int)m_altitudeSurface->getHeight();
     m_altitudeSurface->clear(0xff333333);
 
@@ -124,4 +119,5 @@ void AltitudeIndicatorWidget::draw(UFC::AircraftState &state, std::shared_ptr<Ge
         swprintf(buf, 50, L"QNH %d", (int)bar);
     }
     getDisplay()->getSmallFont()->write(surface.get(), getX() + 2, getY() + getHeight() + 2 , buf, 0xffffffff);
+#endif
 }

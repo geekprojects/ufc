@@ -4,31 +4,35 @@
 
 #include "speedindicator.h"
 #include "pfd/display.h"
-#include "pfd/gfxutils.h"
+
+#include <glm/glm.hpp>
 
 using namespace std;
-using namespace glm;
-using namespace Geek;
-using namespace Geek::Gfx;
 
 SpeedIndicatorWidget::SpeedIndicatorWidget(XPFlightDisplay* display, int x, int y, int w, int h)
     : FlightWidget(display, x, y, w, h)
 {
-    int surfaceHeight = getHeight() * 2;
-    m_speedSurface = make_shared<Surface>(getWidth(), surfaceHeight, 4);
+    //int surfaceHeight = getHeight() * 2;
+    //m_speedSurface = make_shared<Surface>(getWidth(), surfaceHeight, 4);
 }
 
-void SpeedIndicatorWidget::draw(UFC::AircraftState &state, std::shared_ptr<Geek::Gfx::Surface> surface)
+void SpeedIndicatorWidget::draw(UFC::AircraftState &state, std::shared_ptr<Cairo::Context> context)
 {
-    int surfaceHeight = getHeight() * 2;
-    m_speedSurface->clear(0xff333333);
+    context->rectangle(0, 0, getWidth() - 10, getHeight());
+    context->set_source_rgb(0.21, 0.21, 0.21);
+    context->fill();
+
+    context->set_source_rgb(1.0, 1.0, 1.0);
+    context->move_to(getWidth() - 10, 0);
+    context->line_to(getWidth() - 10, getHeight());
+    context->stroke();
 
     float speed = state.indicatedAirspeed;
-    int offset = getDisplay()->getFont()->getPixelHeight() / 2;
+    int offset = 8;//getDisplay()->getFont()->getPixelHeight() / 2;
 
-    int y = surfaceHeight / 2;
+    int y = getHeight() / 2;
 
-    wchar_t buf[50];
+    char buf[50];
     float i = -100;
     while (i < 100)
     {
@@ -38,21 +42,48 @@ void SpeedIndicatorWidget::draw(UFC::AircraftState &state, std::shared_ptr<Geek:
             ((int)rspeed % 10) == 0 &&
             glm::fract(ry) < FLT_EPSILON)
         {
-            m_speedSurface->drawHorizontalLine(getWidth() - 20, (int)ry, 10, 0xffffffff);
+            //m_speedSurface->drawHorizontalLine(getWidth() - 20, (int)ry, 10, 0xffffffff);
+            context->move_to(getWidth() - 20, ry);
+            context->line_to(getWidth() - 10, ry);
+            context->set_source_rgb(1.0, 1.0, 1.0);
+            context->stroke();
+
             if (((int) rspeed % 20) == 0)
             {
-                swprintf(buf, 50, L"%03d", (int) rspeed);
-                getDisplay()->getFont()->write(m_speedSurface.get(), 10, (int)ry - offset, buf, 0xffffffff);
+                snprintf(buf, 50, "%03d", (int) rspeed);
+                //getDisplay()->getFont()->write(m_speedSurface.get(), 10, (int)ry - offset, buf, 0xffffffff);
+                    context->set_source_rgb(1.0, 1.0, 1.0);
+                    context->set_font_face(getDisplay()->getFont());
+                    context->set_font_size(16);
+                    context->move_to(10, ry + offset);
+                    context->show_text(buf);
             }
         }
         i += 0.25f;
     }
 
-    vector<glm::ivec2> points;
-    points.emplace_back(getWidth() - 10, y);
-    points.emplace_back(getWidth(), y - 10);
-    points.emplace_back(getWidth(), y + 10);
-    drawFilledPolygon(m_speedSurface.get(), points, 0xffffffff);
+    // Draw arrow
+    context->move_to(getWidth() - 10, y);
+    context->line_to(getWidth(), y - 10);
+    context->line_to(getWidth(), y + 10);
+    context->set_source_rgb(1.0, 1.0, 1.0);
+    context->fill();
+#if 0
+    context->rectangle(0, 0, getWidth(), 30);
+    context->set_source_rgb(0.0, 0.0, 0.0);
+    context->fill_preserve();
+    context->set_source_rgb(1.0, 1.0, 1.0);
+    context->set_line_width(1);
+    context->stroke();
+    snprintf(buf, 50, "%03d", (int)speed);
+    context->set_font_face(getDisplay()->getFont());
+    context->set_font_size(16);
+    context->move_to(10, 18);
+    context->show_text(buf);
+#endif
+
+
+#if 0
 
     surface->blit(
         getX(),
@@ -75,4 +106,5 @@ void SpeedIndicatorWidget::draw(UFC::AircraftState &state, std::shared_ptr<Geek:
 
     swprintf(buf, 512, L"%0.3fM", state.indicatedMach);
     getDisplay()->getFont()->write(surface.get(), 7, getY() + getHeight() - 28 , buf, 0xffffffff);
+#endif
 }

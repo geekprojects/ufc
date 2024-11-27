@@ -10,13 +10,13 @@
 class SpeedIndicatorWidget : public FlightWidget
 {
  private:
-    std::shared_ptr<Geek::Gfx::Surface> m_speedSurface;
+    //std::shared_ptr<Geek::Gfx::Surface> m_speedSurface;
 
  public:
     SpeedIndicatorWidget(XPFlightDisplay* display, int x, int y, int w, int h);
     ~SpeedIndicatorWidget() override = default;
 
-    void draw(UFC::AircraftState& state, std::shared_ptr<Geek::Gfx::Surface> surface) override;
+    void draw(UFC::AircraftState& state, std::shared_ptr<Cairo::Context> context) override;
 };
 
 #endif //XPFD_SPEEDINDICATOR_H

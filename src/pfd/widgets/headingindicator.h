@@ -10,7 +10,7 @@
 class HeadingIndicatorWidget : public FlightWidget
 {
  private:
-    std::shared_ptr<Geek::Gfx::Surface> m_headingSurface;
+    //std::shared_ptr<Geek::Gfx::Surface> m_headingSurface;
 
     const int m_spacing = 80;
     const int m_width36 = 36 * m_spacing;
@@ -22,7 +22,7 @@ class HeadingIndicatorWidget : public FlightWidget
     HeadingIndicatorWidget(XPFlightDisplay* display, int x, int y, int w, int h);
     ~HeadingIndicatorWidget() override = default;
 
-    void draw(UFC::AircraftState& state, std::shared_ptr<Geek::Gfx::Surface> surface) override;
+    void draw(UFC::AircraftState& state, std::shared_ptr<Cairo::Context> context) override;
 };
 
 

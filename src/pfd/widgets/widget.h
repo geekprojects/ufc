@@ -5,9 +5,9 @@
 #ifndef XPFD_WIDGET_H
 #define XPFD_WIDGET_H
 
-#include <geek/gfx-surface.h>
-
 #include <ufc/aircraftstate.h>
+
+#include <cairomm/cairomm.h>
 
 class XPFlightDisplay;
 
@@ -29,7 +29,7 @@ class FlightWidget
         m_height(h) {}
     virtual ~FlightWidget() = default;
 
-    virtual void draw(UFC::AircraftState& state, std::shared_ptr<Geek::Gfx::Surface> surface) = 0;
+    virtual void draw(UFC::AircraftState& state, std::shared_ptr<Cairo::Context> surface) = 0;
 
     [[nodiscard]] XPFlightDisplay* getDisplay() const { return m_display; }
     [[nodiscard]] int getX() const { return m_x; }

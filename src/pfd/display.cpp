@@ -11,12 +11,13 @@
 
 #include <ufc/flightconnector.h>
 
+#include <pangomm/init.h>
+#include <pangomm/layout.h>
+
 #include <thread>
 
 using namespace std;
 using namespace UFC;
-using namespace Geek;
-using namespace Geek::Gfx;
 
 XPFlightDisplay::XPFlightDisplay() = default;
 
@@ -28,6 +29,8 @@ bool XPFlightDisplay::init()
     {
         return false;
     }
+
+    Pango::init();
 
     m_window = SDL_CreateWindow(
         "XP Flight Display",
@@ -43,33 +46,29 @@ bool XPFlightDisplay::init()
     SDL_GetWindowSize(m_window, &ww, &wh);
     SDL_GetWindowSizeInPixels(m_window, &m_screenWidth, &m_screenHeight);
 
-    float ratio = (float)m_screenWidth / (float)ww;
+    FT_Init_FreeType(&m_ftLibrary);
+    //FT_New_Face (m_ftLibrary, "../data/fonts/BoeingFont.ttf", 0, &m_face);
+    FT_New_Face (m_ftLibrary, "../data/fonts/B612Mono-Regular.ttf", 0, &m_face);
+    m_fontFace = Cairo::FtFontFace::create(m_face, 0);
 
-    m_fontManager = make_shared<FontManager>();
-    m_fontManager->init();
-    m_fontManager->scan("../data/fonts");
-    m_font = m_fontManager->openFont("B612 Mono", "Regular", (int)(14 * ratio));
-    m_fontSmall = m_fontManager->openFont("B612 Mono", "Regular", (int)(12 * ratio));
-    m_largeFont = m_fontManager->openFont("B612 Mono", "Regular", (int)(36 * ratio));
+    m_displaySurface = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32, m_screenWidth, m_screenHeight);
 
-    m_displaySurface = make_shared<Surface>(m_screenWidth, m_screenHeight, 4);
+    double buttonHeight = 20;
+    double instrumentAreaY = buttonHeight;
+    double instrumentAreaHeight = m_screenHeight - (buttonHeight * 2);
 
-    int buttonHeight = 20;
-    int instrumentAreaY = buttonHeight;
-    int instrumentAreaHeight = m_screenHeight - (buttonHeight * 2);
+    double adiWidth = (m_screenWidth / 6.0) * 2.0;
+    double adiHeight = (instrumentAreaHeight / 3.0) * 2.0;
+    double adiX = (m_screenWidth / 4.0) - (adiWidth / 2.0);
+    double adiY = instrumentAreaY + ((instrumentAreaHeight / 2.0) - (adiHeight / 2.0));
 
-    int adiWidth = (m_screenWidth / 6) * 2;
-    int adiHeight = (instrumentAreaHeight / 3) * 2;
-    int adiX = (m_screenWidth / 4) - (adiWidth / 2);
-    int adiY = instrumentAreaY + ((instrumentAreaHeight / 2) - (adiHeight / 2));
-
-    int indicatorHeight = (instrumentAreaHeight / 3) * 2;
-    int indicatorWidth = ((m_screenWidth / 2) - adiWidth) / 3;
-    int headingHeight = (instrumentAreaHeight - adiHeight) / 3;
+    double indicatorHeight = (instrumentAreaHeight / 3.0) * 2.0;
+    double indicatorWidth = ((m_screenWidth / 2.0) - adiWidth) / 3.0;
+    double headingHeight = (instrumentAreaHeight - adiHeight) / 3.0;
 
     m_widgets.push_back(make_shared<ADIWidget>(this, adiX, adiY, adiWidth, adiHeight));
     m_widgets.push_back(make_shared<SpeedIndicatorWidget>(this, 5, adiY, indicatorWidth, indicatorHeight));
-    m_widgets.push_back(make_shared<AltitudeIndicatorWidget>(this, (m_screenWidth / 2) - (indicatorWidth + 5), adiY, indicatorWidth, indicatorHeight));
+    m_widgets.push_back(make_shared<AltitudeIndicatorWidget>(this, (m_screenWidth / 2.0) - (indicatorWidth + 5.0), adiY, indicatorWidth, indicatorHeight));
     m_widgets.push_back(make_shared<HeadingIndicatorWidget>(this, adiX, instrumentAreaY + (instrumentAreaHeight - headingHeight), adiWidth, headingHeight));
 
     m_dataSource = m_flightConnector.openDefaultDataSource();
@@ -92,57 +91,83 @@ void XPFlightDisplay::close()
 
 void XPFlightDisplay::draw()
 {
-    drawWidgets();
+    auto context = Cairo::Context::create(m_displaySurface);
+
+    Cairo::FontOptions fontOptions;
+    //fontOptions.set_antialias(Cairo::ANTIALIAS_SUBPIXEL);
+    fontOptions.set_hint_style(Cairo::FontOptions::HintStyle::FULL);
+    fontOptions.set_subpixel_order(Cairo::SUBPIXEL_ORDER_RGB);
+    fontOptions.set_hint_metrics(Cairo::FontOptions::HintMetrics::ON);
+    context->set_font_options(fontOptions);
+
+    drawWidgets(context);
 
     SDL_Surface* sdlSurface = SDL_GetWindowSurface(m_window);
     SDL_ConvertPixels(
         m_screenWidth, m_screenHeight,
-        SDL_PIXELFORMAT_ARGB8888, m_displaySurface->getData(), m_screenWidth * 4,
+        SDL_PIXELFORMAT_ARGB8888, m_displaySurface->get_data(), m_screenWidth * 4,
         sdlSurface->format->format, sdlSurface->pixels, sdlSurface->pitch);
     SDL_UpdateWindowSurface(m_window);
 }
 
-void XPFlightDisplay::drawWidgets()
+void XPFlightDisplay::drawWidgets(std::shared_ptr<Cairo::Context> context)
 {
     AircraftState state = m_flightConnector.getState();
-    m_displaySurface->clear(0x0);
+    context->save();
+    context->set_source_rgb(0.0, 0.0, 0.0);
+    context->rectangle(0, 0, m_screenWidth, m_screenHeight);
+    context->fill();
+    context->restore();
 
     for (auto const& widget : m_widgets)
     {
-        widget->draw(state, m_displaySurface);
+        auto widgetSurface = Cairo::Surface::create(m_displaySurface, widget->getX(), widget->getY(), widget->getWidth(), widget->getHeight());
+        auto widgetContext = Cairo::Context::create(widgetSurface);
+        widget->draw(state, widgetContext);
     }
 
-    m_displaySurface->drawLine(m_screenWidth / 2, 0, m_screenWidth / 2, m_screenHeight, 0xffffffff);
+    context->save();
+    context->set_source_rgb(1.0, 1.0, 1.0);
+    context->move_to(m_screenWidth / 2, 0);
+    context->line_to(m_screenWidth / 2, m_screenHeight);
+    context->set_line_width(1);
+    context->stroke();
 
-    wchar_t buf[50];
-    swprintf(buf, 50, L"COM1: %03.03f <-> %0.03f", state.comms.com1Hz / 100.0f, state.comms.com1StandbyHz / 100.0f);
-    m_fontSmall->write(m_displaySurface.get(), (m_screenWidth / 2) + 10, 5, buf, 0xffffffff);
-    swprintf(buf, 50, L"COM2: %03.03f <-> %0.03f", state.comms.com2Hz / 100.0f, state.comms.com2StandbyHz / 100.0f);
-    m_fontSmall->write(m_displaySurface.get(), (m_screenWidth / 2) + 10, 20, buf, 0xffffffff);
-    swprintf(buf, 50, L"NAV1: %03.03f <-> %0.03f", state.comms.nav1Hz / 100.0f, state.comms.nav1StandbyHz / 100.0f);
-    m_fontSmall->write(m_displaySurface.get(), (m_screenWidth / 2) + 10, 35, buf, 0xffffffff);
-    swprintf(buf, 50, L"NAV2: %03.03f <-> %0.03f", state.comms.nav2Hz / 100.0f, state.comms.nav2StandbyHz / 100.0f);
-    m_fontSmall->write(m_displaySurface.get(), (m_screenWidth / 2) + 10, 50, buf, 0xffffffff);
+    context->save();
+
+
+    context->set_source_rgb(1.0, 1.0, 1.0);
+
+    char buf[50];
+    snprintf(buf, 50, "COM1: %07.03f <-> %07.03f", (float)state.comms.com1Hz / 1000.0f, (float)state.comms.com1StandbyHz / 1000.0f);
+    drawText(context, buf, (m_screenWidth / 2) + 10, 16);
+    snprintf(buf, 50, "COM2: %07.03f <-> %07.03f", (float)state.comms.com2Hz / 1000.0f, (float)state.comms.com2StandbyHz / 1000.0f);
+    drawText(context, buf, (m_screenWidth / 2) + 10, 32);
+    snprintf(buf, 50, "NAV1: %07.03f <-> %07.03f", (float)state.comms.nav1Hz / 1000.0f, (float)state.comms.nav1StandbyHz / 1000.0f);
+    drawText(context, buf, (m_screenWidth / 2) + 10, 48);
+    snprintf(buf, 50, "NAV2: %07.03f <-> %07.03f", (float)state.comms.nav2Hz / 1000.0f, (float)state.comms.nav2StandbyHz / 1000.0f);
+    drawText(context, buf, (m_screenWidth / 2) + 10, 64);
+    context->restore();
 
     if (!state.connected)
     {
         uint32_t t = SDL_GetTicks();
         if ((t / 1000) % 2)
         {
-            wstring str = L"No Connection";
-            int w = m_largeFont->width(str);
-            int h = m_largeFont->getPixelHeight();
-            m_largeFont->write(
-                m_displaySurface.get(),
-                (m_screenWidth / 2) - (w / 2),
-                (m_screenHeight / 2) - (h / 2),
-                str,
-                0xffffffff);
+            drawText(context, "No Connection", 10, 10);
         }
     }
 }
 
-void XPFlightDisplay::updateMain()
+void XPFlightDisplay::drawText(std::shared_ptr<Cairo::Context> context, const std::string& text, double x, double y, int fontSize)
+{
+    context->set_font_face(getFont());
+    context->set_font_size(fontSize);
+    context->move_to(x, y);
+    context->show_text(text.c_str());
+}
+
+void XPFlightDisplay::updateMain() const
 {
     while (m_running)
     {

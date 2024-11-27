@@ -16,7 +16,9 @@ message(FATAL_ERROR "Unsupported platform")
 endif()
 
 # Optional dependencies, used for the PFD display
-pkg_check_modules(libgeek libgeek)
+pkg_check_modules(cairomm cairomm-1.16)
+pkg_check_modules(pangomm pangomm-2.48)
+pkg_check_modules(freetype2 REQUIRED freetype2)
 pkg_check_modules(glm glm)
 pkg_check_modules(sdl2 sdl2)
 
@@ -29,7 +31,6 @@ SET(CMAKE_CXX_FLAGS_DEBUG "${FLAGS_COMMON} -O0 -g -fsanitize=address -fsanitize-
 SET(CMAKE_CXX_FLAGS_RELEASE  "${FLAGS_COMMON} -O3")
 
 include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/luacpp/Source)
-#add_definitions(-I/usr/local/include ${sdl2_CFLAGS} ${libgeek_CFLAGS} ${yamlcpp_CFLAGS} ${glm_CFLAGS} ${hidapi_CFLAGS})
 add_definitions(-I/usr/local/include ${yamlcpp_CFLAGS} ${hidapi_CFLAGS} ${lua_CFLAGS})
 
 add_library(ufc SHARED
@@ -130,13 +131,11 @@ if (DEFINED ENV{XPLANE_SDK})
     )
 endif()
 
-if (${libgeek_FOUND})
+if (${cairomm_FOUND} AND ${pangomm_FOUND})
 add_executable(xpfd
         src/pfd/main.cpp
         src/pfd/display.cpp
         src/pfd/display.h
-        src/pfd/gfxutils.cpp
-        src/pfd/gfxutils.h
         src/pfd/widgets/adi.cpp
         src/pfd/widgets/adi.h
         src/pfd/widgets/speedindicator.cpp
@@ -149,18 +148,19 @@ add_executable(xpfd
 )
 
 target_include_directories(xpfd PUBLIC ${CMAKE_SOURCE_DIR}/src)
-target_compile_options(xpfd PUBLIC ${libgeek_CFLAGS} ${sdl2_CFLAGS})
+target_compile_options(xpfd PUBLIC ${cairomm_CFLAGS} ${pangomm_CFLAGS} ${sdl2_CFLAGS})
 
 target_link_libraries(xpfd
         -Wl,-rpath -Wl,/usr/local/lib
         -L/usr/local/lib
-        -lbrick
         ufc
-        ${libgeek_LDFLAGS}
+        ${cairomm_LDFLAGS}
+        ${pangomm_LDFLAGS}
         ${sdl2_LDFLAGS}
         ${yamlcpp_LDFLAGS}
         ${glm_LDFLAGS}
         ${hidapi_LDFLAGS}
+        ${freetype2_LDFLAGS}
 )
 endif()
 

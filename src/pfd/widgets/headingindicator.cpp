@@ -6,18 +6,17 @@
 #include "pfd/display.h"
 
 using namespace std;
-using namespace Geek;
-using namespace Geek::Gfx;
 
 HeadingIndicatorWidget::HeadingIndicatorWidget(XPFlightDisplay* display, int x, int y, int w, int h)
     : FlightWidget( display, x, y, w, h)
 {
-    m_headingSurface = make_shared<Surface>(m_surfaceWidth, getHeight(), 4);
+    //m_headingSurface = make_shared<Surface>(m_surfaceWidth, getHeight(), 4);
     drawCompass();
 }
 
 void HeadingIndicatorWidget::drawCompass()
 {
+#if 0
     wchar_t buf[50];
 
     m_headingSurface->clear(0xff333333);
@@ -47,6 +46,7 @@ void HeadingIndicatorWidget::drawCompass()
             {
                 swprintf(buf, 50, L"%d", n);
             }
+            /* XXX TODO
             int w = getDisplay()->getFont()->width(buf);
             for (int j = 0; j < 3; j++)
             {
@@ -54,6 +54,7 @@ void HeadingIndicatorWidget::drawCompass()
                 getDisplay()->getFont()->write(m_headingSurface.get(), x - (w / 2), 25, buf, 0xffffffff);
                 m_headingSurface->drawLine(x, 0, x, 20, 0xffffffff);
             }
+            */
         }
         else if ((i % 5) == 0)
         {
@@ -65,10 +66,12 @@ void HeadingIndicatorWidget::drawCompass()
             }
         }
     }
+#endif
 }
 
-void HeadingIndicatorWidget::draw(UFC::AircraftState &state, std::shared_ptr<Geek::Gfx::Surface> surface)
+void HeadingIndicatorWidget::draw(UFC::AircraftState &state, std::shared_ptr<Cairo::Context> surface)
 {
+#if 0
     surface->blit(
         getX(),
         getY(),
@@ -89,4 +92,5 @@ void HeadingIndicatorWidget::draw(UFC::AircraftState &state, std::shared_ptr<Gee
     wchar_t buf[50];
     swprintf(buf, 50, L"%0.2f", state.magHeading);
     getDisplay()->getSmallFont()->write(surface.get(), getX() + 10, getY() + getHeight() - getDisplay()->getSmallFont()->getPixelHeight(), buf, 0xffffffff);
+#endif
 }

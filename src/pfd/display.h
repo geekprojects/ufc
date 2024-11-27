@@ -6,9 +6,9 @@
 #define XPFD_DISPLAY_H
 
 #include <SDL.h>
+#include <glm/glm.hpp>
 
-#include <geek/gfx-surface.h>
-#include <geek/fonts.h>
+#include <cairomm/cairomm.h>
 
 #include <thread>
 
@@ -26,19 +26,18 @@ class XPFlightDisplay
 
     std::vector<std::shared_ptr<FlightWidget>> m_widgets;
 
-    std::shared_ptr<Geek::Gfx::Surface> m_displaySurface;
-    std::shared_ptr<Geek::FontManager> m_fontManager;
+    std::shared_ptr<Cairo::ImageSurface> m_displaySurface;
 
-    Geek::FontHandle* m_font = nullptr;
-    Geek::FontHandle* m_fontSmall = nullptr;
-    Geek::FontHandle* m_largeFont = nullptr;
+    FT_Library m_ftLibrary = nullptr;
+    FT_Face m_face = nullptr;
+    std::shared_ptr<Cairo::FtFontFace> m_fontFace;
 
     UFC::FlightConnector m_flightConnector;
     std::shared_ptr<UFC::DataSource> m_dataSource;
 
     std::thread* m_updateThread = nullptr;
 
-    void updateMain();
+    void updateMain() const;
 
  public:
     XPFlightDisplay();
@@ -49,10 +48,11 @@ class XPFlightDisplay
 
     void draw();
 
-    Geek::FontHandle* getFont() const { return m_font; }
-    Geek::FontHandle* getSmallFont() const { return m_fontSmall; }
+    std::shared_ptr<Cairo::FtFontFace> getFont() { return m_fontFace; }
 
-    void drawWidgets();
+    void drawWidgets(std::shared_ptr<Cairo::Context> context);
+
+    void drawText(std::shared_ptr<Cairo::Context> surface, const std::string &text, double x, double y, int fontSize = 16);
 };
 
 
