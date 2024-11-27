@@ -29,15 +29,16 @@ Required for the PFD:
 * pangomm
 * freetype
 * glm
+* SDL2
 
 ### Mac
 ```
-$ brew install hidapi yaml-cpp lua
+$ brew install hidapi yaml-cpp lua 
 ```
 
 Optionally:
 ```aiignore
-$ brew install cairomm pangomm freetype2 glm
+$ brew install cairomm pangomm freetype2 glm sdl2
 ```
 
 ### Ubuntu
@@ -47,7 +48,7 @@ $ apt install libyaml-cpp-dev libhidapi-dev lua5.4 liblua5.4-dev
 
 Optionally:
 ```aiignore
-$ apt install libcairomm-1.16-dev libpangomm-2.48-dev libfreetype-dev libglm-dev
+$ apt install libcairomm-1.16-dev libpangomm-2.48-dev libfreetype-dev libglm-dev libsdl2-dev
 ```
 
 ## Build
