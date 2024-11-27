@@ -18,7 +18,7 @@ endif()
 # Optional dependencies, used for the PFD display
 pkg_check_modules(cairomm cairomm-1.16)
 pkg_check_modules(pangomm pangomm-2.48)
-pkg_check_modules(freetype2 REQUIRED freetype2)
+pkg_check_modules(freetype2 freetype2)
 pkg_check_modules(glm glm)
 pkg_check_modules(sdl2 sdl2)
 
