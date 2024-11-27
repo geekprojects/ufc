@@ -18,19 +18,36 @@ such as airport, fixes and procedures.
 
 # Installation
 
-## Required libraries
+## Required Libraries
 * yaml-cpp
 * hidapi (libusb version on Linux)
 * lua
+
+## Optional Libraries
+Required for the PFD:
+* cairomm
+* pangomm
+* freetype
+* glm
 
 ### Mac
 ```
 $ brew install hidapi yaml-cpp lua
 ```
 
+Optionally:
+```aiignore
+$ brew install cairomm pangomm freetype2 glm
+```
+
 ### Ubuntu
 ```
 $ apt install libyaml-cpp-dev libhidapi-dev lua5.4 liblua5.4-dev
+```
+
+Optionally:
+```aiignore
+$ apt install libcairomm-1.16-dev libpangomm-2.48-dev libfreetype-dev libglm-dev
 ```
 
 ## Build
