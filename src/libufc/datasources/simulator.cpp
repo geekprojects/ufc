@@ -91,6 +91,7 @@ bool SimulatorDataSource::update()
                 pitchDir = 1;
             }
         }
+        state.indicatedAirspeed += 0.1;
         state.autopilot = m_autopilot;
         state.comms = m_communication;
         m_flightConnector->updateState(state);
