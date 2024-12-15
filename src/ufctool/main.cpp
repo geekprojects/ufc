@@ -65,6 +65,7 @@ int main(int argc, char** argv)
     FlightConnector flightConnector(config);
 
     flightConnector.init();
+    flightConnector.initDevices();
     auto dataSource = flightConnector.openDefaultDataSource();
     bool res = dataSource->connect();
     if (!res)

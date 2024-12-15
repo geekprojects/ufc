@@ -37,12 +37,15 @@ int UFCPlugin::start(char* outName, char* outSig, char* outDesc)
 
     log(DEBUG, "UFC: XPluginStart: Initialising Flight Connector...");
     m_flightConnector->init();
+    m_flightConnector->initDevices();
 
     for (const auto& device : m_flightConnector->getDevices())
     {
         string name = "Device: " + device->getName();
         XPLMAppendMenuItem(m_menuId, name.c_str(), device, 1);
     }
+    XPLMAppendMenuSeparator(m_menuId);
+    XPLMAppendMenuItem(m_menuId, "Detect devices...", (void*)-1, 1);
 
     if (!m_flightConnector->getDevices().empty())
     {

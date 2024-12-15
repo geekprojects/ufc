@@ -64,6 +64,11 @@ bool FlightConnector::init()
         sigaction(SIGTERM, &sigIntHandler, nullptr);
     }
 
+    return true;
+}
+
+bool FlightConnector::initDevices()
+{
     DeviceRegistry* deviceRegistry = DeviceRegistry::getDeviceRegistry();
     for (const auto& dev : deviceRegistry->getDevices())
     {

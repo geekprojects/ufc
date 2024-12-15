@@ -28,9 +28,19 @@ class Airports;
 
 struct Config
 {
+    /**
+     * Path to the configuration file
+     */
     std::string configPath;
+
+    /**
+     * Path to libufc's data, such as aircraft definitions etc
+     */
     std::string dataDir;
 
+    /**
+     * Name of the default DataSource
+     */
     std::string dataSource;
 
     // X-Plane specific
@@ -82,39 +92,122 @@ class FlightConnector final : public Logger
 
  public:
     FlightConnector();
+
+    /**
+     *
+     * @param config Configuration overrides
+     */
     explicit FlightConnector(const Config &config);
     ~FlightConnector() override;
 
+    /**
+     * Initialise this Flight Connector
+     *
+     * @return true if successfully initialised, otherwise false.
+     */
     bool init();
 
+    /**
+     * Detect and initialise devices.
+     *
+     * This only needs to be called if you intend to use these devices.
+     * If you are using libufc as an API to talk to your simulator, you probably
+     * don't need to call this.
+     *
+     * @return true if devices were successfully initialised.
+     */
+    bool initDevices();
+
+    /**
+     * Find and open the default data source set in configuration
+     *
+     * @return The DataSource
+     */
     std::shared_ptr<DataSource> openDefaultDataSource();
+
+    /**
+     * Open a specific DataSource
+     *
+     * @param name Name of the Data Source
+     * @return The DataSource
+     */
     std::shared_ptr<DataSource> openDataSource(const std::string &name);
+
+    /**
+     *
+     * @return The currently opened DataSource or nullptr if none.
+     */
     std::shared_ptr<DataSource> getDataSource() { return m_dataSource; }
+
+    /**
+     * Set the opened CataSource to a custom DataSource that libufc doesn't
+     * manage.
+     *
+     * @param dataSource The DataSource to set
+     */
     void setDataSource(std::shared_ptr<DataSource> dataSource);
 
+    /**
+     * Start threads that manage communication with the DataSource and devices
+     */
     void start();
+
+    /**
+     * Stop threads that manage the DataSource and devices.
+     */
     void stop();
+
+    /**
+     * Wait for the DataSource and device threads to end.
+     */
     void wait() const;
 
+    /**
+     *
+     * @return The current configuration
+     */
     [[nodiscard]] const Config& getConfig() const { return m_config; }
 
+    /**
+     *
+     * @return A copy of the current aircraft state from the simulator
+     */
     AircraftState getState()
     {
         std::scoped_lock lock(m_stateMutex);
         return m_state;
     }
 
+    /**
+     *
+     * @param state The Aircraft state data to update with
+     */
     void updateState(const AircraftState& state)
     {
         std::scoped_lock lock(m_stateMutex);
         m_state = state;
     }
 
+    /**
+     * Stop all currently running FlightConnectors
+     */
     static void exit();
 
+    /**
+     * Poll devices for updates once
+     */
     void updateDevices();
+
+    /**
+     * @return All currently discovered and initialised Devices.
+     */
     const std::vector<Device*>& getDevices() { return m_devices; }
 
+    /**
+     * Disables the exit handling that is usually set by the FlightConnector.
+     * Use this when using libufc in other environments that already handle
+     * signals, such as within a simulator plugin.
+     */
     void disableExitHandler() { m_exitHandler = false; }
 };
 
