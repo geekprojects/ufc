@@ -92,6 +92,8 @@ bool SimulatorDataSource::update()
             }
         }
         state.indicatedAirspeed += 0.1;
+        state.altitude += 0.5;
+        state.magHeading += 0.1;
         state.autopilot = m_autopilot;
         state.comms = m_communication;
         m_flightConnector->updateState(state);
