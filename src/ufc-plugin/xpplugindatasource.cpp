@@ -130,6 +130,9 @@ bool XPPluginDataSource::updateDataRefs()
             case INTEGER:
                 m_dataMapping.writeInt(state, mapping, XPLMGetDatai(mapping->data));
                 break;
+            case STRING:
+                // Unhandled
+                break;
         }
     }
     m_flightConnector->updateState(state);

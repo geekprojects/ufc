@@ -70,6 +70,11 @@ void XPlaneDataSource::disconnect()
     m_client->disconnect();
 }
 
+bool XPlaneDataSource::isConnected()
+{
+    return m_client->isConnected();
+}
+
 bool XPlaneDataSource::update()
 {
     vector<pair<int, string>> datarefs;
@@ -77,7 +82,9 @@ bool XPlaneDataSource::update()
     int idx = 1;
     for (const auto& dataRef : m_mapping.getDataRefs())
     {
-        if (!dataRef->mapping.dataRef.empty() && dataRef->mapping.dataRef != "null")
+        if (!dataRef->mapping.dataRef.empty() &&
+            dataRef->mapping.dataRef != "null" &&
+            dataRef->pos != -1)
         {
             dataRef->idx = idx;
             datarefs.emplace_back(idx, dataRef->mapping.dataRef);
@@ -92,7 +99,6 @@ bool XPlaneDataSource::update()
 
     return res == XPlaneResult::SUCCESS;
 }
-
 
 void XPlaneDataSource::update(const map<int, float>& values)
 {
@@ -118,6 +124,9 @@ void XPlaneDataSource::update(const map<int, float>& values)
                 break;
             case BOOLEAN:
                 m_mapping.writeBoolean(state, dataRef, (bool)value);
+                break;
+            case STRING:
+                // Ignored!
                 break;
         }
     }
@@ -149,3 +158,58 @@ void XPlaneDataSource::command(string command)
     }
 }
 
+void XPlaneDataSource::setData(const std::string dataName, float value)
+{
+    auto dataRef = m_mapping.getDataRef(dataName);
+    if (dataRef == nullptr || dataRef->mapping.dataRef.empty())
+    {
+        log(WARN, "setData: Unhandled data ref: %s", dataName.c_str());
+        return;
+    }
+
+    m_client->setDataRef(dataRef->mapping.dataRef, value);
+}
+
+bool XPlaneDataSource::getDataInt(std::string dataName, int& value)
+{
+    auto dataRef = m_mapping.getDataRef(dataName);
+    if (dataRef == nullptr || dataRef->mapping.dataRef.empty())
+    {
+        log(WARN, "getDataInt: Unhandled data ref: %s", dataName.c_str());
+        return false;
+    }
+
+    auto res = m_client->readInt(dataRef->mapping.dataRef, value);
+    return res == XPlaneResult::SUCCESS;
+}
+
+bool XPlaneDataSource::getDataFloat(std::string dataName, float& value)
+{
+    auto dataRef = m_mapping.getDataRef(dataName);
+    if (dataRef == nullptr || dataRef->mapping.dataRef.empty())
+    {
+        log(WARN, "getDataInt: Unhandled data ref: %s", dataName.c_str());
+        return false;
+    }
+
+    auto res = m_client->read(dataRef->mapping.dataRef, value);
+    return res == XPlaneResult::SUCCESS;
+}
+
+bool XPlaneDataSource::getDataString(std::string dataName, string& value)
+{
+    auto dataRef = m_mapping.getDataRef(dataName);
+    if (dataRef == nullptr || dataRef->mapping.dataRef.empty())
+    {
+        log(WARN, "getDataInt: Unhandled data ref: %s", dataName.c_str());
+        return false;
+    }
+
+    auto res = m_client->readString(dataRef->mapping.dataRef, dataRef->len, value);
+    return res == XPlaneResult::SUCCESS;
+}
+
+void XPlaneDataSource::sendMessage(std::string message)
+{
+    m_client->sendMessage(message);
+}

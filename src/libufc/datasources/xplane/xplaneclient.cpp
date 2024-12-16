@@ -315,12 +315,14 @@ XPlaneResult XPlaneClient::setDataRef(const std::string& dataRef, float value)
     return send(buffer, len);
 }
 
+#define READ_OFFSET 10000
+
 XPlaneResult XPlaneClient::readString(const std::string& dataref, int len, string& value)
 {
     vector<pair<int, string>> datarefs;
     for (int i = 0; i < len; i++)
     {
-        datarefs.emplace_back(i, dataref + "[" + to_string(i) + "]");
+        datarefs.emplace_back(i + READ_OFFSET, dataref + "[" + to_string(i) + "]");
     }
 
     char buffer[len + 1];
@@ -329,9 +331,14 @@ XPlaneResult XPlaneClient::readString(const std::string& dataref, int len, strin
     {
         for (const auto& [idx, value] : values)
         {
-            if (idx < len)
+            if (idx < READ_OFFSET)
             {
-                buffer[idx] = (char)value;
+                continue;
+            }
+            int i = idx - READ_OFFSET;
+            if (i < len)
+            {
+                buffer[i] = (char)value;
             }
         }
     }, 1);
@@ -344,7 +351,7 @@ XPlaneResult XPlaneClient::readString(const std::string& dataref, int len, strin
     return res;
 }
 
-XPlaneResult XPlaneClient::read(const std::string& dataref, double& returnValue)
+XPlaneResult XPlaneClient::read(const std::string& dataref, float& returnValue)
 {
     vector<pair<int, string>> datarefs;
     datarefs.emplace_back(0, dataref);
@@ -357,3 +364,24 @@ XPlaneResult XPlaneClient::read(const std::string& dataref, double& returnValue)
         }
     }, 1);
 }
+
+struct XPlaneAlertMessage
+{
+    char header[5];
+    char message1[240];	// needs to be multiple of 8 for the align to work out perfect for the copy?
+    char message2[240];	// needs to be long enough to hold the strings!
+    char message3[240];
+    char message4[240];
+};
+
+void XPlaneClient::sendMessage(const std::string& string)
+{
+    XPlaneAlertMessage message;
+
+    const auto alrt = "ALRT";
+    memcpy(message.header, alrt, 4);
+    message.header[4] = 0;
+    strcpy(message.message1, string.c_str());
+    send(&message, sizeof(message));
+}
+

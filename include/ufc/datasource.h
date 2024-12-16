@@ -98,14 +98,29 @@ class DataSource : public Logger
     {}
     ~DataSource() override = default;
 
+    [[nodiscard]] std::string getName() const { return m_name; }
+
     virtual std::shared_ptr<Airports> loadAirports() { return nullptr; }
     virtual std::shared_ptr<NavData> loadNavData() { return nullptr; }
 
     virtual bool connect() = 0;
     virtual void disconnect() = 0;
+    virtual bool isConnected() { return false; }
+
     virtual bool update() = 0;
 
     virtual void command(std::string command) {}
+    virtual void setData(std::string dataName, float value) {}
+
+    // Not all values may be updated in real time or you may not be running
+    // the update thread. These can be used to retrieve values in these cases.
+    // Note, some Data Sources (X-Plane) do not allow you to run the update
+    // thread and use these calls!
+    virtual bool getDataInt(std::string dataName, int& value) { return false; };
+    virtual bool getDataFloat(std::string dataName, float& value) { return false; };
+    virtual bool getDataString(std::string dataName, std::string& value) { return false; };
+
+    virtual void sendMessage(std::string message) {}
 };
 
 }

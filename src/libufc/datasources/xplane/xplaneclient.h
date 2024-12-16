@@ -41,6 +41,7 @@ enum class XPlaneResult
     FAIL
 };
 
+
 class XPlaneClient : Logger
 {
     private:
@@ -70,14 +71,15 @@ class XPlaneClient : Logger
 
     XPlaneResult connect();
     bool disconnect();
+    bool isConnected() const { return m_connected; }
 
     XPlaneResult getPosition(Position& position);
 
     XPlaneResult readString(const std::string &dataref, int len, std::string& value);
-    XPlaneResult read(const std::string& dataref, double& returnValue);
+    XPlaneResult read(const std::string& dataref, float& returnValue);
     XPlaneResult readInt(const std::string& dataref, int& value)
     {
-        double d;
+        float d;
         auto res = read(dataref, d);
         if (res != XPlaneResult::SUCCESS)
         {
@@ -93,6 +95,8 @@ class XPlaneClient : Logger
     XPlaneResult sendCommand(const std::string &command);
 
     XPlaneResult setDataRef(const std::string& string, float value);
+
+    void sendMessage(const std::string& string);
 
     static void disconnectAll();
 };
