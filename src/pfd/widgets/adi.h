@@ -10,8 +10,6 @@
 class ADIWidget : public FlightWidget
 {
  private:
-    std::shared_ptr<Cairo::ImageSurface> m_adiSurface = nullptr;
-
     int pitchToY(float pitch) const;
 
  public:

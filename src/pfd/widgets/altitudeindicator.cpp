@@ -15,18 +15,22 @@ AltitudeIndicatorWidget::AltitudeIndicatorWidget(XPFlightDisplay* display, int x
 
 void AltitudeIndicatorWidget::draw(UFC::AircraftState &state, std::shared_ptr<Cairo::Context> context)
 {
-#if 0
-    auto surfaceHeight = (int)m_altitudeSurface->getHeight();
-    m_altitudeSurface->clear(0xff333333);
+    context->save();
+    context->rectangle(0, 0, getWidth() - 20, getHeight());
+    context->set_source_rgb(0.21, 0.21, 0.21);
+    context->fill();
+
+    auto surfaceHeight = getHeight();
+    //m_altitudeSurface->clear(0xff333333);
 
     float altitude = state.altitude;
-    int offset = getDisplay()->getFont()->getPixelHeight() / 2;
-    int smallOffset = getDisplay()->getSmallFont()->getPixelHeight() / 2;
+    //int offset = getDisplay()->getFont()->getPixelHeight() / 2;
+    //int smallOffset = getDisplay()->getSmallFont()->getPixelHeight() / 2;
 
     int y = surfaceHeight / 2;
 
     int range = 700;
-    wchar_t buf[50];
+    char buf[50];
     for (int i = -range; i < range; i++)
     {
         // The altitude represented by this position, in hundreds of feet
@@ -36,21 +40,58 @@ void AltitudeIndicatorWidget::draw(UFC::AircraftState &state, std::shared_ptr<Ca
         // Position on screen
         float ry = (float)y - (float)(i * 0.5);
 
-        //printf("%0.2f: altitude1000=%0.2f, ry=%0.2f\n", altitude, altitude1000, ry);
-
         if (raltitude100 >= 0 && glm::fract(raltitude100) < 0.01)
         {
             // Represents relAltitude whole 100 feet
-            m_altitudeSurface->drawHorizontalLine(getWidth() - 10, (int)ry, 10, 0xffffffff);
+            context->move_to(getWidth() - 30, ry);
+            context->line_to(getWidth() - 20, ry);
 
             if (((int) raltitude100 % 5) == 0)// && (int)raltitude100 != actual100)
             {
-                swprintf(buf, 50, L"%03d", (int) raltitude100);
-                getDisplay()->getFont()->write(m_altitudeSurface.get(), 13, (int)ry - offset, buf, 0xffffffff);
+                snprintf(buf, 50, "%03d", (int) raltitude100);
+                context->set_source_rgb(1.0, 1.0, 1.0);
+                getDisplay()->drawText(context, buf, 1, (int)ry + 6);
             }
         }
     }
 
+    context->move_to(getWidth() - 20, 0);
+    context->line_to(getWidth() - 20, getHeight());
+    context->set_source_rgb(1, 1, 1);
+    context->stroke();
+
+    context->move_to(0, y - 10);
+    context->line_to(getWidth() - 20, y - 10);
+    context->line_to(getWidth() - 20, y - 25);
+    context->line_to(getWidth(), y - 25);
+    context->line_to(getWidth(), y + 25);
+    context->line_to(getWidth() - 20, y + 25);
+    context->line_to(getWidth() - 20, y + 10);
+    context->line_to(0, y + 10);
+    context->close_path();
+
+    context->set_source_rgb(0, 0, 0);
+    context->fill_preserve();
+
+    context->set_source_rgb(1, 1, 1);
+    context->stroke_preserve();
+    context->save();
+    context->clip_preserve();
+
+    for (int i = - 2; i < 2; i++)
+    {
+        float relAltitude = altitude - ((float)i * 10.0f);
+        float hundreds = floor(fmod((relAltitude / 10.0), 10.0f)) * 10.0f;
+        snprintf(buf, 50, "%02d", (int)hundreds);
+        float offset = (fmod(relAltitude, 10) / 10.0) * 16.0;
+        getDisplay()->drawText(context, buf, getWidth() - 20, y + 4 + ((float)i * 16.0) + offset);
+    }
+        snprintf(buf, 50, "%03d", (int) altitude / 100);
+        getDisplay()->drawText(context, buf, 4, y + 4);
+    context->restore();
+
+
+#if 0
     int hh = getDisplay()->getSmallFont()->getPixelHeight() * 10;
     int hundredsWidth;
     if (m_altitudeHundredsSurface == nullptr)
@@ -120,4 +161,5 @@ void AltitudeIndicatorWidget::draw(UFC::AircraftState &state, std::shared_ptr<Ca
     }
     getDisplay()->getSmallFont()->write(surface.get(), getX() + 2, getY() + getHeight() + 2 , buf, 0xffffffff);
 #endif
+    context->restore();
 }

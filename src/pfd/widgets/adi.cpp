@@ -15,33 +15,6 @@ using namespace glm;
 ADIWidget::ADIWidget(XPFlightDisplay* display, int x, int y, int ww, int wh)
     : FlightWidget(display, x, y, ww, wh)
 {
-    int w = getWidth() * 2;
-    int h = getHeight() * 2;
-    m_adiSurface = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32, w, h);
-
-    auto context = Cairo::Context::create(m_adiSurface);
-
-    context->set_source_rgb(0, 0.5, 1.0);
-    context->rectangle(0, 0, w, h);
-    context->fill();
-
-    context->set_source_rgb(0.5, 0.2, 0);
-    context->rectangle(0, h / 2.0, w, h / 2.0);
-    context->fill();
-
-    context->set_source_rgb(1.0, 1.0, 1.0);
-    context->move_to(0, h / 2.0);
-    context->line_to(w, h / 2.0);
-    context->set_line_width(2);
-    context->stroke();
-
-    context->move_to((w / 2.0), (h / 2.0) - 5);
-    context->line_to((w / 2.0), (h / 2.0) + 5);
-    context->set_line_width(1);
-    context->stroke();
-
-
-    m_adiSurface->write_to_png("pfd.png");
 }
 
 void ADIWidget::draw(AircraftState& state, std::shared_ptr<Cairo::Context> context)
@@ -56,7 +29,25 @@ void ADIWidget::draw(AircraftState& state, std::shared_ptr<Cairo::Context> conte
     int diagonal = hypot(getWidth(), getHeight());
 
     context->save();
+#if 0
     context->arc(halfWidth, halfHeight, halfHeight, 0, 2*M_PI);
+#else
+    double x         = 0;        /* parameters like cairo_rectangle */
+    double y         = 0;
+    double width     = getWidth();
+    double height    = getHeight();
+    double aspect    = 1.0;     /* aspect ratio */
+    double corner_radius = height / 20.0;   /* and corner curvature radius */
+
+    double radius = corner_radius / aspect;
+    double degrees = M_PI / 180.0;
+    context->begin_new_sub_path();
+    context->arc(width - radius, y + radius, radius, -90 * degrees, 0 * degrees);
+    context->arc(x + width - radius, y + height - radius, radius, 0 * degrees, 90 * degrees);
+    context->arc(x + radius, y + height - radius, radius, 90 * degrees, 180 * degrees);
+    context->arc(x + radius, y + radius, radius, 180 * degrees, 270 * degrees);
+    context->close_path();
+#endif
     context->clip();
 
     context->save();
@@ -146,6 +137,7 @@ void ADIWidget::draw(AircraftState& state, std::shared_ptr<Cairo::Context> conte
     context->line_to(-40, 15);
     context->set_source_rgb(1.0, 1.0, 1.0);
     context->set_line_width(5);
+    context->set_line_cap(Cairo::Context::LineCap::ROUND);
     context->stroke_preserve();
     context->set_source_rgb(0.0, 0.0, 0.0);
     context->set_line_width(3);

@@ -69,8 +69,37 @@ void HeadingIndicatorWidget::drawCompass()
 #endif
 }
 
-void HeadingIndicatorWidget::draw(UFC::AircraftState &state, std::shared_ptr<Cairo::Context> surface)
+void HeadingIndicatorWidget::draw(UFC::AircraftState &state, std::shared_ptr<Cairo::Context> context)
 {
+    context->save();
+    context->rectangle(0, 0, getWidth(), getHeight());
+    context->set_source_rgb(0.21, 0.21, 0.21);
+    context->fill_preserve();
+    context->set_source_rgb(1, 1, 1);
+    context->stroke();
+
+    float halfAngleWidth = ((getWidth() / (float)m_spacing) / 2.0f);
+
+    float relAngle = -halfAngleWidth;
+    float offset = fmod(state.magHeading, 0.5);
+    while (relAngle < halfAngleWidth)
+    {
+        float angle = state.magHeading + relAngle - offset;
+        float x = (halfAngleWidth + relAngle + offset) * m_spacing;
+
+        context->move_to(x, 0);
+        context->line_to(x, 10);
+        context->stroke();
+
+        char buf[50];
+        snprintf(buf, 50, "%d", (int)(angle / 10.0));
+        getDisplay()->drawText(context, buf, x, 15);
+
+        relAngle += 0.5;
+    }
+
+
+    context->restore();
 #if 0
     surface->blit(
         getX(),
