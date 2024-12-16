@@ -50,6 +50,14 @@ data:
     autoThrottleMode: # No default
     approachMode: # No default
 
+  cabin:
+    call: # No default
+    seatBeltSign: sim/cockpit2/annunciators/fasten_seatbelt
+    noSmokingSign: sim/cockpit2/annunciators/no_smoking
+  weight:
+    passengerCount: 
+    passengerDistribution: 
+
 commands:
   autopilot:
     altitude:

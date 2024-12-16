@@ -1,6 +1,8 @@
 name: Toliss A321
 author: Gliding Kiwi
-icao: A321
+icao:
+  - A321
+  - A21N
 
 data:
   autopilot:
@@ -20,6 +22,14 @@ data:
     altitudeManaged: AirbusFBW/ALTmanaged
 
     displayVerticalSpeed: "!AirbusFBW/VSdashed"
+
+  cabin:
+    call: AirbusFBW/fmod/env/cabinChime
+    seatBeltSign: AirbusFBW/SeatBeltSignsOn
+    noSmokingSign: AirbusFBW/NoSmokingSignsOn
+  weight:
+    passengerCount: AirbusFBW/NoPax
+    passengerDistribution: AirbusFBW/PaxDistrib
 
 commands:
   autopilot:
@@ -50,5 +60,9 @@ commands:
       toggle: toliss_airbus/hdgtrk_button_push
     verticalSpeed:
       manage: AirbusFBW/vs_push
+  cabin:
+    chime: AirbusFBW/CheckCabin
+  weight:
+    calculateCG: AirbusFBW/SetWeightAndCG
     
 
