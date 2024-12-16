@@ -12,7 +12,7 @@
 using namespace std;
 using namespace UFC;
 
-XPMapping::XPMapping(string baseDir) : Logger("XPMapping"), m_baseDir(baseDir)
+XPMapping::XPMapping(const string& baseDir) : Logger("XPMapping"), m_baseDir(baseDir)
 {
 }
 
@@ -46,18 +46,43 @@ void XPMapping::loadDefinitionsForAircraft(const string& author, const string& i
                 continue;
             }
             auto fileAuthor = aircraftFile["author"].as<string>();
-            auto fileICAO = aircraftFile["icao"].as<string>();
+            vector<string> fileICAOs;
+            auto icaoNode = aircraftFile["icao"];
+            if (icaoNode.IsScalar())
+            {
+                auto fileICAO = aircraftFile["icao"].as<string>();
+                fileICAOs.push_back(fileICAO);
+            }
+            else
+            {
+                for (auto fileICAO : icaoNode)
+                {
+                    fileICAOs.push_back(fileICAO.as<string>());
+                }
+            }
 
             int match = fnmatch(fileAuthor.c_str(), author.c_str(), 0);
             if (match != 0)
             {
                 continue;
             }
-            match = fnmatch(icaoType.c_str(), fileICAO.c_str(), 0);
-            if (match != 0)
+
+            bool foundICAO = false;
+            for (const auto& fileICAO : fileICAOs)
+            {
+                match = fnmatch(icaoType.c_str(), fileICAO.c_str(), 0);
+                if (match == 0)
+                {
+                    foundICAO = true;
+                    break;
+                }
+            }
+
+            if (!foundICAO)
             {
                 continue;
             }
+
             log(INFO, "%s: Aircraft definition found!", entry.path().c_str());
             loadDefinitions(aircraftFile);
             break;
@@ -68,10 +93,10 @@ void XPMapping::loadDefinitionsForAircraft(const string& author, const string& i
 void XPMapping::loadDefinitions(YAML::Node config)
 {
     YAML::Node dataNode = config["data"];
-    for (YAML::const_iterator it=dataNode.begin();it!=dataNode.end();++it)
+    for (YAML::const_iterator it=dataNode.begin(); it!=dataNode.end(); ++it)
     {
         auto categoryName = it->first.as<string>();
-        for (YAML::const_iterator dataIt=it->second.begin();dataIt!=it->second.end();++dataIt)
+        for (auto dataIt = it->second.begin(); dataIt != it->second.end(); ++dataIt)
         {
             if (dataIt->second)
             {
@@ -164,6 +189,16 @@ const CommandDefinition& XPMapping::getCommand(std::string command)
     }
 
     return it->second;
+}
+
+std::shared_ptr<DataDefinition> XPMapping::getDataRef(const std::string& id)
+{
+    auto it = m_dataRefsById.find(id);
+    if (it != m_dataRefsById.end())
+    {
+        return it->second;
+    }
+    return nullptr;
 }
 
 void XPMapping::writeFloat(AircraftState& state, const shared_ptr<DataDefinition> &dataDef, float value)

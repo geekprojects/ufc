@@ -20,6 +20,7 @@ enum DataRefType
     FLOAT,
     BOOLEAN,
     INTEGER,
+    STRING,
 };
 
 struct DataMapping
@@ -33,6 +34,8 @@ struct DataDefinition
     std::string id;
     DataRefType type;
     int pos;
+    int len = 1;
+
     DataMapping mapping;
     int idx;
     void* data;
@@ -63,7 +66,7 @@ class XPMapping : UFC::Logger
     void loadCommands(YAML::Node node, std::string id);
 
  public:
-    XPMapping(std::string baseDir);
+    XPMapping(const std::string &baseDir);
 
     void loadDefinitionsForAircraft(const std::string &author, const std::string &icaoType);
 
@@ -73,6 +76,7 @@ class XPMapping : UFC::Logger
 
     std::vector<std::shared_ptr<DataDefinition>>& getDataRefs() { return m_dataRefs; }
     std::map<std::string, CommandDefinition>& getCommands() { return m_commands; }
+    std::shared_ptr<DataDefinition> getDataRef(const std::string &id);
 
     void writeFloat(UFC::AircraftState& state, const std::shared_ptr<DataDefinition> &dataDef, float value);
     void writeInt(UFC::AircraftState& state, const std::shared_ptr<DataDefinition> &dataDef, int32_t value);
