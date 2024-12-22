@@ -45,10 +45,10 @@ data:
     fmsVnav: sim/cockpit2/autopilot/sim/cockpit2/autopilot/fms_vnav
 
     locMode: # No default
-    ap1Mode: # No default
+    ap1Mode: sim/cockpit/autopilot/autopilot_mode == 2
     ap2Mode: # No default
     autoThrottleMode: # No default
-    approachMode: # No default
+    approachMode: sim/cockpit2/autopilot/approach_status
 
   cabin:
     call: # No default
