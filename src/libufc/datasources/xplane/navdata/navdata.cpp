@@ -37,7 +37,7 @@ void XPlaneDataSource::loadFixes(const shared_ptr<NavData>& navData) const
     while (!fixData->eof())
     {
         string lineStr = fixData->readLine();
-        NavDataUtils::trim(lineStr);
+        lineStr = StringUtils::trim(lineStr);
         if (lineStr.size() == 0)
         {
             continue;
@@ -72,7 +72,7 @@ void XPlaneDataSource::loadNavAids(const std::shared_ptr<NavData>& navData) cons
     while (!fixData->eof())
     {
         string lineStr = fixData->readLine();
-        NavDataUtils::trim(lineStr);
+        StringUtils::trim(lineStr);
         if (lineStr.size() == 0)
         {
             continue;
