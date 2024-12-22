@@ -123,7 +123,7 @@ void XPlaneDataSource::update(const map<int, float>& values)
                 m_mapping.writeInt(state, dataRef, (int32_t)value);
                 break;
             case BOOLEAN:
-                m_mapping.writeBoolean(state, dataRef, (bool)value);
+                m_mapping.writeBoolean(state, dataRef, (int32_t)value);
                 break;
             case STRING:
                 // Ignored!

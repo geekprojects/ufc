@@ -23,10 +23,18 @@ enum DataRefType
     STRING,
 };
 
+enum class DataMappingType
+{
+    VALUE,
+    EQUALS,
+    NEGATE
+};
+
 struct DataMapping
 {
     std::string dataRef;
-    bool negate = false;
+    DataMappingType type;
+    int32_t operand;
 };
 
 struct DataDefinition
@@ -80,7 +88,7 @@ class XPMapping : UFC::Logger
 
     void writeFloat(UFC::AircraftState& state, const std::shared_ptr<DataDefinition> &dataDef, float value);
     void writeInt(UFC::AircraftState& state, const std::shared_ptr<DataDefinition> &dataDef, int32_t value);
-    void writeBoolean(UFC::AircraftState& state, const std::shared_ptr<DataDefinition> &dataDef, bool value);
+    void writeBoolean(UFC::AircraftState &state, const std::shared_ptr<DataDefinition> &dataDef, int32_t value);
     void writeString(UFC::AircraftState& state, const std::shared_ptr<DataDefinition> &dataDef, std::string value);
 };
 

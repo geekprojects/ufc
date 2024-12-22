@@ -31,7 +31,7 @@ static const DataDefinition g_dataRefsInit[] =
 
     {DATA_FLIGHTDIRECTOR_PITCH, FLOAT, offsetof(AircraftState, flightDirector.pitch)},
     {DATA_FLIGHTDIRECTOR_ROLL, FLOAT, offsetof(AircraftState, flightDirector.roll)},
-    {DATA_FLIGHTDIRECTOR_MODE, INTEGER, offsetof(AircraftState, flightDirector.mode)},
+    {DATA_FLIGHTDIRECTOR_MODE, BOOLEAN, offsetof(AircraftState, flightDirector.mode)},
 
     {DATA_AUTOPILOT_DISPLAYSPEED, BOOLEAN, offsetof(AircraftState, autopilot.displaySpeed)},
     {DATA_AUTOPILOT_SPEEDMANAGED, BOOLEAN, offsetof(AircraftState, autopilot.speedManaged)},
@@ -56,11 +56,11 @@ static const DataDefinition g_dataRefsInit[] =
     {DATA_AUTOPILOT_VERTICALSPEED, FLOAT, offsetof(AircraftState, autopilot.verticalSpeed)},
     {DATA_AUTOPILOT_VERTICALSPEEDFPAMODE, INTEGER, offsetof(AircraftState, autopilot.verticalSpeedFPAMode)},
 
-    {DATA_AUTOPILOT_LOCMODE, INTEGER, offsetof(AircraftState, autopilot.locMode)},
-    {DATA_AUTOPILOT_AP1MODE, INTEGER, offsetof(AircraftState, autopilot.ap1Mode)},
-    {DATA_AUTOPILOT_AP2MODE, INTEGER, offsetof(AircraftState, autopilot.ap2Mode)},
-    {DATA_AUTOPILOT_AUTOTHROTTLEMODE, INTEGER, offsetof(AircraftState, autopilot.autoThrottleMode)},
-    {DATA_AUTOPILOT_APPROACHMODE, INTEGER, offsetof(AircraftState, autopilot.approachMode)},
+    {DATA_AUTOPILOT_LOCMODE, BOOLEAN, offsetof(AircraftState, autopilot.locMode)},
+    {DATA_AUTOPILOT_AP1MODE, BOOLEAN, offsetof(AircraftState, autopilot.ap1Mode)},
+    {DATA_AUTOPILOT_AP2MODE, BOOLEAN, offsetof(AircraftState, autopilot.ap2Mode)},
+    {DATA_AUTOPILOT_AUTOTHROTTLEMODE, BOOLEAN, offsetof(AircraftState, autopilot.autoThrottleMode)},
+    {DATA_AUTOPILOT_APPROACHMODE, BOOLEAN, offsetof(AircraftState, autopilot.approachMode)},
 
     {DATA_CABIN_CALL, BOOLEAN, offsetof(AircraftState, cabin.call)},
     {DATA_CABIN_SEATBELTSIGN, BOOLEAN, offsetof(AircraftState, cabin.seatBeltSign)},

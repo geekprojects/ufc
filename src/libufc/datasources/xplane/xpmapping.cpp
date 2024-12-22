@@ -9,6 +9,8 @@
 #include <fnmatch.h>
 #include <unistd.h>
 
+#include "ufc/utils.h"
+
 using namespace std;
 using namespace UFC;
 
@@ -149,12 +151,24 @@ void XPMapping::loadCommands(YAML::Node commandsNode, std::string id)
 DataMapping XPMapping::parseMapping(std::string mappingStr)
 {
     DataMapping mapping;
-    if (mappingStr.at(0) == '!')
+    auto idx = mappingStr.find("==");
+
+    if (idx != string::npos)
     {
-        mapping.negate = true;
-        mappingStr = mappingStr.substr(1);
+        mapping.type = DataMappingType::EQUALS;
+        mapping.dataRef = StringUtils::trim(mappingStr.substr(0, idx));
+        mapping.operand = atoi(StringUtils::trim(mappingStr.substr(idx + 2)).c_str());
+        printf("parseMapping: EQUALS: '%s' -> %d\n", mapping.dataRef.c_str(), mapping.operand);
     }
-    mapping.dataRef = mappingStr;
+    else if (mappingStr.at(0) == '!')
+    {
+        mapping.type = DataMappingType::NEGATE;
+        mapping.dataRef = mappingStr.substr(1);
+    }
+    else
+    {
+        mapping.dataRef = mappingStr;
+    }
     return mapping;
 }
 
@@ -213,13 +227,25 @@ void XPMapping::writeInt(AircraftState& state, const shared_ptr<DataDefinition> 
     *d = value;
 }
 
-void XPMapping::writeBoolean(AircraftState& state, const shared_ptr<DataDefinition> &dataDef, bool value)
+void XPMapping::writeBoolean(AircraftState& state, const shared_ptr<DataDefinition> &dataDef, int32_t value)
 {
     auto d = (bool*)((char*)&state + dataDef->pos);
 
-    if (dataDef->mapping.negate)
+    switch (dataDef->mapping.type)
     {
-        value = !value;
+        case DataMappingType::VALUE:
+            // Just use the value as-is
+            value = static_cast<bool>(value);
+            break;
+
+        case DataMappingType::EQUALS:
+            //printf("writeBoolean: %d -> %d\n", value, dataDef->mapping.operand);
+            value = value == dataDef->mapping.operand;
+            break;
+
+        case DataMappingType::NEGATE:
+            value = !static_cast<bool>(value);
+            break;
     }
     *d = value;
 }
