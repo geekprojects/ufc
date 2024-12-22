@@ -12,16 +12,16 @@
 using namespace std;
 using namespace UFC;
 
-static option g_options[] =
+const static option g_options[] =
 {
-    {"config", required_argument, 0,  'c' },
-    {"data", required_argument, 0,  'd' },
-    {"source", required_argument, 0,  's' },
-    {"help", no_argument, 0,  'h' },
-    {0, 0, 0,  0 }
+    {"config", required_argument, nullptr,  'c' },
+    {"data", required_argument, nullptr,  'd' },
+    {"source", required_argument, nullptr,  's' },
+    {"help", no_argument, nullptr,  'h' },
+    {nullptr, 0, nullptr,  0 }
 };
 
-void usage()
+[[noreturn]] void usage()
 {
     printf("UFC - Universal Flight Connector\n");
     printf("\n");
@@ -56,18 +56,33 @@ int main(int argc, char** argv)
             case 's':
                 config.dataSource = optarg;
                 break;
-            case 'h':
+            default:
                 usage();
-                break;
         }
     }
 
     FlightConnector flightConnector(config);
 
-    flightConnector.init();
-    flightConnector.initDevices();
+    bool res;
+    res = flightConnector.init();
+    if (!res)
+    {
+        return 1;
+    }
+
+    res = flightConnector.initDevices();
+    if (!res)
+    {
+        return 1;
+    }
+
     auto dataSource = flightConnector.openDefaultDataSource();
-    bool res = dataSource->connect();
+    if (dataSource == nullptr)
+    {
+        return 1;
+    }
+
+    res = dataSource->connect();
     if (!res)
     {
         return 1;
