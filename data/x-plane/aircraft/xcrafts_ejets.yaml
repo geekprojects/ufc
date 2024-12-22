@@ -1,0 +1,30 @@
+name: X-Crafts E-Jets
+author: Marko Mamula
+icao:
+  - E170
+  - E175
+  - E190
+  - E195
+
+data:
+  autopilot:
+    speed: XCrafts/ERJ/autopilot/airspeed_dial_kts_mach
+    altitude: XCrafts/ERJ/autopilot/altitude
+    verticalSpeed:  XCrafts/ERJ/autopilot/vertical_velocity
+    autoThrottleMode: XCrafts/ERJ/autopilot/autothrottle_system_active
+
+commands:
+  autopilot:
+    altitude:
+      up: XCrafts/ERJ/ALT_up_100
+      down: XCrafts/ERJ/ALT_dn_100
+    airspeed:
+      up: XCrafts/ERJ/SPD_up_1
+      down: XCrafts/ERJ/SPD_dn_1
+    ap1:
+      toggle: XCrafts/APYD_Toggle
+    approach:
+      toggle: XCrafts/ERJ/APPCH
+    autoThrust:
+      toggle: XCrafts/ERJ/AutoThrottle
+
