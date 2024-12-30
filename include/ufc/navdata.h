@@ -2,8 +2,8 @@
 // Created by Ian Parker on 24/10/2024.
 //
 
-#ifndef NAVAIDS_H
-#define NAVAIDS_H
+#ifndef UFC_NAVAIDS_H
+#define UFC_NAVAIDS_H
 
 #include "geoutils.h"
 

@@ -2,8 +2,8 @@
 // Created by Ian Parker on 27/05/2024.
 //
 
-#ifndef FLIGHTCONNECTOR_H
-#define FLIGHTCONNECTOR_H
+#ifndef UFC_FLIGHTCONNECTOR_H
+#define UFC_FLIGHTCONNECTOR_H
 
 #include <thread>
 #include <mutex>

@@ -2,8 +2,8 @@
 // Created by Ian Parker on 14/05/2024.
 //
 
-#ifndef DEVICE_H
-#define DEVICE_H
+#ifndef UFC_DEVICE_H
+#define UFC_DEVICE_H
 
 #include <ufc/aircraftstate.h>
 

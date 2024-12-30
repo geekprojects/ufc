@@ -2,8 +2,8 @@
 // Created by Ian Parker on 14/06/2024.
 //
 
-#ifndef USBHIDDEVICE_H
-#define USBHIDDEVICE_H
+#ifndef UFC_USBHIDDEVICE_H
+#define UFC_USBHIDDEVICE_H
 
 #include "device.h"
 

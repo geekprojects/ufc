@@ -2,8 +2,8 @@
 // Created by Ian Parker on 20/01/2024.
 //
 
-#ifndef XPFD_STATE_H
-#define XPFD_STATE_H
+#ifndef UFC_STATE_H
+#define UFC_STATE_H
 
 #include <string>
 #include <cstdint>

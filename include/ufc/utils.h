@@ -2,8 +2,8 @@
 // Created by Ian Parker on 31/07/2024.
 //
 
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef UFC_UTILS_H
+#define UFC_UTILS_H
 
 #include <string>
 #include <vector>
