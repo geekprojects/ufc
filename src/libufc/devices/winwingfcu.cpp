@@ -3,7 +3,9 @@
 //
 
 #include "winwingfcu.h"
-#include "ufc/flightconnector.h"
+
+#include <ufc/flightconnector.h>
+#include <ufc/commands.h>
 
 #include <cmath>
 

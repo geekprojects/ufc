@@ -12,6 +12,7 @@
 #include <algorithm>
 
 #include <ufc/flightconnector.h>
+#include <ufc/commands.h>
 
 UFC_DEVICE(ArduinoTest, ArduinoTest)
 

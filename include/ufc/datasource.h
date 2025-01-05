@@ -9,7 +9,6 @@
 #include <map>
 
 #include <ufc/aircraftstate.h>
-#include <ufc/commands.h>
 
 #include "logger.h"
 #include "navdata.h"
@@ -37,7 +36,7 @@ class DataSourceInit
 class DataSourceRegistry
 {
  private:
-    std::map<std::string, DataSourceInit*> m_dataSources;
+    std::map<std::string, DataSourceInit*, std::less<>> m_dataSources;
 
  public:
     static DataSourceRegistry* getDataSourceRegistry();
@@ -53,7 +52,7 @@ class DataSourceRegistry
         return nullptr;
     }
 
-    const std::map<std::string, DataSourceInit*>& getDataSources() { return m_dataSources; }
+    const std::map<std::string, DataSourceInit*, std::less<>>& getDataSources() { return m_dataSources; }
 };
 
 #define UFC_DATA_SOURCE(_name, _class)  \
@@ -109,20 +108,18 @@ class DataSource : public Logger
 
     virtual bool update() = 0;
 
-    virtual void command(std::string command) {}
-    virtual void setData(std::string dataName, float value) {}
+    virtual void command(const std::string& command) {}
+    virtual void setData(const std::string& dataName, float value) {}
 
     // Not all values may be updated in real time or you may not be running
     // the update thread. These can be used to retrieve values in these cases.
-    // Note, some Data Sources (X-Plane) do not allow you to run the update
-    // thread and use these calls!
-    virtual bool getDataInt(std::string dataName, int& value) { return false; };
-    virtual bool getDataFloat(std::string dataName, float& value) { return false; };
-    virtual bool getDataString(std::string dataName, std::string& value) { return false; };
+    virtual bool getDataInt(const std::string& dataName, int& value) { return false; };
+    virtual bool getDataFloat(const std::string& dataName, float& value) { return false; };
+    virtual bool getDataString(const std::string& dataName, std::string& value) { return false; };
 
-    virtual void sendMessage(std::string message) {}
+    virtual void sendMessage(const std::string& message) {}
 };
 
 }
 
-#endif //XPFD_DATASOURCE_H
+#endif // UFC_DATASOURCE_H

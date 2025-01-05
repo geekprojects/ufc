@@ -47,16 +47,16 @@ class XPlaneDataSource : public DataSource
 
     bool update() override;
 
-    void command(std::string command) override;
-    void setData(std::string dataName, float value) override;
+    void command(const std::string& command) override;
+    void setData(const std::string& dataName, float value) override;
 
-    bool getDataInt(std::string dataName, int& value) override;
-    bool getDataFloat(std::string dataName, float& value) override;
-    bool getDataString(std::string dataName, std::string& value) override;
+    bool getDataInt(const std::string& dataName, int& value) override;
+    bool getDataFloat(const std::string& dataName, float& value) override;
+    bool getDataString(const std::string& dataName, std::string& value) override;
 
-    void sendMessage(std::string message) override;
+    void sendMessage(const std::string& message) override;
 
-    int getXPlaneVersion() { return m_xPlaneVersion; }
+    [[nodiscard]] int getXPlaneVersion() const { return m_xPlaneVersion; }
 };
 
 }

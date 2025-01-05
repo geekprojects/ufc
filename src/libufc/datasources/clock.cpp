@@ -7,7 +7,8 @@
 #include <ctime>
 #include <unistd.h>
 
-#include "ufc/flightconnector.h"
+#include <ufc/flightconnector.h>
+#include <ufc/commands.h>
 
 using namespace std;
 using namespace UFC;
@@ -98,7 +99,7 @@ bool ClockDataSource::update()
     return true;
 }
 
-void ClockDataSource::command(std::string command)
+void ClockDataSource::command(const std::string& command)
 {
     log(DEBUG, "command: %s", command.c_str());
     if (command == AUTOPILOT_ALTITUDE_MANAGE)

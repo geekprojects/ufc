@@ -3,7 +3,9 @@
 //
 
 #include "customradiohid.h"
-#include "ufc/flightconnector.h"
+
+#include <ufc/flightconnector.h>
+#include <ufc/commands.h>
 
 using namespace std;
 using namespace UFC;

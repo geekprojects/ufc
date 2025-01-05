@@ -3,7 +3,9 @@
 //
 
 #include "simulator.h"
+
 #include <ufc/flightconnector.h>
+#include <ufc/commands.h>
 
 #include <unistd.h>
 
@@ -102,7 +104,7 @@ bool SimulatorDataSource::update()
     return true;
 }
 
-void SimulatorDataSource::command(std::string command)
+void SimulatorDataSource::command(const std::string& command)
 {
     AutopilotState autopilot = m_autopilot;
     if (command == AUTOPILOT_HEADING_UP)

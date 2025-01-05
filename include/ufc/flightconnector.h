@@ -22,6 +22,13 @@ namespace LuaCpp
 namespace UFC
 {
 
+enum class Result
+{
+    SUCCESS,
+    TIMEOUT,
+    FAIL
+};
+
 class DataSource;
 class Device;
 class Airports;
