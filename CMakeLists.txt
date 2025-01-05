@@ -36,8 +36,8 @@ add_definitions(-I/usr/local/include ${yamlcpp_CFLAGS} ${hidapi_CFLAGS} ${lua_CF
 add_library(ufc SHARED
         src/libufc/aircraftstate.cpp
         src/libufc/flightconnector.cpp
-        src/libufc/data.cpp
-        src/libufc/logger.cpp
+        src/libufc/utils/data.cpp
+        src/libufc/utils/logger.cpp
         src/libufc/datasources/simulator.cpp
         src/libufc/datasources/simulator.h
         src/libufc/datasources/xplane/xplane.cpp
@@ -61,11 +61,11 @@ add_library(ufc SHARED
         src/libufc/devices/winwingfcu.h
         src/libufc/datasources/xplane/datadefs.h
         include/ufc/utils.h
-        src/libufc/utils.cpp
+        src/libufc/utils/utils.cpp
         include/ufc/airports.h
         src/libufc/airport.cpp
         include/ufc/geoutils.h
-        src/libufc/geoutils.cpp
+        src/libufc/utils/geoutils.cpp
         src/libufc/datasources/xplane/navdata/airports.cpp
         src/libufc/datasources/xplane/navdata/navdata.cpp
         src/libufc/devices/customradiohid.cpp
@@ -76,6 +76,8 @@ add_library(ufc SHARED
         include/ufc/navdata.h
         src/libufc/datasources/xplane/xpmapping.cpp
         src/libufc/datasources/xplane/xpmapping.h
+        include/ufc/udp.h
+        src/libufc/utils/udp.cpp
 )
 
 if(UNIX AND APPLE)
