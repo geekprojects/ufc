@@ -3,11 +3,13 @@
 //
 
 #include <unistd.h>
-#include <ufc/udp.h>
+#include <cstring>
 
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <arpa/inet.h>
+
+#include <ufc/udp.h>
 
 using namespace std;
 using namespace UFC;
