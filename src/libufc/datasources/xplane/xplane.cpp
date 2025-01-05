@@ -24,7 +24,7 @@ XPlaneDataSource::XPlaneDataSource(FlightConnector* flightConnector) : DataSourc
 bool XPlaneDataSource::connect()
 {
     auto res = m_client->connect();
-    if (res != XPlaneResult::SUCCESS)
+    if (res != Result::SUCCESS)
     {
         return false;
     }
@@ -35,7 +35,7 @@ bool XPlaneDataSource::connect()
     while (true)
     {
         res = m_client->readInt("sim/version/xplane_internal_version", m_xPlaneVersion);
-        if (res != XPlaneResult::TIMEOUT)
+        if (res != Result::TIMEOUT)
         {
             break;
         }
@@ -43,7 +43,8 @@ bool XPlaneDataSource::connect()
         // Timeout! Try again in a second
         sleep(1);
     }
-    if (res == XPlaneResult::FAIL || m_xPlaneVersion == 0)
+
+    if (res == Result::FAIL || m_xPlaneVersion == 0)
     {
         log(ERROR, "init: Unable to connect to X-Plane");
         return false;
@@ -97,7 +98,7 @@ bool XPlaneDataSource::update()
         update(values);
     });
 
-    return res == XPlaneResult::SUCCESS;
+    return res == Result::SUCCESS;
 }
 
 void XPlaneDataSource::update(const map<int, float>& values)
@@ -133,32 +134,32 @@ void XPlaneDataSource::update(const map<int, float>& values)
     m_flightConnector->updateState(state);
 }
 
-void XPlaneDataSource::command(string command)
+void XPlaneDataSource::command(const string& command)
 {
-    auto xpcommand = m_mapping.getCommand(command);
-    if (xpcommand.command.empty())
+    auto commandDefinition = m_mapping.getCommand(command);
+    if (commandDefinition.command.empty())
     {
         return;
     }
 
-    string xcommand = xpcommand.command;
-    printf("XPlaneDataSource::command: %s -> %s\n", command.c_str(), xcommand.c_str());
+    string commandStr = commandDefinition.command;
+    printf("XPlaneDataSource::command: %s -> %s\n", command.c_str(), commandStr.c_str());
 
-    auto idx = xcommand.find("=");
-    if (idx == xcommand.npos)
+    auto idx = commandStr.find('=');
+    if (idx == string::npos)
     {
-        m_client->sendCommand(xcommand);
+        m_client->sendCommand(commandStr);
     }
     else
     {
-        string dataref = xcommand.substr(0, idx);
-        float value = atof(xcommand.substr(idx + 1).c_str());
+        string dataref = commandStr.substr(0, idx);
+        float value = atof(commandStr.substr(idx + 1).c_str());
         log(INFO, "command: Setting data ref: %s = %0.2f", dataref.c_str(), value);
         m_client->setDataRef(dataref, value);
     }
 }
 
-void XPlaneDataSource::setData(const std::string dataName, float value)
+void XPlaneDataSource::setData(const std::string& dataName, float value)
 {
     auto dataRef = m_mapping.getDataRef(dataName);
     if (dataRef == nullptr || dataRef->mapping.dataRef.empty())
@@ -170,7 +171,7 @@ void XPlaneDataSource::setData(const std::string dataName, float value)
     m_client->setDataRef(dataRef->mapping.dataRef, value);
 }
 
-bool XPlaneDataSource::getDataInt(std::string dataName, int& value)
+bool XPlaneDataSource::getDataInt(const std::string& dataName, int& value)
 {
     auto dataRef = m_mapping.getDataRef(dataName);
     if (dataRef == nullptr || dataRef->mapping.dataRef.empty())
@@ -180,10 +181,10 @@ bool XPlaneDataSource::getDataInt(std::string dataName, int& value)
     }
 
     auto res = m_client->readInt(dataRef->mapping.dataRef, value);
-    return res == XPlaneResult::SUCCESS;
+    return res == Result::SUCCESS;
 }
 
-bool XPlaneDataSource::getDataFloat(std::string dataName, float& value)
+bool XPlaneDataSource::getDataFloat(const std::string& dataName, float& value)
 {
     auto dataRef = m_mapping.getDataRef(dataName);
     if (dataRef == nullptr || dataRef->mapping.dataRef.empty())
@@ -193,10 +194,10 @@ bool XPlaneDataSource::getDataFloat(std::string dataName, float& value)
     }
 
     auto res = m_client->read(dataRef->mapping.dataRef, value);
-    return res == XPlaneResult::SUCCESS;
+    return res == Result::SUCCESS;
 }
 
-bool XPlaneDataSource::getDataString(std::string dataName, string& value)
+bool XPlaneDataSource::getDataString(const std::string& dataName, string& value)
 {
     auto dataRef = m_mapping.getDataRef(dataName);
     if (dataRef == nullptr || dataRef->mapping.dataRef.empty())
@@ -206,10 +207,10 @@ bool XPlaneDataSource::getDataString(std::string dataName, string& value)
     }
 
     auto res = m_client->readString(dataRef->mapping.dataRef, dataRef->len, value);
-    return res == XPlaneResult::SUCCESS;
+    return res == Result::SUCCESS;
 }
 
-void XPlaneDataSource::sendMessage(std::string message)
+void XPlaneDataSource::sendMessage(const std::string& message)
 {
     m_client->sendMessage(message);
 }

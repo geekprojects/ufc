@@ -1,9 +1,6 @@
 #include <string>
-#include <csignal>
 #include <cstring>
 
-#include <sys/socket.h>
-#include <sys/select.h>
 #include <arpa/inet.h>
 
 #include "xplaneclient.h"
@@ -17,7 +14,7 @@ std::vector<XPlaneClient*> XPlaneClient::g_clients;
 
 void XPlaneClient::disconnectAll()
 {
-    for (auto client : g_clients)
+    for (const auto client : g_clients)
     {
         client->disconnect();
     }
@@ -33,142 +30,64 @@ XPlaneClient::XPlaneClient() :
 
 XPlaneClient::XPlaneClient(const string &host, const int port) :
     Logger("XPlaneClient"),
+    m_host(host),
     m_port(port)
 {
-    m_host = host;
     g_clients.push_back(this);
 }
 
 XPlaneClient::~XPlaneClient() = default;
 
-XPlaneResult XPlaneClient::connect()
+Result XPlaneClient::connect()
 {
-    m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-
-    m_serverAddr.sin_family = AF_INET;
-    m_serverAddr.sin_port = htons(m_port);
-    m_serverAddr.sin_addr.s_addr = inet_addr(m_host.c_str());
-
-    sockaddr_in receiveAddr = {};
-    receiveAddr.sin_family = AF_INET;
-    receiveAddr.sin_addr.s_addr = INADDR_ANY;
-    receiveAddr.sin_port = 0;
-
-    int res = ::bind(m_socket, (struct sockaddr*)&receiveAddr, sizeof(receiveAddr));
-    if (res == -1)
+    m_dataSocket = createConnection();
+    if (m_dataSocket == nullptr)
     {
-        log(ERROR, "connect: Failed to bind to port %d", m_port);
-        return XPlaneResult::FAIL;
+        return Result::FAIL;
     }
 
-    struct sockaddr_in name = {};
-    socklen_t len = sizeof(name);
-    getsockname(m_socket, (struct sockaddr *)&name, &len);
-    m_clientPort = name.sin_port;
-
-    // Set socket timeout period for sendUDP to 1 millisecond
-    // Without this, playback may become choppy due to process blocking
-    // Set socket timeout to 1 millisecond = 1,000 microseconds to make it the same as Windows (0 makes it blocking)
-    timeval timeout = {};
-    timeout.tv_sec = 0;
-    timeout.tv_usec = 1000;
-    res = setsockopt(m_socket, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
-    if (res < 0)
-    {
-        log(ERROR, "Failed to set timeout");
-        return XPlaneResult::FAIL;
-    }
-
-    m_connected = true;
-
-    return XPlaneResult::SUCCESS;
+    return Result::SUCCESS;
 }
 
-bool XPlaneClient::disconnect()
+std::shared_ptr<UDPSocket> XPlaneClient::createConnection() const
 {
-    m_connected = false;
-    stopDataRefs();
-    return true;
+    return UDPSocket::connect(m_host, m_port);
 }
 
-XPlaneResult XPlaneClient::send(void* buffer, int len)
+void XPlaneClient::disconnect() const
 {
-    ssize_t result = sendto(m_socket, buffer, len, 0, (const struct sockaddr*)&m_serverAddr, sizeof(m_serverAddr));
-    if (result < 0)
+    if (m_dataSocket != nullptr)
     {
-        log(ERROR, "XPlaneClient::send: Failed to send data: %z", result);
-        return XPlaneResult::FAIL;
+        m_dataSocket->close();
     }
-    return XPlaneResult::SUCCESS;
 }
 
-XPlaneResult XPlaneClient::receive(shared_ptr<Data>& data)
-{
-    fd_set stReadFDS;
-    fd_set stExceptFDS;
-    timeval timeout{};
-
-    // Setup for Select
-    FD_ZERO(&stReadFDS);
-    FD_SET(m_socket, &stReadFDS);
-    FD_ZERO(&stExceptFDS);
-    FD_SET(m_socket, &stExceptFDS);
-
-    timeout.tv_sec = 2;
-    timeout.tv_usec = 0;
-
-    int res = select(m_socket + 1, &stReadFDS, nullptr, &stExceptFDS, &timeout);
-    if (res < 0)
-    {
-        log(ERROR, "receive: Failed to select");
-        return XPlaneResult::FAIL;
-    }
-    else if (res == 0)
-    {
-        log(WARN, "receive: Timeout");
-        return XPlaneResult::TIMEOUT;
-    }
-
-    char buffer[4096];
-    ssize_t len = ::recv(m_socket, buffer, 4096, 0);
-    if (len <= 0)
-    {
-        log(ERROR, "receive: Failed to read data?");
-        return XPlaneResult::FAIL;
-    }
-
-    data = make_shared<Data>(len);
-    memcpy(data->getData(), buffer, len);
-
-    return XPlaneResult::SUCCESS;
-}
-
-XPlaneResult XPlaneClient::getPosition(Position& position)
+Result XPlaneClient::getPosition(Position& position)
 {
     char buffer[8] = "RPOS\001\0";
 
-    auto res = send(buffer, 8);
-    if (res != XPlaneResult::SUCCESS)
+    auto res = m_dataSocket->send(buffer, 8);
+    if (res != Result::SUCCESS)
     {
         return res;
     }
 
     shared_ptr<Data> data;
-    res = receive(data);
-    if (res != XPlaneResult::SUCCESS)
+    res = m_dataSocket->receive(data);
+    if (res != Result::SUCCESS)
     {
         return res;
     }
     if (data->getLength() < sizeof(Position))
     {
         log(ERROR, "getPosition: not received enough data!");
-        return XPlaneResult::FAIL;
+        return Result::FAIL;
     }
 
     // Turn off updates
     buffer[6] = '0';
-    res = send(buffer, 8);
-    if (res != XPlaneResult::SUCCESS)
+    res = m_dataSocket->send(buffer, 8);
+    if (res != Result::SUCCESS)
     {
         return res;
     }
@@ -191,15 +110,7 @@ XPlaneResult XPlaneClient::getPosition(Position& position)
     position.Qrad = data->readFloat();
     position.Rrad = data->readFloat();
 
-    return XPlaneResult::SUCCESS;
-}
-
-XPlaneResult XPlaneClient::sendConnection()
-{
-    char buffer[32] = "CONN ";
-    memcpy(&buffer[5], &m_clientPort, 2);
-
-    return XPlaneResult::SUCCESS;
+    return Result::SUCCESS;
 }
 
 struct dref_struct_in
@@ -211,25 +122,39 @@ struct dref_struct_in
     char dref_string[400] = {};
 } __attribute__((packed));
 
-XPlaneResult XPlaneClient::streamDataRefs(
+Result XPlaneClient::streamDataRefs(
+    const std::vector<std::pair<int, std::string>>& datarefs,
+    const std::function<void(std::map<int, float>)>& callback,
+    int count)
+{
+    auto streamSocket = createConnection();
+    if (streamSocket == nullptr)
+    {
+        return Result::FAIL;
+    }
+
+    return streamDataRefs(streamSocket, datarefs, callback, count);
+}
+
+Result XPlaneClient::streamDataRefs(
+    std::shared_ptr<UDPSocket> socket,
     const vector<pair<int, string>>& datarefs,
     const function<void(map<int, float>)>& callback,
     const int count)
 {
-    m_currentDataRefs = datarefs;
-    auto res = sendRREF(datarefs, 20);
-    if (res != XPlaneResult::SUCCESS)
+    auto res = sendRREF(socket, datarefs, 20);
+    if (res != Result::SUCCESS)
     {
         return res;
     }
 
     int c = 0;
-    XPlaneResult result = XPlaneResult::SUCCESS;
-    while (m_connected && (count == 0 || c < count))
+    Result result = Result::SUCCESS;
+    while (m_dataSocket->isConnected() && socket->isConnected() && (count == 0 || c < count))
     {
         shared_ptr<Data> packet;
-        res = receive(packet);
-        if (res != XPlaneResult::SUCCESS)
+        res = socket->receive(packet);
+        if (res != Result::SUCCESS)
         {
             // Unable to receive data
             result = res;
@@ -256,11 +181,13 @@ XPlaneResult XPlaneClient::streamDataRefs(
         callback(values);
         c++;
     }
-    stopDataRefs();
+
+    sendRREF(socket, datarefs, 0);
+
     return result;
 }
 
-XPlaneResult XPlaneClient::sendRREF(std::vector<std::pair<int, std::string>> datarefs, int freq)
+Result XPlaneClient::sendRREF(const std::shared_ptr<UDPSocket> &socket, std::vector<std::pair<int, std::string>> datarefs, int freq)
 {
     for (unsigned int i = 0; i < datarefs.size(); i += 100)
     {
@@ -277,33 +204,27 @@ XPlaneResult XPlaneClient::sendRREF(std::vector<std::pair<int, std::string>> dat
             drefRequest.dref_sender_index = idx;
             strncpy(drefRequest.dref_string, dataref.c_str(), 399);
             drefRequest.dref_string[399] = 0;
-            auto res = send(&drefRequest, sizeof(drefRequest));
-            if (res != XPlaneResult::SUCCESS)
+            auto res = socket->send(&drefRequest, sizeof(drefRequest));
+            if (res != Result::SUCCESS)
             {
                 return res;
             }
         }
     }
-    return XPlaneResult::SUCCESS;
+    return Result::SUCCESS;
 }
 
-void XPlaneClient::stopDataRefs()
-{
-    sendRREF(m_currentDataRefs, 0);
-    m_currentDataRefs.clear();
-}
-
-XPlaneResult XPlaneClient::sendCommand(const std::string& command)
+Result XPlaneClient::sendCommand(const std::string& command)
 {
     const int len = 5 + command.length();
     char buffer[len];
     const auto cmnd = "CMND\00";
     memcpy(buffer, cmnd, 5);
     memcpy(buffer + 5, command.c_str(), command.length());
-    return send(buffer, len);
+    return m_dataSocket->send(buffer, len);
 }
 
-XPlaneResult XPlaneClient::setDataRef(const std::string& dataRef, float value)
+Result XPlaneClient::setDataRef(const std::string& dataRef, float value)
 {
     int len = 5 + 4 + 500;
     char buffer[len];
@@ -312,12 +233,12 @@ XPlaneResult XPlaneClient::setDataRef(const std::string& dataRef, float value)
     memcpy(buffer, cmnd, 5);
     memcpy(buffer + 5, &value, 4);
     memcpy(buffer + 9, dataRef.c_str(), dataRef.length());
-    return send(buffer, len);
+    return m_dataSocket->send(buffer, len);
 }
 
 #define READ_OFFSET 10000
 
-XPlaneResult XPlaneClient::readString(const std::string& dataref, int len, string& value)
+Result XPlaneClient::readString(const std::string& dataref, int len, string& value)
 {
     vector<pair<int, string>> datarefs;
     for (int i = 0; i < len; i++)
@@ -327,9 +248,9 @@ XPlaneResult XPlaneClient::readString(const std::string& dataref, int len, strin
 
     char buffer[len + 1];
     memset(buffer, 0, len + 1);
-    auto res = streamDataRefs(datarefs, [&buffer, &len](map<int, float> const& values)
+    auto res = streamDataRefs(m_dataSocket, datarefs, [&buffer, &len](map<int, float> const& values)
     {
-        for (const auto& [idx, value] : values)
+        for (const auto& [idx, v] : values)
         {
             if (idx < READ_OFFSET)
             {
@@ -338,12 +259,12 @@ XPlaneResult XPlaneClient::readString(const std::string& dataref, int len, strin
             int i = idx - READ_OFFSET;
             if (i < len)
             {
-                buffer[i] = (char)value;
+                buffer[i] = (char)v;
             }
         }
     }, 1);
 
-    if (res == XPlaneResult::SUCCESS)
+    if (res == Result::SUCCESS)
     {
         value = string(buffer);
     }
@@ -351,12 +272,12 @@ XPlaneResult XPlaneClient::readString(const std::string& dataref, int len, strin
     return res;
 }
 
-XPlaneResult XPlaneClient::read(const std::string& dataref, float& returnValue)
+Result XPlaneClient::read(const std::string& dataref, float& returnValue)
 {
     vector<pair<int, string>> datarefs;
     datarefs.emplace_back(0, dataref);
 
-    return streamDataRefs(datarefs, [&returnValue](map<int, float> const& values)
+    return streamDataRefs(m_dataSocket, datarefs, [&returnValue](map<int, float> const& values)
     {
         for (const auto& [idx, value] : values)
         {
@@ -365,14 +286,6 @@ XPlaneResult XPlaneClient::read(const std::string& dataref, float& returnValue)
     }, 1);
 }
 
-struct XPlaneAlertMessage
-{
-    char header[5];
-    char message1[240];	// needs to be multiple of 8 for the align to work out perfect for the copy?
-    char message2[240];	// needs to be long enough to hold the strings!
-    char message3[240];
-    char message4[240];
-};
 
 void XPlaneClient::sendMessage(const std::string& string)
 {
@@ -382,6 +295,6 @@ void XPlaneClient::sendMessage(const std::string& string)
     memcpy(message.header, alrt, 4);
     message.header[4] = 0;
     strcpy(message.message1, string.c_str());
-    send(&message, sizeof(message));
+    m_dataSocket->send(&message, sizeof(message));
 }
 
