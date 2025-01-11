@@ -48,7 +48,7 @@ bool SimulatorDataSource::update()
     m_communication.com1Hz = 118900;
     m_communication.com1StandbyHz = 136125;
 
-    m_autopilot.speed = 100.0f;
+    m_autopilot.speed = 50.0f;
     m_autopilot.altitude = 1000.0f;
     m_autopilot.heading = 90.0f;
 
@@ -93,11 +93,12 @@ bool SimulatorDataSource::update()
                 pitchDir = 1;
             }
         }
-        state.indicatedAirspeed += 0.1;
-        state.altitude += 0.5;
-        state.magHeading += 0.1;
+        state.indicatedAirspeed += 0.1f;
+        state.altitude += 0.5f;
+        state.magHeading += 0.2f;
         state.autopilot = m_autopilot;
         state.comms = m_communication;
+        state.verticalSpeed = state.pitch * 400.0f;
         m_flightConnector->updateState(state);
         usleep(50000);
     }
