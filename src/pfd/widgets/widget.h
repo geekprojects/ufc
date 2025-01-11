@@ -15,13 +15,23 @@ class FlightWidget
 {
  private:
     XPFlightDisplay* m_display;
-    int m_x;
-    int m_y;
-    int m_width;
-    int m_height;
+    FlightWidget* m_parent = nullptr;
+    float m_x;
+    float m_y;
+    float m_width;
+    float m_height;
+
+    std::vector<std::shared_ptr<FlightWidget>> m_children;
+
+ protected:
+    void addChild(const std::shared_ptr<FlightWidget>& child)
+    {
+        m_children.push_back(child);
+        child->m_parent = this;
+    }
 
  public:
-    FlightWidget(XPFlightDisplay* flightDisplay, int x, int y, int w, int h) :
+    FlightWidget(XPFlightDisplay* flightDisplay, float x, float y, float w, float h) :
         m_display(flightDisplay),
         m_x(x),
         m_y(y),
@@ -29,13 +39,14 @@ class FlightWidget
         m_height(h) {}
     virtual ~FlightWidget() = default;
 
-    virtual void draw(UFC::AircraftState& state, std::shared_ptr<Cairo::Context> surface) = 0;
+    virtual void draw(UFC::AircraftState& state, const std::shared_ptr<Cairo::Context>& surface);
 
     [[nodiscard]] XPFlightDisplay* getDisplay() const { return m_display; }
-    [[nodiscard]] int getX() const { return m_x; }
-    [[nodiscard]] int getY() const { return m_y; }
-    [[nodiscard]] int getWidth() const { return m_width; }
-    [[nodiscard]] int getHeight() const { return m_height; }
+    [[nodiscard]] FlightWidget* getParent() const { return m_parent; }
+    [[nodiscard]] float getX() const { return m_x; }
+    [[nodiscard]] float getY() const { return m_y; }
+    [[nodiscard]] float getWidth() const { return m_width; }
+    [[nodiscard]] float getHeight() const { return m_height; }
 };
 
 #endif //XPFD_WIDGET_H

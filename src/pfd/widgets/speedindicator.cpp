@@ -9,42 +9,48 @@
 
 using namespace std;
 
-SpeedIndicatorWidget::SpeedIndicatorWidget(XPFlightDisplay* display, int x, int y, int w, int h)
+constexpr float pixelsPerKn = 5.0f;
+
+SpeedIndicatorWidget::SpeedIndicatorWidget(XPFlightDisplay* display, float x, float y, float w, float h)
     : FlightWidget(display, x, y, w, h)
 {
     //int surfaceHeight = getHeight() * 2;
     //m_speedSurface = make_shared<Surface>(getWidth(), surfaceHeight, 4);
 }
 
-void SpeedIndicatorWidget::draw(UFC::AircraftState &state, std::shared_ptr<Cairo::Context> context)
+void SpeedIndicatorWidget::draw(UFC::AircraftState &state, const std::shared_ptr<Cairo::Context>& context)
 {
-    context->rectangle(0, 0, getWidth() - 10, getHeight());
-    context->set_source_rgb(0.21, 0.21, 0.21);
+    float tapeWidth = getWidth() * 0.6f;
+    context->rectangle(10, 0, tapeWidth, getHeight());
+    context->set_source_rgb(0.29, 0.29, 0.29);
     context->fill();
 
+#if 0
     context->set_source_rgb(1.0, 1.0, 1.0);
-    context->move_to(getWidth() - 10, 0);
-    context->line_to(getWidth() - 10, getHeight());
+    context->move_to(tapeWidth, 0);
+    context->line_to(tapeWidth, getHeight());
     context->stroke();
+#endif
 
     float speed = state.indicatedAirspeed;
-    int offset = 8;//getDisplay()->getFont()->getPixelHeight() / 2;
+    float offset = glm::fract(state.indicatedAirspeed);
 
-    int y = getHeight() / 2;
+    float y = getHeight() / 2.0f;
 
     char buf[50];
     float i = -100;
     while (i < 100)
     {
         float rspeed = speed + i;
-        float ry = ((float)y - (i * 5.0f));
+        float ry = (float)y - (i * pixelsPerKn);
         if (rspeed >= 0 &&
             ((int)rspeed % 10) == 0 &&
-            glm::fract(ry) < FLT_EPSILON)
+            glm::fract(ry) < FLT_EPSILON )
         {
+            ry += offset * pixelsPerKn;
             //m_speedSurface->drawHorizontalLine(getWidth() - 20, (int)ry, 10, 0xffffffff);
-            context->move_to(getWidth() - 20, ry);
-            context->line_to(getWidth() - 10, ry);
+            context->move_to(tapeWidth - 15, ry);
+            context->line_to(tapeWidth, ry);
             context->set_source_rgb(1.0, 1.0, 1.0);
             context->stroke();
 
@@ -52,22 +58,34 @@ void SpeedIndicatorWidget::draw(UFC::AircraftState &state, std::shared_ptr<Cairo
             {
                 snprintf(buf, 50, "%03d", (int) rspeed);
                 //getDisplay()->getFont()->write(m_speedSurface.get(), 10, (int)ry - offset, buf, 0xffffffff);
-                    context->set_source_rgb(1.0, 1.0, 1.0);
-                    context->set_font_face(getDisplay()->getFont());
-                    context->set_font_size(16);
-                    context->move_to(10, ry + offset);
-                    context->show_text(buf);
+                context->set_source_rgb(1.0, 1.0, 1.0);
+                context->set_font_face(getDisplay()->getFont());
+                context->set_font_size(18);
+                Cairo::TextExtents extents;
+                context->get_text_extents(buf, extents);
+                context->move_to(10, ry + (extents.height / 2.0f));
+                context->show_text(buf);
             }
         }
         i += 0.25f;
     }
 
-    // Draw arrow
-    context->move_to(getWidth() - 10, y);
-    context->line_to(getWidth(), y - 10);
-    context->line_to(getWidth(), y + 10);
+    context->set_source_rgb(1.0, 1.0, 0.0);
+    drawArrow(context, tapeWidth + 5, y, 7);
+    context->move_to(tapeWidth - 15, y);
+    context->line_to(tapeWidth + 10, y);
+    context->stroke();
+    context->move_to(0, y);
+    context->line_to(10, y);
+    context->stroke();
+
     context->set_source_rgb(1.0, 1.0, 1.0);
-    context->fill();
+    float apSpeedY = speedToY(state.autopilot.speed - speed);
+    if (apSpeedY > -10 && apSpeedY < getHeight() - 10)
+    {
+        drawArrow(context, tapeWidth, apSpeedY, 10);
+    }
+
 #if 0
     context->rectangle(0, 0, getWidth(), 30);
     context->set_source_rgb(0.0, 0.0, 0.0);
@@ -108,3 +126,18 @@ void SpeedIndicatorWidget::draw(UFC::AircraftState &state, std::shared_ptr<Cairo
     getDisplay()->getFont()->write(surface.get(), 7, getY() + getHeight() - 28 , buf, 0xffffffff);
 #endif
 }
+
+float SpeedIndicatorWidget::speedToY(float rspeed) const
+{
+    float y = getHeight() / 2.0f;
+    return y - (rspeed * pixelsPerKn);
+}
+
+void SpeedIndicatorWidget::drawArrow(const std::shared_ptr<Cairo::Context>& context, float x, float y, float size)
+{
+    context->move_to(x, y);
+    context->line_to(x + size, y - size);
+    context->line_to(x + size, y + size);
+    context->fill();
+}
+

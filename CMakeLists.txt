@@ -147,6 +147,13 @@ add_executable(xpfd
         src/pfd/widgets/headingindicator.cpp
         src/pfd/widgets/headingindicator.h
         src/pfd/widgets/widget.h
+        src/pfd/widgets/pfdwidget.cpp
+        src/pfd/widgets/pfdwidget.h
+        src/pfd/widgets/widget.cpp
+        src/pfd/widgets/annunciators.cpp
+        src/pfd/widgets/annunciators.h
+        src/pfd/widgets/vsi.cpp
+        src/pfd/widgets/vsi.h
 )
 
 target_include_directories(xpfd PUBLIC ${CMAKE_SOURCE_DIR}/src)

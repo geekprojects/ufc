@@ -10,37 +10,49 @@ using namespace std;
 using namespace UFC;
 using namespace glm;
 
-#define PITCH_SIZE 60.0f
+constexpr float PITCH_SIZE = 30.0f;
 
-ADIWidget::ADIWidget(XPFlightDisplay* display, int x, int y, int ww, int wh)
+ADIWidget::ADIWidget(XPFlightDisplay* display, float x, float y, float ww, float wh)
     : FlightWidget(display, x, y, ww, wh)
 {
 }
 
-void ADIWidget::draw(AircraftState& state, std::shared_ptr<Cairo::Context> context)
+void ADIWidget::draw(AircraftState& state, const std::shared_ptr<Cairo::Context>& topContext)
 {
     float roll = radians(state.roll);
     float pitch = state.pitch;
 
-    float halfWidth = getWidth() / 2.0;
-    float halfHeight = getHeight() / 2.0;
+    float halfWidth = getWidth() / 2.0f;
+    float halfHeight = getHeight() / 2.0f;
 
-    int pitchY = pitchToY(pitch);
-    int diagonal = hypot(getWidth(), getHeight());
+    float pitchY = pitchToY(pitch);
+    float diagonal = hypot(getWidth(), getHeight());
 
+    // 78/84
+    float adiWidth = getWidth() * 0.94;
+    float adiHeight = getHeight() * 0.94;
+
+    auto adiSurface = Cairo::Surface::create(
+    topContext->get_target(),
+    getWidth() * 0.03,
+    getHeight() * 0.03,
+    adiWidth,
+    adiHeight);
+    auto context = Cairo::Context::create(adiSurface);
     context->save();
-#if 0
-    context->arc(halfWidth, halfHeight, halfHeight, 0, 2*M_PI);
+#if 1
+    context->arc(adiWidth / 2.0, adiHeight / 2.0, adiHeight / 2.0f, 0, 2*M_PI);
 #else
-    double x         = 0;        /* parameters like cairo_rectangle */
-    double y         = 0;
-    double width     = getWidth();
-    double height    = getHeight();
-    double aspect    = 1.0;     /* aspect ratio */
-    double corner_radius = height / 20.0;   /* and corner curvature radius */
+    double x = 0;        /* parameters like cairo_rectangle */
+    double y = 0;
+    const double width = getWidth();
+    const double height = getHeight();
+    const double aspect = 1.0;     /* aspect ratio */
+    const double corner_radius = height / 20.0;   /* and corner curvature radius */
 
-    double radius = corner_radius / aspect;
-    double degrees = M_PI / 180.0;
+    const double radius = corner_radius / aspect;
+    const double degrees = M_PI / 180.0;
+
     context->begin_new_sub_path();
     context->arc(width - radius, y + radius, radius, -90 * degrees, 0 * degrees);
     context->arc(x + width - radius, y + height - radius, radius, 0 * degrees, 90 * degrees);
@@ -48,6 +60,7 @@ void ADIWidget::draw(AircraftState& state, std::shared_ptr<Cairo::Context> conte
     context->arc(x + radius, y + radius, radius, 180 * degrees, 270 * degrees);
     context->close_path();
 #endif
+
     context->clip();
 
     context->save();
@@ -59,12 +72,12 @@ void ADIWidget::draw(AircraftState& state, std::shared_ptr<Cairo::Context> conte
 
     // Draw ground
     context->set_source_rgb(0.5, 0.2, 0);
-    context->rectangle(-diagonal, 0, 2 * diagonal, getHeight());
+    context->rectangle(-diagonal, 0, 2 * diagonal, getHeight() * 2);
     context->fill();
 
     // Draw sky
     context->set_source_rgb(0, 0.5, 1.0);
-    context->rectangle(-diagonal, -getHeight(), 2 * diagonal, getHeight());
+    context->rectangle(-diagonal, -getHeight() * 2, 2 * diagonal, getHeight() * 2);
     context->fill();
 
     // Draw horizon
@@ -82,7 +95,8 @@ void ADIWidget::draw(AircraftState& state, std::shared_ptr<Cairo::Context> conte
     context->rotate(-roll);
     context->set_source_rgb(1.0, 1.0, 1.0);
 
-    for (float pitchMark = -20; pitchMark <= 20; pitchMark += 2.5f)
+    float pitchMark = -20;
+    while (pitchMark <= 20)
     {
         bool print = false;
         int markWidth = 10;
@@ -90,14 +104,14 @@ void ADIWidget::draw(AircraftState& state, std::shared_ptr<Cairo::Context> conte
         if (fmod(pitchMarkAbs, 10.0f) < FLT_EPSILON)
         {
             markWidth = 50;
-
             print = pitchMarkAbs >= FLT_EPSILON;
         }
         else if (fmod(pitchMarkAbs, 5.0f) < FLT_EPSILON)
         {
             markWidth = 30;
         }
-        int pitchMarkY = pitchToY(pitchMark) + pitchY;
+
+        float pitchMarkY = pitchToY(pitchMark) + pitchY;
         context->move_to(-markWidth, pitchMarkY);
         context->line_to(markWidth, pitchMarkY);
         context->set_line_width(1);
@@ -109,12 +123,15 @@ void ADIWidget::draw(AircraftState& state, std::shared_ptr<Cairo::Context> conte
             snprintf(buf, 50, "%d", (int)abs(pitchMark));
             context->set_source_rgb(1.0, 1.0, 1.0);
             context->set_font_face(getDisplay()->getFont());
-            context->set_font_size(10);
-            context->move_to(-(markWidth + 20), pitchMarkY + 5);
+            context->set_font_size(20);
+            Cairo::TextExtents extents;
+            context->get_text_extents(buf, extents);
+            context->move_to(-(markWidth + extents.width + 5), pitchMarkY + (extents.height / 2.0f));
             context->show_text(buf);
-            context->move_to((markWidth + 5), pitchMarkY + 5);
+            context->move_to((markWidth + 5), pitchMarkY + (extents.height / 2.0f));
             context->show_text(buf);
         }
+        pitchMark += 2.5f;
     }
     context->restore();
 
@@ -169,9 +186,9 @@ void ADIWidget::draw(AircraftState& state, std::shared_ptr<Cairo::Context> conte
 #endif
 }
 
-int ADIWidget::pitchToY(float pitch) const
+float ADIWidget::pitchToY(float pitch) const
 {
-    return (int) ((float)getHeight() * (pitch / PITCH_SIZE));
+    return getHeight() * (pitch / PITCH_SIZE);
 }
 
 

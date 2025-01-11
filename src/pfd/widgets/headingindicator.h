@@ -9,20 +9,15 @@
 
 class HeadingIndicatorWidget : public FlightWidget
 {
- private:
-    //std::shared_ptr<Geek::Gfx::Surface> m_headingSurface;
-
-    const int m_spacing = 80;
-    const int m_width36 = 36 * m_spacing;
-    const int m_surfaceWidth = m_width36 * 3;
-
-    void drawCompass();
+    const float m_pixelsPerDegree = 8.0f;
 
  public:
-    HeadingIndicatorWidget(XPFlightDisplay* display, int x, int y, int w, int h);
+    HeadingIndicatorWidget(XPFlightDisplay* display, float x, float y, float w, float h);
     ~HeadingIndicatorWidget() override = default;
 
-    void draw(UFC::AircraftState& state, std::shared_ptr<Cairo::Context> context) override;
+    static void wrapAngle(float &angle);
+
+    void draw(UFC::AircraftState& state, const std::shared_ptr<Cairo::Context>& context) override;
 };
 
 

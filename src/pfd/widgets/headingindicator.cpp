@@ -7,97 +7,97 @@
 
 using namespace std;
 
-HeadingIndicatorWidget::HeadingIndicatorWidget(XPFlightDisplay* display, int x, int y, int w, int h)
+HeadingIndicatorWidget::HeadingIndicatorWidget(XPFlightDisplay* display, float x, float y, float w, float h)
     : FlightWidget( display, x, y, w, h)
 {
-    //m_headingSurface = make_shared<Surface>(m_surfaceWidth, getHeight(), 4);
-    drawCompass();
 }
 
-void HeadingIndicatorWidget::drawCompass()
+void HeadingIndicatorWidget::wrapAngle(float& angle)
 {
-#if 0
-    wchar_t buf[50];
-
-    m_headingSurface->clear(0xff333333);
-
-    for (int i = 0; i < 360; i += 5)
+    while (angle < 0.0f || angle > 360.0f)
     {
-        if ((i % 10) == 0)
+        if (angle < 0.0f)
         {
-            int n = i / 10;
-            if (n == 0)
-            {
-                swprintf(buf, 50, L"N");
-            }
-            else if (n == 9)
-            {
-                swprintf(buf, 50, L"E");
-            }
-            else if (n == 18)
-            {
-                swprintf(buf, 50, L"S");
-            }
-            else if (n == 27)
-            {
-                swprintf(buf, 50, L"W");
-            }
-            else
-            {
-                swprintf(buf, 50, L"%d", n);
-            }
-            /* XXX TODO
-            int w = getDisplay()->getFont()->width(buf);
-            for (int j = 0; j < 3; j++)
-            {
-                int x = (n * m_spacing) + (j * 36 * m_spacing);
-                getDisplay()->getFont()->write(m_headingSurface.get(), x - (w / 2), 25, buf, 0xffffffff);
-                m_headingSurface->drawLine(x, 0, x, 20, 0xffffffff);
-            }
-            */
+            angle += 360.0f;
         }
-        else if ((i % 5) == 0)
+        else if (angle > 360.0f)
         {
-            int n = i / 10;
-            for (int j = 0; j < 3; j++)
-            {
-                int x = (m_spacing / 2) + (n * m_spacing) + (j * 36 * m_spacing);
-                m_headingSurface->drawLine(x, 0, x, 10, 0xffffffff);
-            }
+            angle -= 360.0f;
         }
     }
-#endif
 }
 
-void HeadingIndicatorWidget::draw(UFC::AircraftState &state, std::shared_ptr<Cairo::Context> context)
+void HeadingIndicatorWidget::draw(UFC::AircraftState &state, const std::shared_ptr<Cairo::Context>& context)
 {
     context->save();
-    context->rectangle(0, 0, getWidth(), getHeight());
-    context->set_source_rgb(0.21, 0.21, 0.21);
+    context->rectangle(0, 20, getWidth(), getHeight() - 20);
+    context->set_source_rgb(0.29, 0.29, 0.29);
     context->fill_preserve();
     context->set_source_rgb(1, 1, 1);
     context->stroke();
 
-    float halfAngleWidth = ((getWidth() / (float)m_spacing) / 2.0f);
+    float halfAngleWidth = floor(((float)getWidth() / 1.5f) / m_pixelsPerDegree);
+    float cx = (float)getWidth() / 2.0f;
+
+    float heading = state.magHeading;
+    //wrapAngle(heading);
 
     float relAngle = -halfAngleWidth;
-    float offset = fmod(state.magHeading, 0.5);
+    float offset = glm::fract(heading);
+
+    context->set_font_face(getDisplay()->getFont());
+    context->set_font_size(16);
+
     while (relAngle < halfAngleWidth)
     {
-        float angle = state.magHeading + relAngle - offset;
-        float x = (halfAngleWidth + relAngle + offset) * m_spacing;
+        float angle = heading + relAngle;
+        wrapAngle(angle);
 
-        context->move_to(x, 0);
-        context->line_to(x, 10);
-        context->stroke();
+        float a = relAngle;
+        if (angle > 0)
+        {
+            a -= offset;
+        }
+        float x = cx + (a * m_pixelsPerDegree);
 
-        char buf[50];
-        snprintf(buf, 50, "%d", (int)(angle / 10.0));
-        getDisplay()->drawText(context, buf, x, 15);
+        int iangle = (int)floor(angle);
+        if ((iangle % 10) == 0)
+        {
+            char buf[50];
+            snprintf(buf, 50, "%d", iangle / 10);
+            Cairo::TextExtents extents;
+            context->get_text_extents(buf, extents);
+            context->move_to(x - (extents.width / 2.0), 50);
+            context->show_text(buf);
 
-        relAngle += 0.5;
+            context->move_to(x, 20);
+            context->line_to(x, 35);
+            context->stroke();
+        }
+        else if ((iangle % 5) == 0)
+        {
+            context->move_to(x, 20);
+            context->line_to(x, 30);
+            context->stroke();
+        }
+
+        relAngle += 1.0f;
     }
 
+    relAngle = state.magHeading - state.autopilot.heading;
+    float bugX = cx - (relAngle * m_pixelsPerDegree);
+    if (bugX >= 0 && bugX < getWidth())
+    {
+        context->move_to(bugX, 0);
+        context->line_to(bugX, 40);
+        context->stroke();
+    }
+
+    context->set_source_rgb(1.0, 1.0, 0.0);
+    context->set_line_width(2);
+    context->move_to(cx, 10);
+    context->line_to(cx, 25);
+    context->stroke();
 
     context->restore();
 #if 0

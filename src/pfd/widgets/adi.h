@@ -10,13 +10,13 @@
 class ADIWidget : public FlightWidget
 {
  private:
-    int pitchToY(float pitch) const;
+    [[nodiscard]] float pitchToY(float pitch) const;
 
  public:
-    ADIWidget(XPFlightDisplay* display, int x, int y, int w, int h);
+    ADIWidget(XPFlightDisplay* display, float x, float y, float w, float h);
     ~ADIWidget() override = default;
 
-    void draw(UFC::AircraftState& state, std::shared_ptr<Cairo::Context> context) override;
+    void draw(UFC::AircraftState& state, const std::shared_ptr<Cairo::Context>& context) override;
 };
 
 
