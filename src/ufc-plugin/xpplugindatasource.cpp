@@ -147,7 +147,7 @@ bool XPPluginDataSource::updateDataRefs()
     return true;
 }
 
-void XPPluginDataSource::command(std::string command)
+void XPPluginDataSource::command(const std::string& command)
 {
     CommandDefinition commandDef = m_dataMapping.getCommand(command);
 

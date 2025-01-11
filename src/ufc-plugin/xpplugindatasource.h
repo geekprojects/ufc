@@ -47,7 +47,7 @@ class XPPluginDataSource : public UFC::DataSource
     bool update() override;
     bool updateDataRefs();
 
-    void command(std::string command) override;
+    void command(const std::string& command) override;
 };
 
 
