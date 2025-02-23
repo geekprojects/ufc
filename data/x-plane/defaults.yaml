@@ -50,6 +50,13 @@ data:
     autoThrottleMode: # No default
     approachMode: sim/cockpit2/autopilot/approach_status
 
+  instrument:
+    v1: # No default
+    vr: # No default
+    v2: # No default
+    vfeNext: # No default
+    radioAltitude: sim/cockpit2/gauges/indicators/radio_altimeter_height_ft_pilot
+
   cabin:
     call: # No default
     seatBeltSign: sim/cockpit2/annunciators/fasten_seatbelt
@@ -61,15 +68,19 @@ data:
 commands:
   autopilot:
     altitude:
+      manage: sim/autopilot/altitude_hold
       up: sim/autopilot/altitude_up
       down: sim/autopilot/altitude_down
     airspeed:
       up: sim/autopilot/airspeed_up
       down: sim/autopilot/airspeed_down
     heading:
+      manage: sim/autopilot/NAV
+      guidance: sim/autopilot/heading
       up: sim/autopilot/heading_up
       down: sim/autopilot/heading_down
     verticalSpeed:
+      manage: sim/autopilot/vertical_speed
       up: sim/autopilot/vertical_speed_up
       down: sim/autopilot/vertical_speed_down
     localiser/toggle: sim/autopilot/NAV

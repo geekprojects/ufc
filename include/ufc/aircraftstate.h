@@ -148,6 +148,16 @@ struct FlightPlanState
     float distanceToDestination = 0.0f;
 };
 
+struct InstrumentState
+{
+    float v1;
+    float vr;
+    float v2;
+    float vfeNext;
+
+    float radioAltitude;
+};
+
 struct AircraftState
 {
     std::string dataSource;
@@ -170,6 +180,7 @@ struct AircraftState
     CommunicationState comms;
     FlightDirectorState flightDirector;
     AutopilotState autopilot;
+    InstrumentState instrument;
     CabinState cabin;
     WeightState weight;
     FlightPlanState flightPlan;

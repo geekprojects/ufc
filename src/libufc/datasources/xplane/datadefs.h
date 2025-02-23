@@ -68,12 +68,13 @@ static const DataDefinition g_dataRefsInit[] =
     {DATA_WEIGHT_PASSENGERCOUNT, BOOLEAN, offsetof(AircraftState, weight.passengerCount)},
     {DATA_WEIGHT_PASSENGERDISTRIBUTION, BOOLEAN, offsetof(AircraftState, weight.passengerDistribution)},
 
+    {DATA_FLIGHTPLAN_DISTANCETODEST, FLOAT, offsetof(AircraftState, flightPlan.distanceToDestination)},
+
     // These are not polled!
     {DATA_FLIGHTPLAN_FLIGHTNUMBER, STRING, -1, 10},
     {DATA_FLIGHTPLAN_CRUISEALTITUDE, INTEGER, -1},
     {DATA_FLIGHTPLAN_DEPARTUREAIRPORT, STRING, -1, 4},
     {DATA_FLIGHTPLAN_DESTINATIONAIRPORT, STRING, -1, 4},
-    {DATA_FLIGHTPLAN_DISTANCETODEST, FLOAT, offsetof(AircraftState, flightPlan.distanceToDestination)},
 };
 }
 

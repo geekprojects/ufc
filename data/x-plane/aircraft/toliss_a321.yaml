@@ -23,6 +23,12 @@ data:
 
     displayVerticalSpeed: "!AirbusFBW/VSdashed"
 
+  instrument:
+    v1: AirbusFBW/V1
+    vr: AirbusFBW/VR
+    v2: # No default
+    vfeNext: AirbusFBW/VFENext
+
   cabin:
     call: AirbusFBW/fmod/env/cabinChime
     seatBeltSign: AirbusFBW/SeatBeltSignsOn
