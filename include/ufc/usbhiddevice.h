@@ -52,6 +52,7 @@ class USBHIDDevice : public Device
     bool detect() override;
 
     bool init() override;
+    void close() override;
 };
 
 }

@@ -117,7 +117,7 @@ ArduinoTest::~ArduinoTest()
 {
     if (m_fd != -1)
     {
-        close(m_fd);
+        ::close(m_fd);
     }
 }
 

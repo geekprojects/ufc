@@ -78,6 +78,10 @@ class Device : public Logger
 
     virtual bool detect() = 0;
     virtual bool init() { return true; }
+    virtual void close()
+    {
+        // Does nothing by default
+    }
 
     virtual std::string getName() { return m_name; }
 

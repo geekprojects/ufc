@@ -48,3 +48,12 @@ bool USBHIDDevice::init()
     m_device = hid_open(m_foundId.vendorId, m_foundId.productId, nullptr);
     return true;
 }
+
+void USBHIDDevice::close()
+{
+    if (m_device != nullptr)
+    {
+        hid_close(m_device);
+        m_device = nullptr;
+    }
+}
