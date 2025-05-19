@@ -31,9 +31,20 @@ double GeoUtils::distance(Coordinate c1, Coordinate c2)
     return earthRadiusKm * c;
 }
 
+double GeoUtils::angleFromCoordinate(Coordinate coord1, Coordinate coord2)
+{
+    double phi1 = degreesToRadians(coord1.latitude);
+    double phi2 = degreesToRadians(coord2.latitude);
 
+    double dLon = degreesToRadians(coord2.longitude - coord1.longitude);
+    double y = sin(dLon) * cos(phi2);
+    double x =
+        cos(phi1) * sin(phi2) -
+        sin(phi1) * cos(phi2) *
+        cos(dLon);
 
-
+    return atan2(y, x);
+}
 
 template <class T> void QuadTreeNode<T>::dump(int level) const
 {

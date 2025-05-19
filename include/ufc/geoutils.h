@@ -59,6 +59,8 @@ class GeoUtils
 {
  public:
     static double distance(Coordinate c1, Coordinate c2);
+
+    static double angleFromCoordinate(Coordinate coord1, Coordinate coord2);
 };
 
 struct Box
