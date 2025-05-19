@@ -30,16 +30,16 @@ class XPlaneDataSource : public DataSource
 
     void update(const std::map<int, float>& values);
 
+    NavDataHeader loadHeader(std::string headerStr);
+    void loadFixes(const std::shared_ptr<NavAids> &navData);
+    void loadNavAidData(const std::shared_ptr<NavAids>& shared);
+
  public:
     explicit XPlaneDataSource(FlightConnector* flightConnector);
     ~XPlaneDataSource() override = default;
 
     std::shared_ptr<Airports> loadAirports() override;
-
-    void loadFixes(const std::shared_ptr<NavData> &navData) const;
-    void loadNavAids(const std::shared_ptr<NavData>& shared) const;
-
-    std::shared_ptr<NavData> loadNavData() override;
+    std::shared_ptr<NavAids> loadNavAids() override;
 
     bool connect() override;
     void disconnect() override;
