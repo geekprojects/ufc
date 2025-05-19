@@ -26,7 +26,7 @@ pkg_check_modules(sdl2 sdl2)
 add_subdirectory(luacpp/Source EXCLUDE_FROM_ALL)
 
 set(DATADIR ${CMAKE_INSTALL_PREFIX}/share/ufc)
-SET(FLAGS_COMMON "-Wall -Werror")
+SET(FLAGS_COMMON "-Wall -Werror -Wno-vla-cxx-extension")
 SET(CMAKE_CXX_FLAGS_DEBUG "${FLAGS_COMMON} -O0 -g -fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer")
 SET(CMAKE_CXX_FLAGS_RELEASE  "${FLAGS_COMMON} -O3")
 
@@ -67,7 +67,7 @@ add_library(ufc SHARED
         include/ufc/geoutils.h
         src/libufc/utils/geoutils.cpp
         src/libufc/datasources/xplane/navdata/airports.cpp
-        src/libufc/datasources/xplane/navdata/navdata.cpp
+        src/libufc/datasources/xplane/navdata/navaids.cpp
         src/libufc/devices/customradiohid.cpp
         src/libufc/devices/customradiohid.h
         src/libufc/datasources/datasource.cpp
@@ -133,7 +133,7 @@ if (DEFINED ENV{XPLANE_SDK})
     )
 endif()
 
-if (${cairomm_FOUND} AND ${pangomm_FOUND})
+if (false AND ${cairomm_FOUND} AND ${pangomm_FOUND})
 add_executable(xpfd
         src/pfd/main.cpp
         src/pfd/display.cpp
@@ -171,6 +171,7 @@ target_link_libraries(xpfd
         ${hidapi_LDFLAGS}
         ${freetype2_LDFLAGS}
 )
+
 endif()
 
 

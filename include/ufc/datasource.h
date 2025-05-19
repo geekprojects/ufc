@@ -100,7 +100,7 @@ class DataSource : public Logger
     [[nodiscard]] std::string getName() const { return m_name; }
 
     virtual std::shared_ptr<Airports> loadAirports() { return nullptr; }
-    virtual std::shared_ptr<NavData> loadNavData() { return nullptr; }
+    virtual std::shared_ptr<NavAids> loadNavAids() { return nullptr; }
 
     virtual bool connect() = 0;
     virtual void disconnect() = 0;

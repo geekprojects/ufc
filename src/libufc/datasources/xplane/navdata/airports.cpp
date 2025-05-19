@@ -22,7 +22,7 @@ shared_ptr<Airports> XPlaneDataSource::loadAirports()
     auto airportData = make_shared<Airports>();
 
     data->readLine();
-    data->readLine();
+    string headerStr = data->readLine();
 
     shared_ptr<Airport> currentAirport = nullptr;
     double currentLat = 0.0;
@@ -59,10 +59,69 @@ shared_ptr<Airports> XPlaneDataSource::loadAirports()
                 }
                 break;
 
-            /*
-            case 100:
+            case 100: // Runway
+            {
+                int ends = (parts.size() - 8) / 9;
+                if (ends == 2)
+                {
+                    vector<Runway> runways;
+                    for (int i = 0; i < ends; i++)
+                    {
+                        Runway runway;
+                        runway.m_number = parts.at(8 + (i * 9) + 0);
+                        float lat = atof(parts.at(8 + (i * 9) + 1).c_str());
+                        float lon = atof(parts.at(8 + (i * 9) + 2).c_str());
+                        runway.m_startLocation = Coordinate(lat, lon);
+                        runways.push_back(runway);
+                    }
+
+                    float length = GeoUtils::distance(runways.at(0).m_startLocation, runways.at(1).m_startLocation) * 1000.0f;
+                    runways.at(0).m_length = length;
+                    runways.at(1).m_length = length;
+
+Coordinate r0 = runways.at(0).m_startLocation;
+Coordinate r1 = runways.at(1).m_startLocation;
+                    double angle = GeoUtils::angleFromCoordinate(r0, r1);
+                    float variation = 0.0f;
+                    angle = angle * (180.0 / M_PI);
+                    if (r0.longitude < 0)
+                    {
+                        angle -= variation;
+                    }
+                    else
+                    {
+                        angle += variation;
+                    }
+                    angle = fmod(angle + 360, 360);
+                    runways.at(0).m_bearing = angle;
+                    //log(INFO, "%s %s: %ls bearing=%0.2f, variation=%0.2f", currentAirport->getICAOCode().c_str(), runways.at(0).m_number.c_str(), runways.at(0).m_startLocation.toString().c_str(), angle, variation);
+
+                    angle = GeoUtils::angleFromCoordinate(runways.at(1).m_startLocation, runways.at(0).m_startLocation);
+                    /*
+                    wmm_get_magnetic_variation(
+    runways.at(1).m_startLocation.latitude,
+    runways.at(1).m_startLocation.longitude,
+    wmmTime,
+    &variation);
+    */
+                    angle = angle * (180.0 / M_PI);
+                    angle -= variation;
+                    angle = fmod(angle + 360, 360);
+                    runways.at(1).m_bearing = angle;
+
+                    vector<Runway> currentRunways = currentAirport->getRunways();
+                    currentRunways.insert(currentRunways.end(), runways.begin(), runways.end());
+                    currentAirport->setRunways(currentRunways);
+
+                    //log(INFO, "%s %s: %ls bearing=%0.2f", currentAirport->getICAOCode().c_str(), runways.at(1).m_number.c_str(), runways.at(1).m_startLocation.toString().c_str(), angle);
+                }
+                else
+                {
+                    log(WARN, "Runway with %d ends!\n", ends);
+                }
+
                 break;
-                */
+            }
 
             case 1302:
                 if (parts.at(1) == "datum_lat")

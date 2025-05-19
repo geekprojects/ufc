@@ -9,9 +9,18 @@
 #include <map>
 
 #include "geoutils.h"
+#include "navdata.h"
 
 namespace UFC
 {
+
+struct Runway
+{
+    std::string m_number;
+    Coordinate m_startLocation;
+    float m_length;
+    float m_bearing;
+};
 
 class Airport : public Locationable
 {
@@ -19,6 +28,9 @@ class Airport : public Locationable
     std::wstring m_name;
     Coordinate m_location;
     std::string m_icaoCode;
+
+    std::vector<Runway> m_runways;
+
     bool m_hasRunway = false;
 
     float m_elevation = 0.0f;
@@ -68,6 +80,16 @@ class Airport : public Locationable
         m_icaoCode = icaoCode;
     }
 
+    [[nodiscard]] const std::vector<Runway>& getRunways() const
+    {
+        return m_runways;
+    }
+
+    void setRunways(const std::vector<Runway>& runways)
+    {
+        m_runways = runways;
+    }
+
     [[nodiscard]] bool isHasRunway() const
     {
         return m_hasRunway;
@@ -89,7 +111,7 @@ class Airport : public Locationable
     }
 };
 
-class Airports
+class Airports : public NavData
 {
  private:
     std::shared_ptr<QuadTree<Airport>> m_airports;

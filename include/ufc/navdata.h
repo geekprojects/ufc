@@ -12,6 +12,25 @@
 namespace UFC
 {
 
+struct NavDataHeader
+{
+    int version;
+    int cycle;
+    int build;
+    std::string type;
+    std::string copyright;
+};
+
+class NavData
+{
+ protected:
+    NavDataHeader m_header;
+
+ public:
+    void setHeader(const NavDataHeader& header) { m_header = header; }
+    [[nodiscard]] int getCycle() const { return m_header.cycle; }
+};
+
 enum class NavAidType
 {
     WAY_POINT, // Unnnamed location
@@ -28,6 +47,8 @@ class NavAid : public Locationable
     std::string m_id;
     NavAidType m_type = NavAidType::WAY_POINT;
     Coordinate m_location;
+    int m_elevation = 0;
+    int m_frequency = 0;
 
  public:
     NavAid() = default;
@@ -54,20 +75,39 @@ class NavAid : public Locationable
 
     [[nodiscard]] Coordinate getLocation() const override { return m_location; }
     void setLocation(const Coordinate& location) { m_location = location; }
+
+    [[nodiscard]] int getElevation() const
+    {
+        return m_elevation;
+    }
+    void setElevation(int elevation)
+    {
+        m_elevation = elevation;
+    }
+
+    [[nodiscard]] int getFrequency() const
+    {
+        return m_frequency;
+    }
+
+    void setFrequency(int frequency)
+    {
+        m_frequency = frequency;
+    }
 };
 
-class NavData
+class NavAids : public NavData
 {
  private:
     std::shared_ptr<QuadTree<NavAid>> m_navAids;
     std::map<std::string, std::vector<std::shared_ptr<NavAid>>> m_navAidsById;
 
  public:
-    NavData()
+    NavAids()
     {
         m_navAids = std::make_shared<QuadTree<NavAid>>(-180.0f, -180.0f, 360.0f);
     }
-    ~NavData() = default;
+    ~NavAids() = default;
 
     void addNavAid(std::shared_ptr<NavAid> navaid)
     {

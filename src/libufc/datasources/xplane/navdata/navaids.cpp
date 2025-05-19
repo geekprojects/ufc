@@ -9,6 +9,7 @@
 #include <ufc/utils.h>
 
 #include <cstring>
+#include <regex>
 
 #include "ufc/flightconnector.h"
 
@@ -16,24 +17,58 @@ using namespace std;
 using namespace UFC;
 
 
-shared_ptr<NavData> XPlaneDataSource::loadNavData()
+shared_ptr<NavAids> XPlaneDataSource::loadNavAids()
 {
-    auto navData = make_shared<NavData>();
+    auto navData = make_shared<NavAids>();
 
     loadFixes(navData);
-    loadNavAids(navData);
+    loadNavAidData(navData);
 
     return navData;
 }
 
-void XPlaneDataSource::loadFixes(const shared_ptr<NavData>& navData) const
+NavDataHeader XPlaneDataSource::loadHeader(std::string headerStr)
+{
+    NavDataHeader header;
+    regex headerRegex(
+        "([0-9]+) Version - data cycle ([0-9]+), build ([0-9]+), metadata ([A-Za-z0-9]+). (.*)",
+        regex_constants::ECMAScript | std::regex_constants::icase);
+
+    auto results = sregex_iterator(headerStr.begin(), headerStr.end(), headerRegex);
+    auto results_end = std::sregex_iterator();
+    if (!results->empty())
+    {
+        const std::smatch& match = *results;
+        header.version = atoi(match[1].str().c_str());
+        header.cycle = atoi(match[2].str().c_str());
+        header.build = atoi(match[3].str().c_str());
+        header.type = match[4];
+        header.copyright = match[5];
+    }
+    else
+    {
+        log(WARN, "Header does not match expected pattern: %s", headerStr.c_str());
+    }
+    return header;
+}
+
+void XPlaneDataSource::loadFixes(const shared_ptr<NavAids>& navData)
 {
     string fixPath = m_flightConnector->getConfig().xplanePath + "/Custom Data/earth_fix.dat";
 
     auto fixData = make_shared<Data>();
     fixData->load(fixPath);
     fixData->readLine();
-    fixData->readLine(); // TODO: Extract AIRAC cycle
+    string headerStr = fixData->readLine();
+
+    auto header = loadHeader(headerStr);
+    if (header.version != 1200)
+    {
+        log(ERROR, "Unsupported version of earth_fix: version=%d", header.version);
+        return;
+    }
+    navData->setHeader(header);
+
     while (!fixData->eof())
     {
         string lineStr = fixData->readLine();
@@ -57,18 +92,28 @@ void XPlaneDataSource::loadFixes(const shared_ptr<NavData>& navData) const
         auto navAid = make_shared<NavAid>();
         navAid->setLocation(Coordinate(lat, lng));
         navAid->setId(id);
+        navAid->setType(NavAidType::FIX);
         navData->addNavAid(navAid);
     }
 }
 
-void XPlaneDataSource::loadNavAids(const std::shared_ptr<NavData>& navData) const
+void XPlaneDataSource::loadNavAidData(const std::shared_ptr<NavAids>& navData)
 {
     string fixPath = m_flightConnector->getConfig().xplanePath + "/Custom Data/earth_nav.dat";
 
     auto fixData = make_shared<Data>();
     fixData->load(fixPath);
     fixData->readLine();
-    fixData->readLine(); // TODO: Extract AIRAC cycle
+    string headerStr = fixData->readLine();
+
+    auto header = loadHeader(headerStr);
+    if (header.version != 1200)
+    {
+        log(ERROR, "Unsupported version of earth_nav: version=%d", header.version);
+        return;
+    }
+    navData->setHeader(header);
+
     while (!fixData->eof())
     {
         string lineStr = fixData->readLine();
@@ -103,12 +148,15 @@ void XPlaneDataSource::loadNavAids(const std::shared_ptr<NavData>& navData) cons
         double lat = atof(line[1].c_str());
         double lng = atof(line[2].c_str());
         string id = line[7];
-        //double elevation = atof(line[3].c_str());
+        int elevation = atoi(line[3].c_str());
+        int frequency = atoi(line[4].c_str());
         // printf("loadNavAids: type=%d -> %d, lat=%0.2f, lng=%0.2f, id=%s\n", type, (int)navAidType, lat, lng, id.c_str());
         auto navAid = make_shared<NavAid>();
         navAid->setLocation(Coordinate(lat, lng));
         navAid->setId(id);
         navAid->setType(navAidType);
+        navAid->setElevation(elevation);
+        navAid->setFrequency(frequency);
         navData->addNavAid(navAid);
     }
 }
