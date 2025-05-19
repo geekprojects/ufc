@@ -320,7 +320,5 @@ void FlightConnector::loadConfig(const Config& config)
         configStream << configNode;
         configStream.close();
     }
-
-    m_config.dump();
 }
 

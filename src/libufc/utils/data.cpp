@@ -59,7 +59,6 @@ void Data::setEndian(Endian endian)
 bool Data::load(const string& filename)
 {
     clear();
-    log(DEBUG, "load: Loading: %s", filename.c_str());
     FILE* file = fopen(filename.c_str(), "r");
     if (file == nullptr)
     {
