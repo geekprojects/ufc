@@ -1,20 +1,21 @@
 UFC - Universal Flight Connector
 ==
 
-> [!WARNING]
-> Universal Flight Connector in a beta stage!
-
 UFC is a cross-platform library and tool that connects devices and other tools to flight
-simulators, and provides a simple cross-sim library for making connecting to flight
-simulators easy. UFC defines its own Sim/Aircraft-agnostic data and command sets
+simulators and provides a simple cross-sim library for making connecting to flight
+simulators easy.
+
+This project also provides a plugin for X-Plane 12 that allows you to easily connect devices
+such as the WinWing FCU to any aircraft *.
+
+UFC defines its own Sim/Aircraft-agnostic data and command sets
 that mean device and aircraft definitions will work with everything else.
 
-UFC is also available as a plugin for X-Plane 12.
+There is also basic support for accessing to navigation data provided by the simulator
+such as airport, fixes and procedures. For X-Plane, this also includes Navigraph data.
 
-### Work in progress
-UFC will also (eventually!) provide access to navigation data provided by the simulator
-such as airport, fixes and procedures.
-
+\* Many aircraft will work out of the box with the default configuration, others
+require a definition file.
 
 # Installation
 
@@ -51,7 +52,7 @@ I will look in to packaging this up properly, but for now:
 * ... And that's it! No configuration is required
 
 ## ufctool
-ufctool is the main tool for using UFC.
+ufctool is a command line tool for using UFC to connect simulators with devices.
 
 ```
 Usage: ufctool [OPTIONS]
@@ -105,6 +106,7 @@ Aircraft:
   * Laminar Research A330
   * ToLiss (Only tested with the A321)
   * FlightFactor 777v2
+  * Felis 747-200
   * ... And more coming! (Insert another plea for Pull Requests!)
 
 ### Simulated Simulator
