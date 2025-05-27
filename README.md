@@ -23,32 +23,14 @@ such as airport, fixes and procedures.
 * hidapi (libusb version on Linux)
 * lua
 
-## Optional Libraries
-Required for the PFD:
-* cairomm
-* pangomm
-* freetype
-* glm
-* SDL2
-
 ### Mac
 ```
 $ brew install hidapi yaml-cpp lua 
 ```
 
-Optionally:
-```aiignore
-$ brew install cairomm pangomm freetype2 glm sdl2
-```
-
 ### Ubuntu
 ```
 $ apt install libyaml-cpp-dev libhidapi-dev lua5.4 liblua5.4-dev
-```
-
-Optionally:
-```aiignore
-$ apt install libcairomm-1.16-dev libpangomm-2.48-dev libfreetype-dev libglm-dev libsdl2-dev
 ```
 
 ## Build
@@ -144,8 +126,6 @@ a Windows machine available. (Again, Pull Requests are welcome!)
 ## Devices and Connectors
 * WinWingSim FCU
 * An example USB HID radio panel
-* SDL display
-  * A simple PF-style flight display
 * Console output
   * For testing, disabled by default
 
