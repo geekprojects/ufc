@@ -1,0 +1,24 @@
+name: Felis Boeing 747-200B
+author: Felis Leopard
+icao: B742
+
+data:
+  autopilot:
+    altitude: B742/AP_panel/altitude_set
+    speed: B742/AP_panel/AT_spd_set_rotary
+    heading: B742/AP_panel/heading_set
+
+commands:
+  autopilot:
+    ap1:
+      toggle: 
+    airspeed:
+      up: autopilot/speed ++
+      down: autopilot/speed --
+    heading:
+      up: autopilot/heading ++
+      down: autopilot/heading --
+    altitude:
+      up: autopilot/altitude + 100
+      down: autopilot/altitude + -100
+
