@@ -15,13 +15,6 @@ else()
 message(FATAL_ERROR "Unsupported platform")
 endif()
 
-# Optional dependencies, used for the PFD display
-pkg_check_modules(cairomm cairomm-1.16)
-pkg_check_modules(pangomm pangomm-2.48)
-pkg_check_modules(freetype2 freetype2)
-pkg_check_modules(glm glm)
-pkg_check_modules(sdl2 sdl2)
-
 # Third Party Modules
 add_subdirectory(luacpp/Source EXCLUDE_FROM_ALL)
 
@@ -132,48 +125,6 @@ if (DEFINED ENV{XPLANE_SDK})
             ${XPLM_LDFLAGS}
     )
 endif()
-
-if (false AND ${cairomm_FOUND} AND ${pangomm_FOUND})
-add_executable(xpfd
-        src/pfd/main.cpp
-        src/pfd/display.cpp
-        src/pfd/display.h
-        src/pfd/widgets/adi.cpp
-        src/pfd/widgets/adi.h
-        src/pfd/widgets/speedindicator.cpp
-        src/pfd/widgets/speedindicator.h
-        src/pfd/widgets/altitudeindicator.cpp
-        src/pfd/widgets/altitudeindicator.h
-        src/pfd/widgets/headingindicator.cpp
-        src/pfd/widgets/headingindicator.h
-        src/pfd/widgets/widget.h
-        src/pfd/widgets/pfdwidget.cpp
-        src/pfd/widgets/pfdwidget.h
-        src/pfd/widgets/widget.cpp
-        src/pfd/widgets/annunciators.cpp
-        src/pfd/widgets/annunciators.h
-        src/pfd/widgets/vsi.cpp
-        src/pfd/widgets/vsi.h
-)
-
-target_include_directories(xpfd PUBLIC ${CMAKE_SOURCE_DIR}/src)
-target_compile_options(xpfd PUBLIC ${cairomm_CFLAGS} ${pangomm_CFLAGS} ${sdl2_CFLAGS})
-
-target_link_libraries(xpfd
-        -Wl,-rpath -Wl,/usr/local/lib
-        -L/usr/local/lib
-        ufc
-        ${cairomm_LDFLAGS}
-        ${pangomm_LDFLAGS}
-        ${sdl2_LDFLAGS}
-        ${yamlcpp_LDFLAGS}
-        ${glm_LDFLAGS}
-        ${hidapi_LDFLAGS}
-        ${freetype2_LDFLAGS}
-)
-
-endif()
-
 
 install(DIRECTORY include/ufc DESTINATION include FILES_MATCHING PATTERN "*.h" )
 
