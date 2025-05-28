@@ -144,8 +144,7 @@ Devices can then read from this common structure to present data and send comman
 
 For X-Plane, the aircraft configuration can be found [here](https://github.com/geekprojects/ufc/tree/main/data/x-plane/aircraft).
 
-Note: The ability to use Lua to transform data and commands to and from the common format
-is coming soon!
+Commands can be sent directly to the simulator or handled by a Lua script.
 
 
 # Contributions
