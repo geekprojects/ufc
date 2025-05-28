@@ -1,4 +1,8 @@
 
+init: |
+  lua:
+  state.altitudeStep = 1000
+
 data:
   aircraft:
     indicatedAirspeed: sim/flightmodel/position/indicated_airspeed
@@ -71,6 +75,11 @@ commands:
       manage: sim/autopilot/altitude_hold
       up: sim/autopilot/altitude_up
       down: sim/autopilot/altitude_down
+      step:
+        100: |
+          lua: state.altitudeStep = 100
+        1000: |
+          lua: state.altitudeStep = 1000
     airspeed:
       up: sim/autopilot/airspeed_up
       down: sim/autopilot/airspeed_down

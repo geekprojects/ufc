@@ -13,12 +13,18 @@ commands:
     ap1:
       toggle: 
     airspeed:
-      up: autopilot/speed ++
-      down: autopilot/speed --
+      up: |
+        lua: data['autopilot/speed'] = data['autopilot/speed'] + 1
+      down: |
+        lua: data['autopilot/speed'] = data['autopilot/speed'] - 1
     heading:
-      up: autopilot/heading ++
-      down: autopilot/heading --
+      up: |
+        lua: data['autopilot/heading'] = data['autopilot/heading'] + 1
+      down: |
+        lua: data['autopilot/heading'] = data['autopilot/heading'] - 1
     altitude:
-      up: autopilot/altitude + 100
-      down: autopilot/altitude + -100
-
+      up: |
+        lua: data['autopilot/altitude'] = data['autopilot/altitude'] + state.altitudeStep
+      down: |
+        lua: data['autopilot/altitude'] = data['autopilot/altitude'] - state.altitudeStep
+ 
