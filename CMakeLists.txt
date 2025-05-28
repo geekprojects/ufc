@@ -52,7 +52,7 @@ add_library(ufc SHARED
         src/libufc/devices/usbhiddevice.cpp
         src/libufc/devices/winwingfcu.cpp
         src/libufc/devices/winwingfcu.h
-        src/libufc/datasources/xplane/datadefs.h
+        src/libufc/datasources/datadefs.h
         include/ufc/utils.h
         src/libufc/utils/utils.cpp
         include/ufc/airports.h
@@ -67,8 +67,8 @@ add_library(ufc SHARED
         src/libufc/datasources/clock.cpp
         src/libufc/datasources/clock.h
         include/ufc/navdata.h
-        src/libufc/datasources/xplane/xpmapping.cpp
-        src/libufc/datasources/xplane/xpmapping.h
+        src/libufc/datasources/aircraftmapping.cpp
+        include/ufc/aircraftmapping.h
         include/ufc/udp.h
         src/libufc/utils/udp.cpp
         include/ufc/lua.h

@@ -13,7 +13,7 @@ using namespace UFC;
 
 UFC_DATA_SOURCE(Simulator, SimulatorDataSource)
 
-SimulatorDataSource::SimulatorDataSource(FlightConnector* flightConnector) : DataSource(flightConnector, "Simulator", 0)
+SimulatorDataSource::SimulatorDataSource(FlightConnector* flightConnector) : DataSource(flightConnector, "Simulator", "", 0)
 {
 
 }
@@ -105,7 +105,7 @@ bool SimulatorDataSource::update()
     return true;
 }
 
-void SimulatorDataSource::command(const std::string& command)
+void SimulatorDataSource::executeCommand(const std::string& command, const CommandDefinition& commandDefinition)
 {
     AutopilotState autopilot = m_autopilot;
     if (command == AUTOPILOT_HEADING_UP)

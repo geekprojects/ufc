@@ -10,6 +10,7 @@
 
 #include <ufc/aircraftstate.h>
 
+#include "aircraftmapping.h"
 #include "logger.h"
 #include "lua.h"
 #include "navdata.h"
@@ -89,18 +90,17 @@ class DataSource : public Logger
 
     bool m_running = true;
 
+    AircraftMapping m_mapping;
+
     UFCLua m_commandLua;
     UFCLua m_dataLua;
 
-public:
-    explicit DataSource(FlightConnector* flightConnector, const std::string& name, int priority) :
-        Logger("DataSource[" + name + "]"),
-        m_flightConnector(flightConnector),
-        m_name(name),
-        m_priority(priority),
-        m_commandLua(flightConnector),
-        m_dataLua(flightConnector)
-    {}
+    float transformData(const std::shared_ptr<DataDefinition> &dataRef, float value);
+    virtual void executeCommand(const std::string& command, const CommandDefinition& commandDefinition) {}
+
+ public:
+    explicit DataSource(FlightConnector* flightConnector, const std::string& name, const std::string& dataPath, int priority);
+
     ~DataSource() override = default;
 
     [[nodiscard]] std::string getName() const { return m_name; }
@@ -115,7 +115,7 @@ public:
 
     virtual bool update() = 0;
 
-    virtual void command(const std::string& command) {}
+    void command(const std::string& command);
     virtual void setData(const std::string& dataName, float value) {}
 
     // Not all values may be updated in real time or you may not be running

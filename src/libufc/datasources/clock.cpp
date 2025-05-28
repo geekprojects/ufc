@@ -16,7 +16,7 @@ using namespace UFC;
 UFC_DATA_SOURCE(Clock, ClockDataSource)
 
 ClockDataSource::ClockDataSource(FlightConnector* fc) :
-    DataSource(fc, "Clock", 0)
+    DataSource(fc, "Clock", "", 0)
 {
 }
 
@@ -99,7 +99,7 @@ bool ClockDataSource::update()
     return true;
 }
 
-void ClockDataSource::command(const std::string& command)
+void ClockDataSource::executeCommand(const std::string& command, const CommandDefinition& commandDefinition)
 {
     log(DEBUG, "command: %s", command.c_str());
     if (command == AUTOPILOT_ALTITUDE_MANAGE)

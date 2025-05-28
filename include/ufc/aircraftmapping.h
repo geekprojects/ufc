@@ -62,7 +62,7 @@ struct CommandDefinition
     void* data = nullptr;
 };
 
-class XPMapping : UFC::Logger
+class AircraftMapping : UFC::Logger
 {
  private:
     UFC::DataSource* m_dataSource;
@@ -81,7 +81,7 @@ class XPMapping : UFC::Logger
     void loadCommands(YAML::Node node, std::string id);
 
  public:
-    XPMapping(UFC::DataSource* dataSource, const std::string &baseDir);
+    AircraftMapping(UFC::DataSource* dataSource, const std::string &baseDir);
 
     void loadDefinitionsForAircraft(const std::string &author, const std::string &icaoType);
 

@@ -23,9 +23,7 @@ class ClockDataSource : public UFC::DataSource
     void disconnect() override;
     bool update() override;
 
-    void command(const std::string& command) override;
+    void executeCommand(const std::string& command, const CommandDefinition& commandDefinition) override;
 };
-
-
 
 #endif //CLOCK_H

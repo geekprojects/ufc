@@ -21,8 +21,7 @@ float updateCallback(float elapsedMe, float elapsedSim, int counter, void * refc
 }
 
 XPPluginDataSource::XPPluginDataSource(UFC::FlightConnector* flightConnector) :
-    DataSource(flightConnector, "XPPlugin", 100),
-    m_dataMapping(this, "Resources/plugins/ufc")
+    DataSource(flightConnector, "XPPlugin", "Resources/plugins/ufc", 100)
 {
 }
 
@@ -72,9 +71,9 @@ bool XPPluginDataSource::reloadAircraft()
 
     log(DEBUG, "UFC: New Aircraft: ICAO: %s, author: %s", state.aircraftICAO.c_str(), state.aircraftAuthor.c_str());
 
-    m_dataMapping.loadDefinitionsForAircraft(state.aircraftAuthor, state.aircraftICAO);
+    m_mapping.loadDefinitionsForAircraft(state.aircraftAuthor, state.aircraftICAO);
 
-    for (auto& mapping : m_dataMapping.getDataRefs())
+    for (auto& mapping : m_mapping.getDataRefs())
     {
         if (!mapping->mapping.dataRef.empty())
         {
@@ -88,7 +87,7 @@ bool XPPluginDataSource::reloadAircraft()
         log(DEBUG, "UFC: Data: %s -> %s (%p)", mapping->id.c_str(), mapping->mapping.dataRef.c_str(), mapping->data);
     }
 
-    for (auto& commandMapping : m_dataMapping.getCommands())
+    for (auto& commandMapping : m_mapping.getCommands())
     {
         commandMapping.second.data = XPLMFindCommand(commandMapping.second.commands.at(0).c_str());
         log(DEBUG, "UFC: Command: %s -> %s (%p)", commandMapping.first.c_str(), commandMapping.second.commands.at(0).c_str(), commandMapping.second.data);
@@ -113,7 +112,7 @@ bool XPPluginDataSource::update()
 bool XPPluginDataSource::updateDataRefs()
 {
     AircraftState state = m_flightConnector->getState();
-    for (const auto& mapping : m_dataMapping.getDataRefs())
+    for (const auto& mapping : m_mapping.getDataRefs())
     {
         if (mapping->data == nullptr)
         {
@@ -122,13 +121,13 @@ bool XPPluginDataSource::updateDataRefs()
         switch (mapping->type)
         {
             case FLOAT:
-                m_dataMapping.writeFloat(state, mapping, XPLMGetDataf(mapping->data));
+                m_mapping.writeFloat(state, mapping, XPLMGetDataf(mapping->data));
                 break;
             case BOOLEAN:
-                m_dataMapping.writeBoolean(state, mapping, XPLMGetDatai(mapping->data));
+                m_mapping.writeBoolean(state, mapping, XPLMGetDatai(mapping->data));
                 break;
             case INTEGER:
-                m_dataMapping.writeInt(state, mapping, XPLMGetDatai(mapping->data));
+                m_mapping.writeInt(state, mapping, XPLMGetDatai(mapping->data));
                 break;
             case STRING:
                 // Unhandled
@@ -147,55 +146,47 @@ bool XPPluginDataSource::updateDataRefs()
     return true;
 }
 
-void XPPluginDataSource::command(const std::string& command)
+void XPPluginDataSource::executeCommand(const std::string& command, const CommandDefinition& commandDefinition)
 {
-    CommandDefinition commandDef = m_dataMapping.getCommand(command);
+    std::scoped_lock lock(m_commandQueueMutex);
+    m_commandQueue.push_back(commandDefinition.data);
+}
 
-    string xcommand = commandDef.commands.at(0);
-    auto idx = xcommand.find('=');
-    if (idx == string::npos)
+void XPPluginDataSource::setData(const std::string &dataName, float value)
+{
+    string dataRefName = dataName;
+
+    auto dataRef = m_mapping.getDataRef(dataName);
+    if (dataRef != nullptr && !dataRef->mapping.dataRef.empty())
     {
-        if (commandDef.data == nullptr)
-        {
-            return;
-        }
+        dataRefName = dataRef->mapping.dataRef;
+    }
 
-        log(DEBUG, "UFC: command: %s -> %s (%p)", command.c_str(), commandDef.commands.at(0).c_str(), commandDef.data);
-        std::scoped_lock lock(m_commandQueueMutex);
-        m_commandQueue.push_back(commandDef.data);
+    DataRefInfo dataRefInfo;
+    auto it = m_commandDataRefs.find(dataRefName);
+    if (it == m_commandDataRefs.end())
+    {
+        dataRefInfo.dataRef = XPLMFindDataRef(dataRefName.c_str());
+        if (dataRefInfo.dataRef != nullptr)
+        {
+            dataRefInfo.types = XPLMGetDataRefTypes(dataRefInfo.dataRef);
+        }
+        m_commandDataRefs.try_emplace(dataRefName, dataRefInfo);
     }
     else
     {
-        string dataRefName = xcommand.substr(0, idx);
-        float value = atof(xcommand.substr(idx + 1).c_str());
-        log(INFO, "command: Setting data ref: %s = %0.2f", dataRefName.c_str(), value);
+        dataRefInfo = it->second;
+    }
 
-        DataRefInfo dataRefInfo;
-        auto it = m_commandDataRefs.find(dataRefName);
-        if (it == m_commandDataRefs.end())
+    if (dataRefInfo.dataRef != nullptr)
+    {
+        if (!!(dataRefInfo.types & xplmType_Float))
         {
-            dataRefInfo.dataRef = XPLMFindDataRef(dataRefName.c_str());
-            if (dataRefInfo.dataRef != nullptr)
-            {
-                dataRefInfo.types = XPLMGetDataRefTypes(dataRefInfo.dataRef);
-            }
-            m_commandDataRefs.try_emplace(dataRefName, dataRefInfo);
+            XPLMSetDataf(dataRefInfo.dataRef, value);
         }
-        else
+        else if (!!(dataRefInfo.types & xplmType_Int))
         {
-            dataRefInfo = it->second;
-        }
-
-        if (dataRefInfo.dataRef != nullptr)
-        {
-            if (!!(dataRefInfo.types & xplmType_Float))
-            {
-                XPLMSetDataf(dataRefInfo.dataRef, value);
-            }
-            else if (!!(dataRefInfo.types & xplmType_Int))
-            {
-                XPLMSetDatai(dataRefInfo.dataRef, (int)value);
-            }
+            XPLMSetDatai(dataRefInfo.dataRef, (int)value);
         }
     }
 }

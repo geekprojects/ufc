@@ -7,9 +7,6 @@
 
 #include <ufc/datasource.h>
 #include "xplaneclient.h"
-#include "xpmapping.h"
-
-#include <yaml-cpp/yaml.h>
 
 #include <map>
 
@@ -19,13 +16,9 @@
 namespace UFC
 {
 
-
 class XPlaneDataSource : public DataSource
 {
- private:
     std::shared_ptr<XPlaneClient> m_client;
-
-    XPMapping m_mapping;
 
     int m_xPlaneVersion = 0;
 
@@ -48,7 +41,7 @@ class XPlaneDataSource : public DataSource
 
     bool update() override;
 
-    void command(const std::string& command) override;
+    void executeCommand(const std::string& command, const CommandDefinition& commandDefinition) override;
     void setData(const std::string& dataName, float value) override;
 
     bool getDataInt(const std::string& dataName, int& value) override;

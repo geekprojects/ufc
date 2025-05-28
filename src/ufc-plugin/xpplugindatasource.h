@@ -6,7 +6,7 @@
 #define XPPLUGINDATASOURCE_H
 
 #include <ufc/datasource.h>
-#include "../libufc/datasources/xplane/xpmapping.h"
+#include "../../include/ufc/aircraftmapping.h"
 
 #define XPLM200 1
 #define XPLM210 1
@@ -22,8 +22,6 @@ struct DataRefInfo
 class XPPluginDataSource : public UFC::DataSource
 {
  private:
-    XPMapping m_dataMapping;
-
     XPLMDataRef m_icaoDataRef;
     XPLMDataRef m_authorDataRef;
     XPLMDataRef m_studioDataRef;
@@ -47,7 +45,8 @@ class XPPluginDataSource : public UFC::DataSource
     bool update() override;
     bool updateDataRefs();
 
-    void command(const std::string& command) override;
+    void executeCommand(const std::string& command, const CommandDefinition& commandDefinition) override;
+    void setData(const std::string& dataName, float value) override;
 };
 
 

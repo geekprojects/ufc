@@ -2,27 +2,28 @@
 // Created by Ian Parker on 11/11/2024.
 //
 
-#include "xpmapping.h"
-#include "datadefs.h"
+#include <ufc/aircraftmapping.h>
+#include <ufc/datasource.h>
 
 #include <filesystem>
 #include <fnmatch.h>
-#include <unistd.h>
 
 #include "ufc/lua.h"
 #include "ufc/utils.h"
 
+#include "datadefs.h"
+
 using namespace std;
 using namespace UFC;
 
-XPMapping::XPMapping(DataSource* dataSource, const string& baseDir) :
+AircraftMapping::AircraftMapping(DataSource* dataSource, const string& baseDir) :
     Logger("XPMapping"),
     m_dataSource(dataSource),
     m_baseDir(baseDir)
 {
 }
 
-void XPMapping::initDefinitions()
+void AircraftMapping::initDefinitions()
 {
     m_dataRefs.clear();
     m_dataRefsById.clear();
@@ -34,7 +35,9 @@ void XPMapping::initDefinitions()
     }
 }
 
-void XPMapping::loadDefinitionsForAircraft(const string& author, const string& icaoType)
+void AircraftMapping::loadDefinitionsForAircraft(
+    const string& author,
+    const string& icaoType)
 {
     // Load defaults
     initDefinitions();
@@ -96,7 +99,7 @@ void XPMapping::loadDefinitionsForAircraft(const string& author, const string& i
     }
 }
 
-void XPMapping::loadDefinitions(YAML::Node config)
+void AircraftMapping::loadDefinitions(YAML::Node config)
 {
     if (config["init"])
     {
@@ -152,7 +155,7 @@ void XPMapping::loadDefinitions(YAML::Node config)
     loadCommands(config["commands"], "");
 }
 
-void XPMapping::loadCommands(YAML::Node commandsNode, std::string id)
+void AircraftMapping::loadCommands(YAML::Node commandsNode, std::string id)
 {
     for (YAML::const_iterator it=commandsNode.begin();it!=commandsNode.end();++it)
     {
@@ -192,7 +195,7 @@ void XPMapping::loadCommands(YAML::Node commandsNode, std::string id)
     }
 }
 
-DataMapping XPMapping::parseMapping(std::string mappingStr)
+DataMapping AircraftMapping::parseMapping(std::string mappingStr)
 {
     DataMapping mapping;
     auto idx = mappingStr.find("==");
@@ -216,14 +219,14 @@ DataMapping XPMapping::parseMapping(std::string mappingStr)
     return mapping;
 }
 
-void XPMapping::addDataRef(const DataDefinition& dataRef)
+void AircraftMapping::addDataRef(const DataDefinition& dataRef)
 {
     auto dataRefShared = make_shared<DataDefinition>(dataRef);
     m_dataRefs.push_back(dataRefShared);
     m_dataRefsById.insert(make_pair(dataRef.id, dataRefShared));
 }
 
-void XPMapping::dump()
+void AircraftMapping::dump()
 {
     for (const auto& dataRef : m_dataRefs)
     {
@@ -236,7 +239,7 @@ void XPMapping::dump()
 }
 
 const CommandDefinition nullCommand = {};
-const CommandDefinition& XPMapping::getCommand(std::string command)
+const CommandDefinition& AircraftMapping::getCommand(std::string command)
 {
     auto it = m_commands.find(command);
 
@@ -249,7 +252,7 @@ const CommandDefinition& XPMapping::getCommand(std::string command)
     return it->second;
 }
 
-std::shared_ptr<DataDefinition> XPMapping::getDataRef(const std::string& id)
+std::shared_ptr<DataDefinition> AircraftMapping::getDataRef(const std::string& id)
 {
     auto it = m_dataRefsById.find(id);
     if (it != m_dataRefsById.end())
@@ -259,19 +262,19 @@ std::shared_ptr<DataDefinition> XPMapping::getDataRef(const std::string& id)
     return nullptr;
 }
 
-void XPMapping::writeFloat(AircraftState& state, const shared_ptr<DataDefinition> &dataDef, float value)
+void AircraftMapping::writeFloat(AircraftState& state, const shared_ptr<DataDefinition> &dataDef, float value)
 {
     auto d = (float*)((char*)&state + dataDef->pos);
     *d = value;
 }
 
-void XPMapping::writeInt(AircraftState& state, const shared_ptr<DataDefinition> &dataDef, int32_t value)
+void AircraftMapping::writeInt(AircraftState& state, const shared_ptr<DataDefinition> &dataDef, int32_t value)
 {
     auto d = (int32_t*)((char*)&state + dataDef->pos);
     *d = value;
 }
 
-void XPMapping::writeBoolean(AircraftState& state, const shared_ptr<DataDefinition> &dataDef, int32_t value)
+void AircraftMapping::writeBoolean(AircraftState& state, const shared_ptr<DataDefinition> &dataDef, int32_t value)
 {
     auto d = (bool*)((char*)&state + dataDef->pos);
 
@@ -293,7 +296,7 @@ void XPMapping::writeBoolean(AircraftState& state, const shared_ptr<DataDefiniti
     *d = value;
 }
 
-void XPMapping::writeString(AircraftState& state, const shared_ptr<DataDefinition> &dataDef, string value)
+void AircraftMapping::writeString(AircraftState& state, const shared_ptr<DataDefinition> &dataDef, string value)
 {
     auto d = (string*)((char*)&state + dataDef->pos);
     *d = value;

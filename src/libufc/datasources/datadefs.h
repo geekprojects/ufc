@@ -5,11 +5,11 @@
 #ifndef DATADEFS_H
 #define DATADEFS_H
 
-#include "xplane.h"
+#include "xplane/xplane.h"
 
 namespace UFC
 {
-static const DataDefinition g_dataRefsInit[] =
+static const std::vector<DataDefinition> g_dataRefsInit =
 {
     {DATA_AIRCRAFT_INDICATEDAIRSPEED, FLOAT, offsetof(AircraftState, indicatedAirspeed)},
     {DATA_AIRCRAFT_PITCH, FLOAT, offsetof(AircraftState, pitch) },

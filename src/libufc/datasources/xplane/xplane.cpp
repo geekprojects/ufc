@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <unistd.h>
 
+#include "../datadefs.h"
 #include "ufc/utils.h"
 
 using namespace std;
@@ -18,8 +19,7 @@ using namespace UFC;
 UFC_DATA_SOURCE(XPlane, XPlaneDataSource)
 
 XPlaneDataSource::XPlaneDataSource(FlightConnector* flightConnector) :
-    DataSource(flightConnector, "XPlane", 10),
-    m_mapping(this, "../data/x-plane")
+    DataSource(flightConnector, "XPlane", "../data/x-plane", 10)
 {
     m_client = make_shared<XPlaneClient>(
         flightConnector->getConfig().xplaneHost,
@@ -121,12 +121,7 @@ void XPlaneDataSource::update(const map<int, float>& values)
 
         const auto& dataRef = m_mapping.getDataRefs()[idx - 1];
 
-        float v = value;
-        if (!dataRef->mapping.luaScript.empty())
-        {
-            v = m_dataLua.execute(dataRef->mapping.luaScript, "value", value);
-        }
-
+        float v = transformData(dataRef, value);
         switch (dataRef->type)
         {
             case FLOAT:
@@ -146,46 +141,24 @@ void XPlaneDataSource::update(const map<int, float>& values)
     m_flightConnector->updateState(state);
 }
 
-void XPlaneDataSource::command(const string& commandName)
+void XPlaneDataSource::executeCommand(const string& commandName, const CommandDefinition& commandDefinition)
 {
-    auto commandDefinition = m_mapping.getCommand(commandName);
-    if (commandDefinition.commands.empty())
-    {
-        return;
-    }
-
-    for (auto commandStr : commandDefinition.commands)
-    {
-        printf("XPlaneDataSource::command: %s -> %s\n", commandName.c_str(), commandStr.c_str());
-
-        if (commandStr.starts_with("lua:"))
-        {
-            string luaScript = commandStr.substr(4);
-            m_commandLua.execute(luaScript);
-            continue;
-        }
-
-        auto idx = commandStr.find('=');
-        if (idx != string::npos)
-        {
-            string dataref = StringUtils::trim(commandStr.substr(0, idx));
-            string valueStr = StringUtils::trim(commandStr.substr(idx + 1));
-            auto value = (float)atof(valueStr.c_str());
-            log(INFO, "command: Setting data ref: %s = %0.2f", dataref.c_str(), value);
-            m_client->setDataRef(dataref, value);
-            continue;
-        }
-
-        m_client->sendCommand(commandStr);
-    }
+    m_client->sendCommand(commandName);
 }
 
 void XPlaneDataSource::setData(const std::string& dataName, float value)
 {
     auto dataRef = m_mapping.getDataRef(dataName);
-    if (dataRef == nullptr || dataRef->mapping.dataRef.empty())
+    if (dataRef == nullptr)
     {
-        log(WARN, "setData: Unhandled data ref: %s", dataName.c_str());
+        // Not mapped. Try setting directly
+        m_client->setDataRef(dataName, value);
+        return;
+    }
+
+    if (dataRef->mapping.dataRef.empty())
+    {
+        log(WARN, "setData: Data ref is empty for {}", dataName.c_str());
         return;
     }
 
