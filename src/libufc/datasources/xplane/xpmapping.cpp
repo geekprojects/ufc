@@ -9,12 +9,16 @@
 #include <fnmatch.h>
 #include <unistd.h>
 
+#include "ufc/lua.h"
 #include "ufc/utils.h"
 
 using namespace std;
 using namespace UFC;
 
-XPMapping::XPMapping(const string& baseDir) : Logger("XPMapping"), m_baseDir(baseDir)
+XPMapping::XPMapping(DataSource* dataSource, const string& baseDir) :
+    Logger("XPMapping"),
+    m_dataSource(dataSource),
+    m_baseDir(baseDir)
 {
 }
 
@@ -94,6 +98,16 @@ void XPMapping::loadDefinitionsForAircraft(const string& author, const string& i
 
 void XPMapping::loadDefinitions(YAML::Node config)
 {
+    if (config["init"])
+    {
+        string initScript = config["init"].as<string>();
+        if (initScript.starts_with("lua:"))
+        {
+            initScript = initScript.substr(4);
+        }
+        m_dataSource->getFlightConnector()->getLua()->execute(initScript);
+    }
+
     YAML::Node dataNode = config["data"];
     for (YAML::const_iterator it=dataNode.begin(); it!=dataNode.end(); ++it)
     {

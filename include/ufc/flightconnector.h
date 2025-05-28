@@ -14,13 +14,11 @@
 
 #include "logger.h"
 
-namespace LuaCpp
-{
-    class LuaContext;
-}
 
 namespace UFC
 {
+
+class UFCLua;
 
 enum class Result
 {
@@ -87,7 +85,7 @@ class FlightConnector final : public Logger
     std::shared_ptr<std::thread> m_updateDataSourceThread = nullptr;
     bool m_exitHandler = true;
 
-    std::shared_ptr<LuaCpp::LuaContext> m_luaContext;
+    std::shared_ptr<UFCLua> m_lua;
 
     static void updateDeviceThread(FlightConnector* flightConnector);
     void updateDeviceMain();
@@ -95,6 +93,7 @@ class FlightConnector final : public Logger
     static void updateDataSourceThread(FlightConnector* flightConnector);
     void updateDataSourceMain();
 
+    void setup(const Config &config);
     void loadConfig(const Config &config);
 
  public:
@@ -194,6 +193,8 @@ class FlightConnector final : public Logger
         std::scoped_lock lock(m_stateMutex);
         m_state = state;
     }
+
+    std::shared_ptr<UFCLua> getLua() { return m_lua; }
 
     /**
      * Stop all currently running FlightConnectors

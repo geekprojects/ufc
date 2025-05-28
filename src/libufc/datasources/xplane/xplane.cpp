@@ -5,6 +5,7 @@
 #include "xplane.h"
 
 #include <ufc/flightconnector.h>
+#include <ufc/lua.h>
 
 #include <filesystem>
 #include <unistd.h>
@@ -16,7 +17,9 @@ using namespace UFC;
 
 UFC_DATA_SOURCE(XPlane, XPlaneDataSource)
 
-XPlaneDataSource::XPlaneDataSource(FlightConnector* flightConnector) : DataSource(flightConnector, "XPlane", 10), m_mapping("../data/x-plane")
+XPlaneDataSource::XPlaneDataSource(FlightConnector* flightConnector) :
+    DataSource(flightConnector, "XPlane", 10),
+    m_mapping(this, "../data/x-plane")
 {
     m_client = make_shared<XPlaneClient>(
         flightConnector->getConfig().xplaneHost,
@@ -147,48 +150,21 @@ void XPlaneDataSource::command(const string& command)
     string commandStr = commandDefinition.command;
     printf("XPlaneDataSource::command: %s -> %s\n", command.c_str(), commandStr.c_str());
 
+    if (commandStr.starts_with("lua:"))
+    {
+        string luaScript = commandStr.substr(4);
+        m_flightConnector->getLua()->execute(luaScript);
+        return;
+    }
+
     auto idx = commandStr.find('=');
     if (idx != string::npos)
     {
-        string dataref = commandStr.substr(0, idx);
-        float value = atof(commandStr.substr(idx + 1).c_str());
+        string dataref = StringUtils::trim(commandStr.substr(0, idx));
+        string valueStr = StringUtils::trim(commandStr.substr(idx + 1));
+        auto value = (float)atof(valueStr.c_str());
         log(INFO, "command: Setting data ref: %s = %0.2f", dataref.c_str(), value);
         m_client->setDataRef(dataref, value);
-        return;
-    }
-
-    if (commandStr.ends_with("++") || commandStr.ends_with("--"))
-    {
-        string dataRef = StringUtils::trim(commandStr.substr(0, commandStr.size() - 2));
-        log(INFO, "command: Incrementing data ref: %s", dataRef.c_str());
-
-        int value;
-        getDataInt(dataRef, value);
-        log(INFO, "command: Original value=%d", value);
-        if (commandStr.ends_with("++"))
-        {
-            value++;
-        }
-        else
-        {
-            value--;
-        }
-        setData(dataRef, value);
-        return;
-    }
-
-    idx = commandStr.find("+");
-    if (idx != string::npos)
-    {
-        string dataRef = StringUtils::trim(commandStr.substr(0, idx));
-        int inc = atoi(StringUtils::trim(commandStr.substr(idx + 1)).c_str());
-        log(INFO, "command: Adding %d to data ref: %s", inc, dataRef.c_str());
-
-        int value;
-        getDataInt(dataRef, value);
-        log(INFO, "command: Original value=%d", value);
-        value += inc;
-        setData(dataRef, value);
         return;
     }
 

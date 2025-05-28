@@ -22,7 +22,7 @@ float updateCallback(float elapsedMe, float elapsedSim, int counter, void * refc
 
 XPPluginDataSource::XPPluginDataSource(UFC::FlightConnector* flightConnector) :
     DataSource(flightConnector, "XPPlugin", 100),
-    m_dataMapping("Resources/plugins/ufc")
+    m_dataMapping(this, "Resources/plugins/ufc")
 {
 }
 

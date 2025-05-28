@@ -98,6 +98,7 @@ class DataSource : public Logger
     ~DataSource() override = default;
 
     [[nodiscard]] std::string getName() const { return m_name; }
+    [[nodiscard]] FlightConnector* getFlightConnector() const { return m_flightConnector; }
 
     virtual std::shared_ptr<Airports> loadAirports() { return nullptr; }
     virtual std::shared_ptr<NavAids> loadNavAids() { return nullptr; }

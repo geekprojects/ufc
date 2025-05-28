@@ -10,6 +10,7 @@
 #include "datasources/simulator.h"
 #include "datasources/xplane/xplane.h"
 #include "ufc/device.h"
+#include "ufc/lua.h"
 
 using namespace std;
 using namespace UFC;
@@ -28,15 +29,13 @@ FlightConnector::FlightConnector() :
     Logger("FlightConnector")
 {
     Config config = {};
-    loadConfig(config);
-    g_flightConnectors.push_back(this);
+    setup(config);
 }
 
 FlightConnector::FlightConnector(const Config& config) :
     Logger("FlightConnector")
 {
-    loadConfig(config);
-    g_flightConnectors.push_back(this);
+    setup(config);
 }
 
 FlightConnector::~FlightConnector()
@@ -49,6 +48,15 @@ FlightConnector::~FlightConnector()
             break;
         }
     }
+}
+
+void FlightConnector::setup(const Config &config)
+{
+    loadConfig(config);
+    g_flightConnectors.push_back(this);
+
+    m_lua = make_shared<UFCLua>(this);
+    m_lua->init();
 }
 
 bool FlightConnector::init()

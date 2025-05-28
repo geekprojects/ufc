@@ -15,6 +15,11 @@
 
 #include "ufc/aircraftstate.h"
 
+namespace UFC
+{
+class DataSource;
+}
+
 enum DataRefType
 {
     FLOAT,
@@ -59,6 +64,7 @@ struct CommandDefinition
 class XPMapping : UFC::Logger
 {
  private:
+    UFC::DataSource* m_dataSource;
     std::string m_baseDir;
 
     std::vector<std::shared_ptr<DataDefinition>> m_dataRefs;
@@ -74,7 +80,7 @@ class XPMapping : UFC::Logger
     void loadCommands(YAML::Node node, std::string id);
 
  public:
-    XPMapping(const std::string &baseDir);
+    XPMapping(UFC::DataSource* dataSource, const std::string &baseDir);
 
     void loadDefinitionsForAircraft(const std::string &author, const std::string &icaoType);
 
