@@ -33,11 +33,13 @@ class UFCLua
     std::shared_ptr<LuaCpp::Engine::LuaTTable> m_stateTable;
 
  public:
-    UFCLua(UFC::FlightConnector* flightConnector) : m_flightConnector(flightConnector) {}
+    UFCLua(UFC::FlightConnector* flightConnector);
     ~UFCLua() = default;
 
     bool init();
     void execute(std::string str);
+
+    float execute(const std::string &str, std::string variable, float value);
 };
 
 }

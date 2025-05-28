@@ -37,9 +37,10 @@ enum class DataMappingType
 
 struct DataMapping
 {
-    std::string dataRef;
     DataMappingType type;
     int32_t operand;
+    std::string dataRef;
+    std::string luaScript;
 };
 
 struct DataDefinition
@@ -57,7 +58,7 @@ struct DataDefinition
 struct CommandDefinition
 {
     std::string id;
-    std::string command;
+    std::vector<std::string> commands;
     void* data = nullptr;
 };
 

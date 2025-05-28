@@ -13,6 +13,7 @@
 
 #include <map>
 
+#include "ufc/lua.h"
 #include "ufc/navdata.h"
 
 namespace UFC
@@ -57,6 +58,7 @@ class XPlaneDataSource : public DataSource
     void sendMessage(const std::string& message) override;
 
     [[nodiscard]] int getXPlaneVersion() const { return m_xPlaneVersion; }
+
 };
 
 }

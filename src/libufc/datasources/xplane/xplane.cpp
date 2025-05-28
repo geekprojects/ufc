@@ -120,16 +120,23 @@ void XPlaneDataSource::update(const map<int, float>& values)
         }
 
         const auto& dataRef = m_mapping.getDataRefs()[idx - 1];
+
+        float v = value;
+        if (!dataRef->mapping.luaScript.empty())
+        {
+            v = m_dataLua.execute(dataRef->mapping.luaScript, "value", value);
+        }
+
         switch (dataRef->type)
         {
             case FLOAT:
-                m_mapping.writeFloat(state, dataRef, value);
+                m_mapping.writeFloat(state, dataRef, v);
                 break;
             case INTEGER:
-                m_mapping.writeInt(state, dataRef, (int32_t)value);
+                m_mapping.writeInt(state, dataRef, (int32_t)v);
                 break;
             case BOOLEAN:
-                m_mapping.writeBoolean(state, dataRef, (int32_t)value);
+                m_mapping.writeBoolean(state, dataRef, (int32_t)v);
                 break;
             case STRING:
                 // Ignored!
@@ -139,36 +146,38 @@ void XPlaneDataSource::update(const map<int, float>& values)
     m_flightConnector->updateState(state);
 }
 
-void XPlaneDataSource::command(const string& command)
+void XPlaneDataSource::command(const string& commandName)
 {
-    auto commandDefinition = m_mapping.getCommand(command);
-    if (commandDefinition.command.empty())
+    auto commandDefinition = m_mapping.getCommand(commandName);
+    if (commandDefinition.commands.empty())
     {
         return;
     }
 
-    string commandStr = commandDefinition.command;
-    printf("XPlaneDataSource::command: %s -> %s\n", command.c_str(), commandStr.c_str());
-
-    if (commandStr.starts_with("lua:"))
+    for (auto commandStr : commandDefinition.commands)
     {
-        string luaScript = commandStr.substr(4);
-        m_flightConnector->getLua()->execute(luaScript);
-        return;
-    }
+        printf("XPlaneDataSource::command: %s -> %s\n", commandName.c_str(), commandStr.c_str());
 
-    auto idx = commandStr.find('=');
-    if (idx != string::npos)
-    {
-        string dataref = StringUtils::trim(commandStr.substr(0, idx));
-        string valueStr = StringUtils::trim(commandStr.substr(idx + 1));
-        auto value = (float)atof(valueStr.c_str());
-        log(INFO, "command: Setting data ref: %s = %0.2f", dataref.c_str(), value);
-        m_client->setDataRef(dataref, value);
-        return;
-    }
+        if (commandStr.starts_with("lua:"))
+        {
+            string luaScript = commandStr.substr(4);
+            m_commandLua.execute(luaScript);
+            continue;
+        }
 
-    m_client->sendCommand(commandStr);
+        auto idx = commandStr.find('=');
+        if (idx != string::npos)
+        {
+            string dataref = StringUtils::trim(commandStr.substr(0, idx));
+            string valueStr = StringUtils::trim(commandStr.substr(idx + 1));
+            auto value = (float)atof(valueStr.c_str());
+            log(INFO, "command: Setting data ref: %s = %0.2f", dataref.c_str(), value);
+            m_client->setDataRef(dataref, value);
+            continue;
+        }
+
+        m_client->sendCommand(commandStr);
+    }
 }
 
 void XPlaneDataSource::setData(const std::string& dataName, float value)

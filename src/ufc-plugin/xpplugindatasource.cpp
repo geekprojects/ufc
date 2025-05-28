@@ -90,8 +90,8 @@ bool XPPluginDataSource::reloadAircraft()
 
     for (auto& commandMapping : m_dataMapping.getCommands())
     {
-        commandMapping.second.data = XPLMFindCommand(commandMapping.second.command.c_str());
-        log(DEBUG, "UFC: Command: %s -> %s (%p)", commandMapping.first.c_str(), commandMapping.second.command.c_str(), commandMapping.second.data);
+        commandMapping.second.data = XPLMFindCommand(commandMapping.second.commands.at(0).c_str());
+        log(DEBUG, "UFC: Command: %s -> %s (%p)", commandMapping.first.c_str(), commandMapping.second.commands.at(0).c_str(), commandMapping.second.data);
     }
 
     m_flightConnector->updateState(state);
@@ -151,7 +151,7 @@ void XPPluginDataSource::command(const std::string& command)
 {
     CommandDefinition commandDef = m_dataMapping.getCommand(command);
 
-    string xcommand = commandDef.command;
+    string xcommand = commandDef.commands.at(0);
     auto idx = xcommand.find('=');
     if (idx == string::npos)
     {
@@ -160,7 +160,7 @@ void XPPluginDataSource::command(const std::string& command)
             return;
         }
 
-        log(DEBUG, "UFC: command: %s -> %s (%p)", command.c_str(), commandDef.command.c_str(), commandDef.data);
+        log(DEBUG, "UFC: command: %s -> %s (%p)", command.c_str(), commandDef.commands.at(0).c_str(), commandDef.data);
         std::scoped_lock lock(m_commandQueueMutex);
         m_commandQueue.push_back(commandDef.data);
     }

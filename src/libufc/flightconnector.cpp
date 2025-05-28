@@ -54,9 +54,6 @@ void FlightConnector::setup(const Config &config)
 {
     loadConfig(config);
     g_flightConnectors.push_back(this);
-
-    m_lua = make_shared<UFCLua>(this);
-    m_lua->init();
 }
 
 bool FlightConnector::init()

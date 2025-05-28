@@ -85,8 +85,6 @@ class FlightConnector final : public Logger
     std::shared_ptr<std::thread> m_updateDataSourceThread = nullptr;
     bool m_exitHandler = true;
 
-    std::shared_ptr<UFCLua> m_lua;
-
     static void updateDeviceThread(FlightConnector* flightConnector);
     void updateDeviceMain();
 
@@ -193,8 +191,6 @@ class FlightConnector final : public Logger
         std::scoped_lock lock(m_stateMutex);
         m_state = state;
     }
-
-    std::shared_ptr<UFCLua> getLua() { return m_lua; }
 
     /**
      * Stop all currently running FlightConnectors

@@ -105,7 +105,12 @@ void XPMapping::loadDefinitions(YAML::Node config)
         {
             initScript = initScript.substr(4);
         }
-        m_dataSource->getFlightConnector()->getLua()->execute(initScript);
+        initScript = StringUtils::trim(initScript);
+        if (!initScript.empty())
+        {
+            m_dataSource->getDataLua()->execute(initScript);
+            m_dataSource->getCommandLua()->execute(initScript);
+        }
     }
 
     YAML::Node dataNode = config["data"];
@@ -117,17 +122,28 @@ void XPMapping::loadDefinitions(YAML::Node config)
             if (dataIt->second)
             {
                 auto name = dataIt->first.as<string>();
-                auto value = dataIt->second.as<string>();
                 auto id = categoryName + "/" + name;
+
                 auto dataRefIt = m_dataRefsById.find(id);
-                if (dataRefIt != m_dataRefsById.end())
+                if (dataRefIt == m_dataRefsById.end())
                 {
-                    dataRefIt->second->mapping = parseMapping(value);
-                    log(DEBUG, "loadDefinitions: %s -> %s", id.c_str(), value.c_str());
+                    log(WARN, "Unknown data ref: %s", id.c_str());
+                    continue;
+                }
+
+                auto second = dataIt->second;
+                if (second.Type() == YAML::NodeType::Map)
+                {
+                    string dataRef = dataIt->second["dataRef"].as<string>();
+                    string lua = dataIt->second["lua"].as<string>();
+                    dataRefIt->second->mapping.dataRef = dataRef;
+                    dataRefIt->second->mapping.luaScript = lua;
                 }
                 else
                 {
-                    log(WARN, "Unknown data ref: %s", id.c_str());
+                    auto value = dataIt->second.as<string>();
+                    dataRefIt->second->mapping = parseMapping(value);
+                    log(DEBUG, "loadDefinitions: %s -> %s", id.c_str(), value.c_str());
                 }
             }
         }
@@ -152,11 +168,25 @@ void XPMapping::loadCommands(YAML::Node commandsNode, std::string id)
         }
         else
         {
-            auto command = it->second.as<string>();
-            log(DEBUG, "loadCommands: command %s -> %s", categoryName.c_str(), command.c_str());
             CommandDefinition commandDefinition;
-            commandDefinition.command = command;
             commandDefinition.id = id;
+
+            vector<string> commands;
+            if (it->second.Type() == YAML::NodeType::Sequence)
+            {
+                for (auto commandIt : it->second)
+                {
+                    string command = commandIt.as<string>();
+                    commandDefinition.commands.push_back(command);
+                    log(DEBUG, "loadCommands: command %s -> %s", categoryName.c_str(), command.c_str());
+                }
+            }
+            else
+            {
+                string command = it->second.as<string>();
+                log(DEBUG, "loadCommands: command %s -> %s", categoryName.c_str(), command.c_str());
+                commandDefinition.commands.push_back(command);
+            }
             m_commands.insert_or_assign(categoryName, commandDefinition);
         }
     }
@@ -201,7 +231,7 @@ void XPMapping::dump()
     }
     for (const auto& [id, command] : m_commands)
     {
-        log(DEBUG, "dump: Command: %s -> %s", id.c_str(), command.command.c_str());
+        log(DEBUG, "dump: Command: %s -> %s", id.c_str(), command.commands.at(0).c_str());
     }
 }
 
@@ -253,7 +283,6 @@ void XPMapping::writeBoolean(AircraftState& state, const shared_ptr<DataDefiniti
             break;
 
         case DataMappingType::EQUALS:
-            //printf("writeBoolean: %d -> %d\n", value, dataDef->mapping.operand);
             value = value == dataDef->mapping.operand;
             break;
 

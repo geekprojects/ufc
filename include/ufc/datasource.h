@@ -11,6 +11,7 @@
 #include <ufc/aircraftstate.h>
 
 #include "logger.h"
+#include "lua.h"
 #include "navdata.h"
 
 namespace UFC
@@ -88,12 +89,17 @@ class DataSource : public Logger
 
     bool m_running = true;
 
- public:
+    UFCLua m_commandLua;
+    UFCLua m_dataLua;
+
+public:
     explicit DataSource(FlightConnector* flightConnector, const std::string& name, int priority) :
         Logger("DataSource[" + name + "]"),
         m_flightConnector(flightConnector),
         m_name(name),
-        m_priority(priority)
+        m_priority(priority),
+        m_commandLua(flightConnector),
+        m_dataLua(flightConnector)
     {}
     ~DataSource() override = default;
 
@@ -114,11 +120,15 @@ class DataSource : public Logger
 
     // Not all values may be updated in real time or you may not be running
     // the update thread. These can be used to retrieve values in these cases.
-    virtual bool getDataInt(const std::string& dataName, int& value) { return false; };
+    virtual bool getDataInt(const std::string& dataName, int& value) { return false; }
+
     virtual bool getDataFloat(const std::string& dataName, float& value) { return false; };
     virtual bool getDataString(const std::string& dataName, std::string& value) { return false; };
 
     virtual void sendMessage(const std::string& message) {}
+
+    UFCLua* getDataLua() { return &m_dataLua; }
+    UFCLua* getCommandLua() { return &m_commandLua; }
 };
 
 }
