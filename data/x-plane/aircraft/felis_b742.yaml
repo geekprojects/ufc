@@ -10,10 +10,10 @@ data:
 
     verticalSpeed:
       dataRef: B742/AP_panel/VS_rotary
+      # The value from the aircraft has a fair amount of noise which keeps it fluctuating
+      # between small positive and negative values. Force it to zero.
       lua: |
         value = value * 1000
-        # The value from the aircraft has a fair amount of noise which keeps it fluctuating
-        # between small positive and negative values. Force it to zero.
         if math.abs(value) < 100 then
           value = 0
          end
