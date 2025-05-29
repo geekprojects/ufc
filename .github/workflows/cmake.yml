@@ -15,7 +15,9 @@ jobs:
     # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
     # You can convert this to a matrix build if you need cross-platform coverage.
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    runs-on: ubuntu-24.04
+    runs-on: ${{ matrix.os }}
+    matrix:
+      os: [ubuntu-latest, macos-latest]
 
     permissions:
       # required for all workflows
@@ -34,8 +36,13 @@ jobs:
     - name: Fetch submodules
       run: git submodule init && git submodule update
 
-    - name: Install dependencies
-      run: sudo apt-get update && sudo apt-get install libyaml-cpp-dev libhidapi-dev lua5.4 liblua5.4-dev libcairomm-1.16-dev libpangomm-2.48-dev libfreetype-dev libglm-dev libsdl2-dev
+    - name: Install dependencies (MacOS)
+      if: runner.os == "MacOS"
+      run: brew install hidapi yaml-cpp lua
+
+    - name: Install dependencies (Linux)
+      if: runner.os == "Linux"
+      run: sudo apt-get update && sudo apt-get install libyaml-cpp-dev libhidapi-dev lua5.4 liblua5.4-dev
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
