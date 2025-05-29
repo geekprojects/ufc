@@ -39,7 +39,7 @@ jobs:
 
     - name: Install dependencies (MacOS)
       if: runner.os == 'MacOS'
-      run: brew install hidapi yaml-cpp lua
+      run: brew update && brew install hidapi yaml-cpp lua
 
     - name: Install dependencies (Linux)
       if: runner.os == 'Linux'

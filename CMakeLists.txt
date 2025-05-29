@@ -26,7 +26,7 @@ SET(CMAKE_CXX_FLAGS_DEBUG "${FLAGS_COMMON} -O0 -g -fsanitize=address -fsanitize-
 SET(CMAKE_CXX_FLAGS_RELEASE  "${FLAGS_COMMON} -O3")
 
 include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/luacpp/Source)
-add_definitions(-I/usr/local/include ${yamlcpp_CFLAGS} ${hidapi_CFLAGS} ${lua_CFLAGS})
+add_definitions(${yamlcpp_CFLAGS} ${hidapi_CFLAGS} ${lua_CFLAGS})
 
 add_library(ufc SHARED
         src/libufc/flightconnector.cpp
@@ -92,8 +92,6 @@ install(TARGETS ufc DESTINATION lib)
 
 add_executable(ufctool src/ufctool/main.cpp)
 target_link_libraries(ufctool
-        -Wl,-rpath -Wl,/usr/local/lib
-        -L/usr/local/lib
         ufc
 )
 
@@ -122,8 +120,6 @@ if (DEFINED ENV{XPLANE_SDK})
     target_compile_definitions(ufc-plugin PUBLIC ${XPLM_CFLAGS})
     target_include_directories(ufc-plugin PUBLIC ${XPLANE_INC})
     target_link_libraries(ufc-plugin
-            -Wl,-rpath -Wl,/usr/local/lib
-            -L/usr/local/lib
             ufc
             ${XPLM_LDFLAGS}
     )
