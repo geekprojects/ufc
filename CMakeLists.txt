@@ -75,12 +75,11 @@ add_library(ufc SHARED
         src/libufc/lua.cpp
 )
 
-if(UNIX AND NOT APPLE)
-target_compile_definitions(ufc PUBLIC -fPIC)
-elseif(UNIX AND APPLE)
+if(UNIX AND APPLE)
 target_link_options(ufc PUBLIC -all_load)
 endif()
 
+set_property(TARGET ufc PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(ufc PUBLIC -DDATADIR=${DATADIR})
 target_link_libraries(ufc
         luacpp_static
