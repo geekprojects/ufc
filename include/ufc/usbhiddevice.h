@@ -9,7 +9,7 @@
 
 #include <vector>
 
-#include <hidapi/hidapi.h>
+#include <hidapi.h>
 
 #define checkInput(_field, _command) \
     if (m_inputReport._field != m_previousInputReport._field && m_inputReport._field) \
