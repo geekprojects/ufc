@@ -26,8 +26,7 @@ float updateCallback(
 }
 
 XPPluginDataSource::XPPluginDataSource(UFC::FlightConnector* flightConnector) :
-    // XXX DataSource(flightConnector, "XPPlugin", "Resources/plugins/ufc", 100)
-    DataSource(flightConnector, "XPPlugin", "/Users/ian/projects/xpsim/xpsim/Resources/plugins/ufc", 100)
+    DataSource(flightConnector, "XPPlugin", "Resources/plugins/ufc", 100)
 {
 }
 
