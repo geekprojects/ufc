@@ -19,9 +19,9 @@ float updateCallback(
     [[maybe_unused]] float elapsedMe,
     [[maybe_unused]] float elapsedSim,
     [[maybe_unused]] int counter,
-    void* refcon)
+    XPPluginDataSource* refcon)
 {
-    ((XPPluginDataSource*)refcon)->updateDataRefs();
+    refcon->updateDataRefs();
     return 0.1f;
 }
 
@@ -43,7 +43,7 @@ bool XPPluginDataSource::connect()
     XPLMCreateFlightLoop_t createFlightLoop;
     createFlightLoop.structSize = sizeof(XPLMCreateFlightLoop_t);
     createFlightLoop.phase = xplm_FlightLoop_Phase_AfterFlightModel;
-    createFlightLoop.callbackFunc = updateCallback;
+    createFlightLoop.callbackFunc = (XPLMFlightLoop_f)updateCallback;
     createFlightLoop.refcon = this;
     auto flightLoopId = XPLMCreateFlightLoop(&createFlightLoop);
     XPLMScheduleFlightLoop(flightLoopId, 0.1f, true);
