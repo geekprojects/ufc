@@ -16,7 +16,7 @@ DataSource::DataSource(FlightConnector* flightConnector, const std::string& name
     m_flightConnector(flightConnector),
     m_name(name),
     m_priority(priority),
-    m_mapping(this, "../data/x-plane"),
+    m_mapping(this, dataPath),
     m_commandLua(flightConnector),
     m_dataLua(flightConnector)
 {}
@@ -31,7 +31,9 @@ void DataSource::command(const std::string& commandName)
 
     for (auto const& commandStr : commandDefinition.commands)
     {
-        log(DEBUG, "command: %s -> %s\n", commandName.c_str(), commandStr.c_str());
+#if 0
+        log(DEBUG, "command: %s -> %s", commandName.c_str(), commandStr.c_str());
+#endif
 
         if (commandStr.starts_with("lua:"))
         {
@@ -46,7 +48,9 @@ void DataSource::command(const std::string& commandName)
             string dataref = StringUtils::trim(commandStr.substr(0, idx));
             string valueStr = StringUtils::trim(commandStr.substr(idx + 1));
             auto value = (float)atof(valueStr.c_str());
+#if 0
             log(INFO, "command: Setting data ref: %s = %0.2f", dataref.c_str(), value);
+#endif
             setData(dataref, value);
             continue;
         }

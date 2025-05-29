@@ -12,6 +12,7 @@
 #include <map>
 
 #include <yaml-cpp/yaml.h>
+#include <__filesystem/directory_entry.h>
 
 #include "ufc/aircraftstate.h"
 
@@ -37,8 +38,8 @@ enum class DataMappingType
 
 struct DataMapping
 {
-    DataMappingType type;
-    int32_t operand;
+    DataMappingType type = DataMappingType::VALUE;
+    int32_t operand = 0;
     std::string dataRef;
     std::string luaScript;
 };
@@ -74,8 +75,18 @@ class AircraftMapping : UFC::Logger
     std::map<std::string, CommandDefinition> m_commands;
 
     void initDefinitions();
+
+    bool checkAircraft(
+        const std::string &author,
+        const std::string &icaoType,
+        const std::filesystem::directory_entry &entry,
+        YAML::Node aircraftFile);
+
+    void addDataDefinition(std::string id, YAML::Node definitionNode);
+
     void addDataRef(const DataDefinition& dataRef);
-    DataMapping parseMapping(std::string mapping);
+
+    static DataMapping parseMapping(std::string mapping);
 
     void loadDefinitions(YAML::Node config);
     void loadCommands(YAML::Node node, std::string id);
@@ -84,8 +95,6 @@ class AircraftMapping : UFC::Logger
     AircraftMapping(UFC::DataSource* dataSource, const std::string &baseDir);
 
     void loadDefinitionsForAircraft(const std::string &author, const std::string &icaoType);
-
-    void dump();
 
     const CommandDefinition& getCommand(std::string command);
 

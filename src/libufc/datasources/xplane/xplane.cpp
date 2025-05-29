@@ -5,13 +5,10 @@
 #include "xplane.h"
 
 #include <ufc/flightconnector.h>
-#include <ufc/lua.h>
+#include <ufc/utils.h>
 
 #include <filesystem>
 #include <unistd.h>
-
-#include "../datadefs.h"
-#include "ufc/utils.h"
 
 using namespace std;
 using namespace UFC;

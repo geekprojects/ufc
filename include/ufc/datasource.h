@@ -54,7 +54,7 @@ class DataSourceRegistry
         return nullptr;
     }
 
-    const std::map<std::string, DataSourceInit*, std::less<>>& getDataSources() { return m_dataSources; }
+    const std::map<std::string, DataSourceInit*, std::less<>>& getDataSources() const { return m_dataSources; }
 };
 
 #define UFC_DATA_SOURCE(_name, _class)  \

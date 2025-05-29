@@ -8,20 +8,26 @@
 
 #define XPLM200 1
 #define XPLM210 1
+
 #include <XPLMProcessing.h>
 #include <XPLMUtilities.h>
 
 using namespace std;
 using namespace UFC;
 
-float updateCallback(float elapsedMe, float elapsedSim, int counter, void * refcon)
+float updateCallback(
+    [[maybe_unused]] float elapsedMe,
+    [[maybe_unused]] float elapsedSim,
+    [[maybe_unused]] int counter,
+    void* refcon)
 {
     ((XPPluginDataSource*)refcon)->updateDataRefs();
     return 0.1f;
 }
 
 XPPluginDataSource::XPPluginDataSource(UFC::FlightConnector* flightConnector) :
-    DataSource(flightConnector, "XPPlugin", "Resources/plugins/ufc", 100)
+    // XXX DataSource(flightConnector, "XPPlugin", "Resources/plugins/ufc", 100)
+    DataSource(flightConnector, "XPPlugin", "/Users/ian/projects/xpsim/xpsim/Resources/plugins/ufc", 100)
 {
 }
 
@@ -46,6 +52,32 @@ bool XPPluginDataSource::connect()
     return true;
 }
 
+XPLMCommandRef XPPluginDataSource::findOrRegisterCommand(string const &command)
+{
+    auto it = m_commandDefs.find(command);
+    XPLMCommandRef commandRef;
+    if (it == m_commandDefs.end())
+    {
+        commandRef = XPLMFindCommand(command.c_str());
+        m_commandDefs.try_emplace(command, commandRef);
+        if (commandRef != nullptr)
+        {
+#if 0
+            log(DEBUG, "UFC: Command: %s -> %s (%p)", command.c_str(), command.c_str(), commandRef);
+#endif
+        }
+        else
+        {
+            log(WARN, "UFC: Command: Unable to find command %s", command.c_str());
+        }
+    }
+    else
+    {
+        commandRef = it->second;
+    }
+    return commandRef;
+}
+
 bool XPPluginDataSource::reloadAircraft()
 {
     m_icaoDataRef = XPLMFindDataRef("sim/aircraft/view/acf_ICAO");
@@ -62,7 +94,7 @@ bool XPPluginDataSource::reloadAircraft()
     AircraftState state = m_flightConnector->getState();
     if (aircraftICAO == state.aircraftICAO && aircraftAuthor == state.aircraftAuthor)
     {
-        // Aircraft definitions are already loaded, noting to do!
+        // Aircraft definitions are already loaded, nothing to do!
         return true;
     }
 
@@ -89,8 +121,13 @@ bool XPPluginDataSource::reloadAircraft()
 
     for (auto& commandMapping : m_mapping.getCommands())
     {
-        commandMapping.second.data = XPLMFindCommand(commandMapping.second.commands.at(0).c_str());
-        log(DEBUG, "UFC: Command: %s -> %s (%p)", commandMapping.first.c_str(), commandMapping.second.commands.at(0).c_str(), commandMapping.second.data);
+        for (auto const& command : commandMapping.second.commands)
+        {
+            if (!command.empty() && !command.starts_with("lua:"))
+            {
+                findOrRegisterCommand(command);
+            }
+        }
     }
 
     m_flightConnector->updateState(state);
@@ -101,7 +138,6 @@ bool XPPluginDataSource::reloadAircraft()
 void XPPluginDataSource::disconnect()
 {
 }
-
 
 bool XPPluginDataSource::update()
 {
@@ -148,12 +184,18 @@ bool XPPluginDataSource::updateDataRefs()
 
 void XPPluginDataSource::executeCommand(const std::string& command, const CommandDefinition& commandDefinition)
 {
-    std::scoped_lock lock(m_commandQueueMutex);
-    m_commandQueue.push_back(commandDefinition.data);
+    log(DEBUG, "executeCommand: %s", command.c_str());
+    XPLMCommandRef commandRef = findOrRegisterCommand(command);
+    if (commandRef != nullptr)
+    {
+        std::scoped_lock lock(m_commandQueueMutex);
+        m_commandQueue.push_back(commandRef);
+    }
 }
 
 void XPPluginDataSource::setData(const std::string &dataName, float value)
 {
+    log(DEBUG, "setData: %s -> %f", dataName.c_str(), value);
     string dataRefName = dataName;
 
     auto dataRef = m_mapping.getDataRef(dataName);
@@ -163,15 +205,15 @@ void XPPluginDataSource::setData(const std::string &dataName, float value)
     }
 
     DataRefInfo dataRefInfo;
-    auto it = m_commandDataRefs.find(dataRefName);
-    if (it == m_commandDataRefs.end())
+    auto it = m_dataRefInfoMap.find(dataRefName);
+    if (it == m_dataRefInfoMap.end())
     {
         dataRefInfo.dataRef = XPLMFindDataRef(dataRefName.c_str());
         if (dataRefInfo.dataRef != nullptr)
         {
             dataRefInfo.types = XPLMGetDataRefTypes(dataRefInfo.dataRef);
         }
-        m_commandDataRefs.try_emplace(dataRefName, dataRefInfo);
+        m_dataRefInfoMap.try_emplace(dataRefName, dataRefInfo);
     }
     else
     {
@@ -189,6 +231,45 @@ void XPPluginDataSource::setData(const std::string &dataName, float value)
             XPLMSetDatai(dataRefInfo.dataRef, (int)value);
         }
     }
+}
+
+bool XPPluginDataSource::getDataInt(const std::string &dataName, int &value)
+{
+    auto dataRef = m_mapping.getDataRef(dataName);
+    if (dataRef == nullptr || dataRef->mapping.dataRef.empty())
+    {
+        log(WARN, "getDataInt: Unhandled data ref: %s", dataName.c_str());
+        return false;
+    }
+
+    value = XPLMGetDatai(dataRef->data);
+    return true;
+}
+
+bool XPPluginDataSource::getDataFloat(const std::string &dataName, float &value)
+{
+    auto dataRef = m_mapping.getDataRef(dataName);
+    if (dataRef == nullptr || dataRef->mapping.dataRef.empty())
+    {
+        log(WARN, "getDataInt: Unhandled data ref: %s", dataName.c_str());
+        return false;
+    }
+
+    value = XPLMGetDataf(dataRef->data);
+    return true;
+}
+
+bool XPPluginDataSource::getDataString(const std::string &dataName, std::string &value)
+{
+    auto dataRef = m_mapping.getDataRef(dataName);
+    if (dataRef == nullptr || dataRef->mapping.dataRef.empty())
+    {
+        log(WARN, "getDataInt: Unhandled data ref: %s", dataName.c_str());
+        return false;
+    }
+
+    value = getString(dataRef->data);
+    return true;
 }
 
 std::string XPPluginDataSource::getString(const XPLMDataRef ref)

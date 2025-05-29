@@ -22,11 +22,12 @@ struct DataRefInfo
 class XPPluginDataSource : public UFC::DataSource
 {
  private:
-    XPLMDataRef m_icaoDataRef;
-    XPLMDataRef m_authorDataRef;
-    XPLMDataRef m_studioDataRef;
+    XPLMDataRef m_icaoDataRef = nullptr;
+    XPLMDataRef m_authorDataRef = nullptr;
+    XPLMDataRef m_studioDataRef = nullptr;
 
-    std::map<std::string, DataRefInfo> m_commandDataRefs;
+    std::map<std::string, DataRefInfo> m_dataRefInfoMap;
+    std::map<std::string, XPLMCommandRef> m_commandDefs;
 
     static std::string getString(XPLMDataRef ref);
 
@@ -34,10 +35,13 @@ class XPPluginDataSource : public UFC::DataSource
     std::mutex m_commandQueueMutex;
 
  public:
-    XPPluginDataSource(UFC::FlightConnector* flightConnector);
+    explicit XPPluginDataSource(UFC::FlightConnector* flightConnector);
     ~XPPluginDataSource() override;
 
     bool connect() override;
+
+    XPLMCommandRef findOrRegisterCommand(
+        std::string const &command);
 
     void disconnect() override;
 
@@ -47,6 +51,10 @@ class XPPluginDataSource : public UFC::DataSource
 
     void executeCommand(const std::string& command, const CommandDefinition& commandDefinition) override;
     void setData(const std::string& dataName, float value) override;
+
+    bool getDataInt(const std::string& dataName, int& value) override;
+    bool getDataFloat(const std::string& dataName, float& value) override;
+    bool getDataString(const std::string& dataName, std::string& value) override;
 };
 
 
