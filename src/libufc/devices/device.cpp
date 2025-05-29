@@ -27,6 +27,6 @@ DeviceRegistry* DeviceRegistry::getDeviceRegistry()
 
 void DeviceRegistry::registerDevice(DeviceInit* device)
 {
-    getDeviceRegistry()->m_devices.insert(make_pair(device->getName(), device));
+    getDeviceRegistry()->m_devices.try_emplace(device->getName(), device);
 }
 

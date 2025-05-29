@@ -14,10 +14,9 @@ class ClockDataSource : public UFC::DataSource
     bool m_showYear = false;
     time_t m_showYearTime = 0;
     bool m_showSeconds = false;
-    time_t m_showSecondsTime = 0;
 
  public:
-    ClockDataSource(UFC::FlightConnector* flightConnector);
+    explicit ClockDataSource(UFC::FlightConnector* flightConnector);
 
     bool connect() override;
     void disconnect() override;

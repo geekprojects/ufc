@@ -7,8 +7,6 @@
 
 #include <ufc/datasource.h>
 
-#include "ufc/flightconnector.h"
-
 namespace UFC
 {
 

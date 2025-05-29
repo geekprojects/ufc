@@ -29,7 +29,6 @@ include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/luacpp/Sourc
 add_definitions(-I/usr/local/include ${yamlcpp_CFLAGS} ${hidapi_CFLAGS} ${lua_CFLAGS})
 
 add_library(ufc SHARED
-        src/libufc/aircraftstate.cpp
         src/libufc/flightconnector.cpp
         src/libufc/utils/data.cpp
         src/libufc/utils/logger.cpp

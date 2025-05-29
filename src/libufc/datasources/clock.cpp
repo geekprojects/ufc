@@ -110,7 +110,6 @@ void ClockDataSource::executeCommand(const std::string& command, const CommandDe
     else if (command == AUTOPILOT_HEADING_MANAGE)
     {
         m_showSeconds = !m_showSeconds;
-        //m_showSecondsTime = time(nullptr);
     }
     else if (command == AUTOPILOT_AIRSPEED_MANAGE)
     {
