@@ -75,7 +75,9 @@ add_library(ufc SHARED
         src/libufc/lua.cpp
 )
 
-if(UNIX AND APPLE)
+if(UNIX AND NOT APPLE)
+target_compile_definitions(ufc PUBLIC -fPIC)
+elseif(UNIX AND APPLE)
 target_link_options(ufc PUBLIC -all_load)
 endif()
 
