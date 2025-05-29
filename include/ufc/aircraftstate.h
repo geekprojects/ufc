@@ -6,6 +6,7 @@
 #define UFC_STATE_H
 
 #include <string>
+#include <cstdint>
 
 #define DATA_AIRCRAFT_INDICATEDAIRSPEED "aircraft/indicatedAirspeed"
 #define DATA_AIRCRAFT_PITCH "aircraft/pitch"
