@@ -50,7 +50,7 @@ void AircraftMapping::loadDefinitionsForAircraft(
     {
         defaults = YAML::LoadFile(defaultsFile);
     }
-    catch (std::exception e)
+    catch (std::exception& e)
     {
         log(ERROR, "loadDefinitionsForAircraft: Failed to load default definitions: %s", e.what());
         return;
