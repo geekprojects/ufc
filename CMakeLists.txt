@@ -15,6 +15,8 @@ else()
 message(FATAL_ERROR "Unsupported platform")
 endif()
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 # Third Party Modules
 add_subdirectory(luacpp/Source EXCLUDE_FROM_ALL)
 
@@ -79,7 +81,6 @@ if(UNIX AND APPLE)
 target_link_options(ufc PUBLIC -all_load)
 endif()
 
-set_property(TARGET ufc PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(ufc PUBLIC -DDATADIR=${DATADIR})
 target_link_libraries(ufc
         luacpp_static
