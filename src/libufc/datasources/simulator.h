@@ -24,7 +24,7 @@ class SimulatorDataSource : public DataSource
 
     bool update() override;
 
-    void executeCommand(const std::string& command, const CommandDefinition& commandDefinition) override;
+    void command(const std::string& command) override;
 };
 
 }

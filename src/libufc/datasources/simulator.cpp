@@ -9,6 +9,8 @@
 
 #include <unistd.h>
 
+#include "datadefs.h"
+
 using namespace UFC;
 
 UFC_DATA_SOURCE(Simulator, SimulatorDataSource)
@@ -23,6 +25,7 @@ bool SimulatorDataSource::connect()
     AircraftState state = m_flightConnector->getState();
     state.connected = true;
     m_flightConnector->updateState(state);
+
     return true;
 }
 
@@ -105,7 +108,7 @@ bool SimulatorDataSource::update()
     return true;
 }
 
-void SimulatorDataSource::executeCommand(const std::string& command, const CommandDefinition& commandDefinition)
+void SimulatorDataSource::command(const std::string& command)
 {
     AutopilotState autopilot = m_autopilot;
     if (command == AUTOPILOT_HEADING_UP)
@@ -187,11 +190,25 @@ void SimulatorDataSource::executeCommand(const std::string& command, const Comma
     }
     else if (command == COMMS_COM1_STANDBY_UP_FINE)
     {
-        m_communication.com1StandbyHz += 25;
+        auto hz = (int)(m_communication.com1StandbyHz % 1000);
+        m_communication.com1StandbyHz -= hz;
+        hz += 25;
+        if (hz >= 1000)
+        {
+            hz -= 1000;
+        }
+        m_communication.com1StandbyHz = m_communication.com1StandbyHz + hz;
     }
     else if (command == COMMS_COM1_STANDBY_DOWN_FINE)
     {
-        m_communication.com1StandbyHz -= 25;
+        auto hz = (int)(m_communication.com1StandbyHz % 1000);
+        m_communication.com1StandbyHz -= hz;
+        hz -= 25;
+        if (hz < 0)
+        {
+            hz += 1000;
+        }
+        m_communication.com1StandbyHz = m_communication.com1StandbyHz + hz;
     }
     else if (command == COMMS_COM1_SWAP)
     {

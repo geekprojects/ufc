@@ -109,14 +109,14 @@ struct AutopilotState
 
 struct CommunicationState
 {
-    uint32_t com1Hz = 0.0;
-    uint32_t com1StandbyHz = 0.0;
-    uint32_t com2Hz = 0.0;
-    uint32_t com2StandbyHz = 0.0;
-    uint32_t nav1Hz = 0.0;
-    uint32_t nav1StandbyHz = 0.0;
-    uint32_t nav2Hz = 0.0;
-    uint32_t nav2StandbyHz = 0.0;
+    uint32_t com1Hz = 0;
+    uint32_t com1StandbyHz = 0;
+    uint32_t com2Hz = 0;
+    uint32_t com2StandbyHz = 0;
+    uint32_t nav1Hz = 0;
+    uint32_t nav1StandbyHz = 0;
+    uint32_t nav2Hz = 0;
+    uint32_t nav2StandbyHz = 0;
 };
 
 struct FlightDirectorState

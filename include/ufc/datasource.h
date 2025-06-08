@@ -115,7 +115,7 @@ class DataSource : public Logger
 
     virtual bool update() = 0;
 
-    void command(const std::string& command);
+    virtual void command(const std::string& command);
     virtual void setData(const std::string& dataName, float value) {}
 
     // Not all values may be updated in real time or you may not be running
