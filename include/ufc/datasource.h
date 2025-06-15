@@ -12,7 +12,6 @@
 
 #include "aircraftmapping.h"
 #include "logger.h"
-#include "lua.h"
 #include "navdata.h"
 
 namespace UFC
@@ -20,6 +19,7 @@ namespace UFC
 class Airports;
 class FlightConnector;
 class DataSource;
+class UFCLua;
 
 const std::string SOURCE_SIMULATOR = "Simulator";
 const std::string SOURCE_XPLANE = "XPlane";
@@ -92,8 +92,8 @@ class DataSource : public Logger
 
     AircraftMapping m_mapping;
 
-    UFCLua m_commandLua;
-    UFCLua m_dataLua;
+    std::shared_ptr<UFCLua> m_commandLua;
+    std::shared_ptr<UFCLua> m_dataLua;
 
     float transformData(const std::shared_ptr<DataDefinition> &dataRef, float value);
     virtual void executeCommand(const std::string& command, const CommandDefinition& commandDefinition) {}
@@ -127,8 +127,8 @@ class DataSource : public Logger
 
     virtual void sendMessage(const std::string& message) {}
 
-    UFCLua* getDataLua() { return &m_dataLua; }
-    UFCLua* getCommandLua() { return &m_commandLua; }
+    std::shared_ptr<UFCLua> getDataLua() { return m_dataLua; }
+    std::shared_ptr<UFCLua> getCommandLua() { return m_commandLua; }
 };
 
 }

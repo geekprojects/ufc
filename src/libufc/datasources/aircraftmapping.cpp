@@ -8,7 +8,7 @@
 #include <filesystem>
 #include <fnmatch.h>
 
-#include "ufc/lua.h"
+#include "../lua.h"
 #include "ufc/utils.h"
 
 #include "datadefs.h"

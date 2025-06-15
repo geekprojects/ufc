@@ -5,7 +5,7 @@
 #include <memory>
 
 #include "ufc/flightconnector.h"
-#include "ufc/lua.h"
+#include "lua.h"
 
 #include "Engine/LuaTTable.hpp"
 

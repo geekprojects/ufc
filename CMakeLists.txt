@@ -72,7 +72,7 @@ add_library(ufc SHARED
         include/ufc/aircraftmapping.h
         include/ufc/udp.h
         src/libufc/utils/udp.cpp
-        include/ufc/lua.h
+        src/libufc/lua.h
         src/libufc/lua.cpp
 )
 

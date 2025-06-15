@@ -10,7 +10,7 @@
 
 #include <map>
 
-#include "ufc/lua.h"
+#include "../../lua.h"
 #include "ufc/navdata.h"
 
 namespace UFC

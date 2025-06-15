@@ -5,6 +5,7 @@
 #include <ufc/datasource.h>
 
 #include "ufc/utils.h"
+#include "../lua.h"
 
 using namespace std;
 using namespace UFC;
@@ -16,10 +17,11 @@ DataSource::DataSource(FlightConnector* flightConnector, const std::string& name
     m_flightConnector(flightConnector),
     m_name(name),
     m_priority(priority),
-    m_mapping(this, dataPath),
-    m_commandLua(flightConnector),
-    m_dataLua(flightConnector)
-{}
+    m_mapping(this, dataPath)
+{
+    m_commandLua = make_shared<UFCLua>(flightConnector);
+    m_dataLua = make_shared<UFCLua>(flightConnector);
+}
 
 void DataSource::command(const std::string& commandName)
 {
@@ -38,7 +40,7 @@ void DataSource::command(const std::string& commandName)
         if (commandStr.starts_with("lua:"))
         {
             string luaScript = commandStr.substr(4);
-            m_commandLua.execute(luaScript);
+            m_commandLua->execute(luaScript);
             continue;
         }
 
@@ -63,7 +65,7 @@ float DataSource::transformData(const shared_ptr<DataDefinition>& dataRef, float
 {
     if (!dataRef->mapping.luaScript.empty())
     {
-        value = m_dataLua.execute(dataRef->mapping.luaScript, "value", value);
+        value = m_dataLua->execute(dataRef->mapping.luaScript, "value", value);
     }
     return value;
 }

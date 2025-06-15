@@ -10,7 +10,7 @@
 #include "datasources/simulator.h"
 #include "datasources/xplane/xplane.h"
 #include "ufc/device.h"
-#include "ufc/lua.h"
+#include "lua.h"
 
 using namespace std;
 using namespace UFC;
