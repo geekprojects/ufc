@@ -13,8 +13,9 @@ enum class WinWingFCULED
     AP1 = 0x5,
     AP2 = 0x7,
     ATHR = 0x9,
-    EXPED = 0xb,
-    APPR = 0xd
+    APPR = 0xd,
+    EXPED_BUTTON = 0x1e,
+    EXPED = 0x1f,
 };
 
 struct WinWingFCUInputReport

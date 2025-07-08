@@ -73,9 +73,11 @@ bool WinWingFCU::init()
     // Set brightness
     setLED(WinWingFCULED::LCD, 0xff);
 
+    // More recent firmware turns the EXPED light off... Turn it back on!
+    setLED(WinWingFCULED::EXPED_BUTTON, 0xff);
+
     const AircraftState aircraftState = {};
     updateLCD(aircraftState);
-
     return true;
 }
 
@@ -175,7 +177,7 @@ void WinWingFCU::handleInput()
 
 void WinWingFCU::updateLCD(const AircraftState& state)
 {
-    WinWingFCULCDData data;
+    WinWingFCULCDData data = {};
     if (state.autopilot.displaySpeed)
     {
         int speed;
@@ -190,6 +192,7 @@ void WinWingFCU::updateLCD(const AircraftState& state)
         else
         {
             speed = (int) (state.autopilot.speed * 1000.0f);
+            data.speed2Point = true;
             data.speed1 = getDigit(0, 0);
             data.speed2 = getDigit(speed, 2);
             data.speed3 = getDigit(speed, 1);
@@ -202,8 +205,8 @@ void WinWingFCU::updateLCD(const AircraftState& state)
         data.speed3 = 2;
     }
 
-    data.speed1Point = 0;
-    data.speed3Point = 0;
+    data.speed1Point = false;
+
     data.speedDot = state.autopilot.speedManaged;
     data.machSign = state.autopilot.speedMach;
     data.spdSign = !state.autopilot.speedMach;
@@ -316,7 +319,6 @@ void WinWingFCU::updateLCD(const AircraftState& state)
     data.lvlChSign3 = true;
 
     hid_write(getDevice(), reinterpret_cast<unsigned char*>(&data), sizeof(data));
-    //m_previousLCDData = data;
 
     // I'm not sure what this does but the LCD won't update without these magic bytes
     WinWingFCUFeatureReport featureReport = {};
@@ -335,6 +337,7 @@ void WinWingFCU::updateLEDs(const AircraftState& state)
     setLED(WinWingFCULED::AP2, state.autopilot.ap2Mode);
     setLED(WinWingFCULED::ATHR, state.autopilot.autoThrottleMode);
     setLED(WinWingFCULED::APPR, state.autopilot.approachMode);
+    setLED(WinWingFCULED::EXPED, 1);
 }
 
 void WinWingFCU::setLED(WinWingFCULED led, int state)
