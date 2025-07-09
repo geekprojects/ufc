@@ -1,8 +1,9 @@
-name: Toliss A321
-author: Gliding Kiwi
+name: Toliss Airbus
+author: Gliding*Kiwi
 icao:
   - A321
   - A21N
+  - A339
 
 data:
   autopilot:
@@ -12,6 +13,7 @@ data:
     approachMode: AirbusFBW/APPRilluminated
     headingTrkMode: AirbusFBW/HDGTRKmode
     verticalSpeedFPAMode: AirbusFBW/HDGTRKmode
+    locMode: AirbusFBW/LOCilluminated
 
     displaySpeed: "!AirbusFBW/SPDdashed"
     speedManaged: AirbusFBW/SPDmanaged
@@ -52,7 +54,8 @@ commands:
     expedite:
       toggle: AirbusFBW/EXPEDbutton
     airspeed:
-      manage: AirbusFBW/spd_push
+      manage: toliss_airbus/spd_push
+      guidance: toliss_airbus/spd_pull
     heading:
       manage: AirbusFBW/PushHDGSel
       guidance: AirbusFBW/PullHDGSel
@@ -65,7 +68,8 @@ commands:
     hdkTrk:
       toggle: toliss_airbus/hdgtrk_button_push
     verticalSpeed:
-      manage: AirbusFBW/vs_push
+       manage: toliss_airbus/vs_push
+       guidance: AirbusFBW/PullVSSel
   cabin:
     chime: AirbusFBW/CheckCabin
   weight:
