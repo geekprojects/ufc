@@ -146,6 +146,11 @@ void FlightConnector::start()
 
 void FlightConnector::stop()
 {
+    for (Device* device : m_devices)
+    {
+        device->close();
+    }
+
     log(INFO, "Stopping Data Source...");
     m_running = false;
     if (m_dataSource != nullptr)
@@ -207,17 +212,21 @@ void FlightConnector::updateDevices()
 
 void FlightConnector::updateDeviceMain()
 {
+    registerThread();
     while (m_running)
     {
         updateDevices();
         usleep(1000000 / 50);
     }
+    unregisterThread();
 }
 
 void FlightConnector::updateDataSourceMain()
 {
+    registerThread();
     auto dataSource = getDataSource();
     dataSource->update();
+    unregisterThread();
 }
 
 void FlightConnector::loadConfig(const Config& config)

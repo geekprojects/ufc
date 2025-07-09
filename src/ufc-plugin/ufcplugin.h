@@ -33,6 +33,16 @@ class XPLogPrinter : public UFC::LogPrinter
 class UFCPlugin : public UFC::Logger
 {
  private:
+    XPLMPluginID m_pluginId;
+    std::thread::id m_mainThread;
+
+    sigaction m_prev_sigsegv = {};
+    sigaction m_prev_sigabrt = {};
+    sigaction m_prev_sigfpe = {};
+    sigaction m_prev_sigint = {};
+    sigaction m_prev_sigill = {};
+    sigaction m_prev_sigterm = {};
+
     XPLogPrinter m_logPrinter;
     UFC::FlightConnector* m_flightConnector = nullptr;
     std::shared_ptr<XPPluginDataSource> m_dataSource = nullptr;
@@ -45,6 +55,12 @@ class UFCPlugin : public UFC::Logger
 
     static void menuCallback(void* menuRef, void* itemRef);
     void menu(void* itemRef);
+
+    void registerCrashHandler();
+    void handlePosixSignal(int sig, siginfo_t *siginfo, void* context);
+    static void handlePosixSigCallback(int sig, siginfo_t *siginfo, void *context);
+    void handleCrash();
+    bool isExecuting();
 
  public:
     UFCPlugin() : Logger("UFCPlugin") {}

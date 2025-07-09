@@ -85,6 +85,9 @@ class FlightConnector final : public Logger
     std::shared_ptr<std::thread> m_updateDataSourceThread = nullptr;
     bool m_exitHandler = true;
 
+    std::mutex m_threadsMutex;
+    std::set<std::thread::id> m_threads;
+
     static void updateDeviceThread(FlightConnector* flightConnector);
     void updateDeviceMain();
 
@@ -213,6 +216,25 @@ class FlightConnector final : public Logger
      * signals, such as within a simulator plugin.
      */
     void disableExitHandler() { m_exitHandler = false; }
+
+    void registerThread()
+    {
+        std::scoped_lock lock(m_threadsMutex);
+        m_threads.insert(std::this_thread::get_id());
+    }
+
+    void unregisterThread()
+    {
+        std::scoped_lock lock(m_threadsMutex);
+        m_threads.erase(std::this_thread::get_id());
+    }
+
+    bool isOurThread()
+    {
+        std::scoped_lock lock(m_threadsMutex);
+        const std::thread::id thread_id = std::this_thread::get_id();
+        return m_threads.contains(thread_id);
+    }
 };
 
 }

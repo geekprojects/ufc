@@ -2,9 +2,14 @@
 #include "xpplugindatasource.h"
 #include "ufcplugin.h"
 
+#include <signal.h>
 #include <XPLMProcessing.h>
 #include <XPLMMenus.h>
 #include <XPLMPlugin.h>
+
+#include <execinfo.h>
+#include <unistd.h>
+#include <sys/fcntl.h>
 
 #include "ufc/device.h"
 
@@ -15,6 +20,7 @@ UFCPlugin g_ufcPlugin;
 
 int UFCPlugin::start(char* outName, char* outSig, char* outDesc)
 {
+    registerCrashHandler();
     setLogPrinter(&m_logPrinter);
 
     fprintf(stderr, "UFC: XPluginStart: Here!\n");
@@ -123,6 +129,143 @@ void UFCPlugin::menuCallback(void* menuRef, void* itemRef)
 void UFCPlugin::menu(void* itemRef)
 {
     log(DEBUG, "menu: itemRef=%p", itemRef);
+}
+
+void UFCPlugin::handlePosixSigCallback(int sig, siginfo_t *siginfo, void *context)
+{
+    g_ufcPlugin.handlePosixSignal(sig, siginfo, context);
+}
+
+void UFCPlugin::handleCrash()
+{
+#if APL || LIN
+    // NOTE: This is definitely NOT production code
+    // backtrace and backtrace_symbols are NOT signal handler safe and are just put in here for demonstration purposes
+    // A better alternative would be to use something like libunwind here
+
+    void *frames[64];
+    int frame_count = backtrace(frames, 64);
+    char **names = backtrace_symbols(frames, frame_count);
+
+    const int fd = open("backtrace.txt", O_CREAT | O_RDWR | O_TRUNC | O_SYNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    if(fd >= 0)
+    {
+        for(int i = 0; i < frame_count; ++ i)
+        {
+            write(fd, names[i], strlen(names[i]));
+            write(fd, "\n", 1);
+        }
+
+        close(fd);
+    }
+
+#endif
+#if IBM
+    // Create a mini-dump file that can be later opened up in Visual Studio or WinDbg to do post mortem debugging
+    write_mini_dump((PEXCEPTION_POINTERS)context);
+#endif
+}
+
+void UFCPlugin::registerCrashHandler()
+{
+    m_mainThread = this_thread::get_id();
+    m_pluginId = XPLMGetMyID();
+
+#if APL || LIN
+    struct sigaction sig_action = { .sa_sigaction = handlePosixSigCallback };
+
+    sigemptyset(&sig_action.sa_mask);
+
+#if	LIN
+    static uint8_t alternate_stack[SIGSTKSZ];
+    stack_t ss = {
+        .ss_sp = (void*)alternate_stack,
+        .ss_size = SIGSTKSZ,
+        .ss_flags = 0
+    };
+
+    sigaltstack(&ss, NULL);
+    sig_action.sa_flags = SA_SIGINFO | SA_ONSTACK;
+#else
+    sig_action.sa_flags = SA_SIGINFO;
+#endif
+
+    sigaction(SIGSEGV, &sig_action, &m_prev_sigsegv);
+    sigaction(SIGABRT, &sig_action, &m_prev_sigabrt);
+    sigaction(SIGFPE, &sig_action, &m_prev_sigfpe);
+    sigaction(SIGINT, &sig_action, &m_prev_sigint);
+    sigaction(SIGILL, &sig_action, &m_prev_sigill);
+    sigaction(SIGTERM, &sig_action, &m_prev_sigterm);
+#endif
+
+#if IBM
+    // Load the debug helper library into the process already, this way we don't have to hit the dynamic loader
+    // in an exception context where it's potentially unsafe to do so.
+    HMODULE module = ::GetModuleHandleA("dbghelp.dll");
+    if(!module)
+        module = ::LoadLibraryA("dbghelp.dll");
+
+    (void)module;
+    s_previous_windows_exception_handler = SetUnhandledExceptionFilter(handle_windows_exception);
+#endif
+}
+
+void UFCPlugin::handlePosixSignal(int sig, siginfo_t* siginfo, void* context)
+{
+    if(isExecuting())
+    {
+        static bool has_called_out = false;
+
+        if(!has_called_out)
+        {
+            has_called_out = true;
+            handleCrash();
+        }
+
+        abort();
+    }
+
+    // Forward the signal to the other handlers
+#define	FORWARD_SIGNAL(sigact) \
+    do { \
+        if((sigact)->sa_sigaction && ((sigact)->sa_flags & SA_SIGINFO)) \
+            (sigact)->sa_sigaction(sig, siginfo, context); \
+        else if((sigact)->sa_handler) \
+            (sigact)->sa_handler(sig); \
+    } while (0)
+
+    switch(sig)
+    {
+        case SIGSEGV:
+            FORWARD_SIGNAL(&m_prev_sigsegv);
+            break;
+        case SIGABRT:
+            FORWARD_SIGNAL(&m_prev_sigabrt);
+            break;
+        case SIGFPE:
+            FORWARD_SIGNAL(&m_prev_sigfpe);
+            break;
+        case SIGILL:
+            FORWARD_SIGNAL(&m_prev_sigill);
+            break;
+        case SIGTERM:
+            FORWARD_SIGNAL(&m_prev_sigterm);
+            break;
+    }
+#undef FORWARD_SIGNAL
+
+    abort();
+}
+
+bool UFCPlugin::isExecuting()
+{
+    const std::thread::id thread_id = std::this_thread::get_id();
+    if (m_mainThread == thread_id)
+    {
+        return (m_pluginId == XPLMGetMyID());
+    }
+
+    return m_flightConnector->isOurThread();
 }
 
 PLUGIN_API int XPluginStart(char* outName, char* outSig, char* outDesc)
