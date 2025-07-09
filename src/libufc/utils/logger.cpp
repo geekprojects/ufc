@@ -132,7 +132,7 @@ void Logger::logv(LoggerLevel_t level, const char* msg, va_list va)
 
     strftime(timeStr, 256, "%Y/%m/%d %H:%M:%S", &tm);
 
-    m_logPrinter->printf("%s: %s: %s: %s%s\n", timeStr, levelStr.c_str(), m_name.c_str(), spaces.c_str(), buf);
+    m_logPrinter->printf("UFC: %s: %s: %s: %s%s\n", timeStr, levelStr.c_str(), m_name.c_str(), spaces.c_str(), buf);
 }
 
 void LogPrinter::printf(const char* message, ...)
