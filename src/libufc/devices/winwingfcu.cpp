@@ -91,6 +91,13 @@ void WinWingFCU::close()
     WinWingFCULCDData data = {};
     updateLCD(data);
 
+    setLED(WinWingFCULED::LOC, 0);
+    setLED(WinWingFCULED::AP1, 0);
+    setLED(WinWingFCULED::AP2, 0);
+    setLED(WinWingFCULED::ATHR, 0);
+    setLED(WinWingFCULED::APPR, 0);
+    setLED(WinWingFCULED::EXPED, 1);
+
     USBHIDDevice::close();
 }
 
@@ -135,11 +142,12 @@ void WinWingFCU::handleInput()
     {
         m_inputReport.reportId = 0x01;
         int res = hid_read(getDevice(), reinterpret_cast<unsigned char*>(&m_inputReport), sizeof(m_inputReport));
-        if (res < static_cast<int>(sizeof(m_inputReport)))
+        if (res <= 0)
         {
             break;
         }
-        if (m_inputReport.reportId != 0x01)
+
+        if (m_inputReport.reportId != 0x1 || res < static_cast<int>(sizeof(m_inputReport)))
         {
             continue;
         }

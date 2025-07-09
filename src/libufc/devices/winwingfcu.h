@@ -38,14 +38,20 @@ enum class WinWingFCUDigit
     NUMBER_7 = 0x40 | 0x20 | 0x10,
     NUMBER_8 = 0x7f,
     NUMBER_9 = 0x40 | 0x04 | 0x02 | 0x20 | 0x10 | 0x08,
-    U = 0x04 | 0x01 | 0x08 | 0x10 | 0x20,
-    F = 0x04 | 0x01 | 0x40 | 0x02,
+    A = 0x40 | 0x04 | 0x20 | 0x02 | 0x01 | 0x10,
+    B = 0x04 | 0x02 | 0x01 | 0x10 | 0x08,
     C = 0x04 | 0x01 | 0x40 | 0x08,
+    E = 0x04 | 0x01 | 0x40 | 0x02 | 0x08,
+    F = 0x04 | 0x01 | 0x40 | 0x02,
+    U = 0x04 | 0x01 | 0x08 | 0x10 | 0x20,
+    Y = 0x04 | 0x02 | 0x20 | 0x10 | 0x08,
 };
 
 struct WinWingFCUInputReport
 {
     uint8_t reportId;
+
+    /**** Buttons: 16 bytes ****/
 
     uint8_t spdMachButton : 1;
     uint8_t locButton : 1;
@@ -73,19 +79,26 @@ struct WinWingFCUInputReport
     uint8_t vsDown : 1;
     uint8_t vsUp : 1;
     uint8_t vsPush : 1;
+
     uint8_t vsPull : 1;
     uint8_t altitude100 : 1;
     uint8_t altitude1000 : 1;
+    uint8_t padding1 : 1;
+    uint8_t padding2 : 1;
+    uint8_t padding3 : 1;
+    uint8_t padding4 : 1;
+    uint8_t padding5 : 1;
 
-    uint8_t padding2[12];
+    uint8_t buttonExtra[12];
 
-    // Not actually used!
     uint16_t x_axis;
     uint16_t y_axis;
     uint16_t z_axis;
     uint16_t rx_axis;
     uint16_t ry_axis;
     uint16_t rz_axis;
+
+    uint16_t padding[6];
 } __attribute__((packed));
 
 struct WinWingFCUOutputReport
