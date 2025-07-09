@@ -13,9 +13,34 @@ enum class WinWingFCULED
     AP1 = 0x5,
     AP2 = 0x7,
     ATHR = 0x9,
+    EXPED = 0xb,
     APPR = 0xd,
     EXPED_BUTTON = 0x1e,
-    EXPED = 0x1f,
+};
+
+/*
+ * LCD number segments:
+ *    --40--
+ *  04|    |20
+ *    --02--
+ *  01|    |10
+ *    --08--
+ */
+enum class WinWingFCUDigit
+{
+    NUMBER_0 = 0x40 | 0x20 | 0x10 | 0x08 | 0x1 | 0x4,
+    NUMBER_1 = 0x20 | 0x10,
+    NUMBER_2 = 0x40 | 0x20 | 0x02 | 0x01 | 0x08,
+    NUMBER_3 = 0x40 | 0x20 | 0x02 | 0x10 | 0x08,
+    NUMBER_4 = 0x04 | 0x02 | 0x20 | 0x10,
+    NUMBER_5 = 0x40 | 0x04 | 0x02 | 0x10 | 0x08,
+    NUMBER_6 = 0x40 | 0x04 | 0x02 | 0x10 | 0x08 | 0x01,
+    NUMBER_7 = 0x40 | 0x20 | 0x10,
+    NUMBER_8 = 0x7f,
+    NUMBER_9 = 0x40 | 0x04 | 0x02 | 0x20 | 0x10 | 0x08,
+    U = 0x04 | 0x01 | 0x08 | 0x10 | 0x20,
+    F = 0x04 | 0x01 | 0x40 | 0x02,
+    C = 0x04 | 0x01 | 0x40 | 0x08,
 };
 
 struct WinWingFCUInputReport
@@ -86,7 +111,7 @@ struct WinWingFCULCDData
     };
 
     unsigned char speed1Point : 1;
-    uint8_t speed1 : 7;
+    uint8_t speed1: 7;
     unsigned char speed2Point : 1;
     uint8_t speed2 : 7;
     unsigned char speed3Point : 1;
@@ -224,8 +249,11 @@ class WinWingFCU : public UFC::USBHIDDevice
     ~WinWingFCU() override = default;
 
     bool init() override;
+    void close() override;
 
     void handleInput();
+
+    void updateLCD(WinWingFCULCDData data);
 
     void update(const UFC::AircraftState& state) override;
 };

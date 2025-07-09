@@ -70,15 +70,28 @@ bool WinWingFCU::init()
 
     hid_set_nonblocking(getDevice(), true);
 
+    WinWingFCULCDData data = {};
+    data.speed1 = static_cast<uint8_t>(WinWingFCUDigit::U);
+    data.speed2 = static_cast<uint8_t>(WinWingFCUDigit::F);
+    data.speed3 = static_cast<uint8_t>(WinWingFCUDigit::C);
+    updateLCD(data);
+
     // Set brightness
     setLED(WinWingFCULED::LCD, 0xff);
 
-    // More recent firmware turns the EXPED light off... Turn it back on!
+    // More recent firmware turns the EXPED light off... Turn it back on?
     setLED(WinWingFCULED::EXPED_BUTTON, 0xff);
 
-    const AircraftState aircraftState = {};
-    updateLCD(aircraftState);
+
     return true;
+}
+
+void WinWingFCU::close()
+{
+    WinWingFCULCDData data = {};
+    updateLCD(data);
+
+    USBHIDDevice::close();
 }
 
 void WinWingFCU::update(const AircraftState& state)
@@ -88,14 +101,7 @@ void WinWingFCU::update(const AircraftState& state)
     updateLEDs(state);
 }
 
-/*
- * LCD number segments:
- *    --40--
- *  04|    |20
- *    --02--
- *  01|    |10
- *    --08--
- */
+
 uint8_t WinWingFCU::getDigit(int number, int digit)
 {
     int div = 1;
@@ -108,16 +114,16 @@ uint8_t WinWingFCU::getDigit(int number, int digit)
 
     switch (number)
     {
-        case 0: return 0x40 | 0x20 | 0x10 | 0x08 | 0x1 | 0x4;
-        case 1: return 0x20 | 0x10;
-        case 2: return 0x40 | 0x20 | 0x02 | 0x01 | 0x08;
-        case 3: return 0x40 | 0x20 | 0x02 | 0x10 | 0x08;
-        case 4: return 0x04 | 0x02 | 0x20 | 0x10;
-        case 5: return 0x40 | 0x04 | 0x02 | 0x10 | 0x08;
-        case 6: return 0x40 | 0x04 | 0x02 | 0x10 | 0x08 | 0x01;
-        case 7: return 0x40 | 0x20 | 0x10;
-        case 8: return 0x7f;
-        case 9: return 0x40 | 0x04 | 0x02 | 0x20 | 0x10 | 0x08;
+        case 0: return static_cast<uint8_t>(WinWingFCUDigit::NUMBER_0);
+        case 1: return static_cast<uint8_t>(WinWingFCUDigit::NUMBER_1);
+        case 2: return static_cast<uint8_t>(WinWingFCUDigit::NUMBER_2);
+        case 3: return static_cast<uint8_t>(WinWingFCUDigit::NUMBER_3);
+        case 4: return static_cast<uint8_t>(WinWingFCUDigit::NUMBER_4);
+        case 5: return static_cast<uint8_t>(WinWingFCUDigit::NUMBER_5);
+        case 6: return static_cast<uint8_t>(WinWingFCUDigit::NUMBER_6);
+        case 7: return static_cast<uint8_t>(WinWingFCUDigit::NUMBER_7);
+        case 8: return static_cast<uint8_t>(WinWingFCUDigit::NUMBER_8);
+        case 9: return static_cast<uint8_t>(WinWingFCUDigit::NUMBER_9);
         default: return 0;
     }
 }
@@ -174,6 +180,7 @@ void WinWingFCU::handleInput()
         m_previousInputReport = m_inputReport;
     }
 }
+
 
 void WinWingFCU::updateLCD(const AircraftState& state)
 {
@@ -318,6 +325,11 @@ void WinWingFCU::updateLCD(const AircraftState& state)
     data.lvlChSign2 = true;
     data.lvlChSign3 = true;
 
+    updateLCD(data);
+}
+
+void WinWingFCU::updateLCD(WinWingFCULCDData data)
+{
     hid_write(getDevice(), reinterpret_cast<unsigned char*>(&data), sizeof(data));
 
     // I'm not sure what this does but the LCD won't update without these magic bytes
@@ -337,7 +349,7 @@ void WinWingFCU::updateLEDs(const AircraftState& state)
     setLED(WinWingFCULED::AP2, state.autopilot.ap2Mode);
     setLED(WinWingFCULED::ATHR, state.autopilot.autoThrottleMode);
     setLED(WinWingFCULED::APPR, state.autopilot.approachMode);
-    setLED(WinWingFCULED::EXPED, 1);
+    setLED(WinWingFCULED::EXPED, 0);
 }
 
 void WinWingFCU::setLED(WinWingFCULED led, int state)
