@@ -1,0 +1,23 @@
+
+name: GeekProjects.com Overhead Panel
+vendorId: 0x1209
+productId: 0xD200
+
+input:
+  buttons:
+    fields:
+      - bit: comms/com1/standby/fine/down
+      - bit: comms/com1/standby/fine/up
+      - bit: comms/com1/standby/coarse/down
+      - bit: comms/com1/standby/coarse/up
+      - bit: comms/com1/swap
+      - bit: 
+      - bit:
+      - bit:
+
+output:
+  freq:
+    fields:
+      - uint32: comms/com1Hz
+      - uint32: comms/com1StandbyHz
+

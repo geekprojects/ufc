@@ -1,0 +1,251 @@
+#
+# WinWing A320 FCU
+# TODO: EFIS
+#
+
+name: WinWing FCU
+vendorId: 0x4098
+productId: 0xBB10
+
+# Common Definitions
+ledPrefix: &ledPrefix [0x10, 0xbb, 0x00, 0x00, 0x03, 0x49]
+ledSuffix: &ledSuffix [0x00, 0x00, 0x00, 0x00, 0x00]
+ledLCD: &ledLCD 0x1
+ledLOC: &ledLOC 0x3
+ledAP1: &ledAP1 0x5
+ledAP2: &ledAP2 0x7
+ledATHR: &ledATHR 0x9
+ledEXPED: &ledEXPED 0xb
+ledAPPR: &ledAPPR 0xd
+ledExpedButton: &ledExpedButton 0x1e
+
+lcdPreix: &lcdPrefix
+    data: [
+      0x00, 0x05, 0x31, 0x10, 0xbb, 0x00, 0x00, 0x02,
+      0x01, 0x00, 0x00, 0x1d, 0x12, 0x20, 0x10, 0x00,
+      0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+
+init:
+  lcd:
+    reportId: 2
+    fields:
+      - data: *ledPrefix
+      - byte: *ledLCD
+      - byte: 0xff
+      - data: *ledSuffix
+
+  exped:
+    reportId: 2
+    fields:
+      - data: *ledPrefix
+      - byte: *ledExpedButton
+      - byte: 0xff
+      - data: *ledSuffix
+
+  # Display "UFC" until we have data
+  resetLCD:
+    reportId: 0xf0
+    fields:
+      - *lcdPrefix
+      - bit: 0 # Speed Decimal Point
+      - bits:
+          size: 7
+          value: 0x3d
+      - bit: 0
+      - bits:
+          size: 7
+          value: 0x47
+      - bit: 0 # Speed Decimal Point
+      - bits:
+          size: 7
+          value: 0x4d
+      - padding: 66
+
+close:
+  resetLCD:
+    reportId: 0xf0
+    fields:
+      - *lcdPrefix
+      - padding: 66
+
+input:
+  buttons:
+    reportId: 1
+    fields:
+      - bit: autopilot/spdMach/toggle
+      - bit: autopilot/localiser/toggle
+      - bit: autopilot/hdkTrk/toggle
+      - bit: autopilot/ap1/toggle
+      - bit: autopilot/ap2/toggle
+      - bit: autopilot/autoThrust/toggle
+      - bit: autopilot/expedite/toggle
+      - bit: # Metric Alt
+
+      - bit: autopilot/approach/toggle
+      - bit: autopilot/airspeed/down
+      - bit: autopilot/airspeed/up
+      - bit: autopilot/airspeed/manage
+      - bit: autopilot/airspeed/guidance
+      - bit: autopilot/heading/down
+      - bit: autopilot/heading/up
+      - bit: autopilot/heading/manage
+
+      - bit: autopilot/heading/guidance
+      - bit: autopilot/altitude/down
+      - bit: autopilot/altitude/up
+      - bit: autopilot/altitude/manage
+      - bit: autopilot/altitude/guidance
+      - bit: autopilot/verticalSpeed/down
+      - bit: autopilot/verticalSpeed/up
+      - bit: autopilot/verticalSpeed/manage
+
+      - bit: autopilot/verticalSpeed/guidance
+      - bit: autopilot/altitude/step/100
+      - bit: autopilot/altitude/step/1000
+
+output:
+  lcd1:
+    reportId: 0xf0
+    fields:
+      - *lcdPrefix
+
+      - bit: 0 # Speed Decimal Point
+      - bits:
+          size: 7
+          value: display/speed[2]
+
+      - bit: autopilot/speedMach # Speed Decimal Point
+      - bits:
+          size: 7
+          value: display/speed[1]
+
+      - bit: 0 # Speed Decimal Point
+      - bits:
+          size: 7
+          value: display/speed[0]
+
+      - bit: 0 # Padding
+      - bit: autopilot/speedManaged
+      - bit: autopilot/speedMach
+      - bit: "!autopilot/speedMach"
+
+      - bit: 0 # Speed Decimal Point
+      - bits:
+          size: 7
+          value: display/heading[2]
+      - bit: 0 # Speed Decimal Point
+      - bits:
+          size: 7
+          value: display/heading[1]
+      - bit: 0 # Speed Decimal Point
+      - bits:
+          size: 7
+          value: display/heading[0]
+
+      - bit: autopilot/headingManaged
+
+      - bit: 1 # Lat Sign
+      - bit: autopilot/headingTrkMode # First Trk sign
+      - bit: "!autopilot/headingTrkMode" # Heading Sign
+      - bit: autopilot/verticalSpeedFPAMode
+      - bit: autopilot/headingTrkMode # Second Trk sign
+      - bit: "!autopilot/verticalSpeedFPAMode" # Vertical Speed Sign
+      - bit: "!autopilot/headingTrkMode" # Second Heading Sign
+      
+      - bit: 0 # Altitude decimal point
+      - bits:
+          size: 7
+          value: display/altitude[4]
+      - bit: 1 # Altitude Sign
+      - bits:
+          size: 7
+          value: display/altitude[3]
+      - bit: 1 # Lvl Ch sign 1
+      - bits:
+          size: 7
+          value: display/altitude[2]
+      - bit: 1 # Lvl Ch sign 2
+      - bits:
+          size: 7
+          value: display/altitude[1]
+      - bit: 1 # Lvl Ch sign 3
+      - bits:
+          size: 7
+          value: display/altitude[0]
+
+      - bit: 1 # Vertical Speed negative dash
+      - bits:
+          size: 7
+          value: display/verticalSpeed[3]
+      - bit: autopilot/verticalSpeedFPAMode # Vertical Speed Sign
+      - bits:
+          size: 7
+          value: display/verticalSpeed[2]
+      - bit: "!display/negativeVerticalSpeed" # Vertical speed positive
+      - bits:
+          size: 7
+          value: display/verticalSpeed[1]
+      - bit: autopilot/altitudeManaged
+      - bits:
+          size: 7
+          value: display/verticalSpeed[0]
+
+      - bit: 0 # Padding
+      - bit: 0 # Padding
+      - bit: "!autopilot/verticalSpeedFPAMode" # Vertican Speed sign
+      - bit: "autopilot/verticalSpeedFPAMode" # FPA sign
+
+      - padding: 66
+
+  lcd2: # The LCD won't update with receiving these magic bytes
+    reportId: 0xf0
+    fields:
+      - data: [
+        0x00, 0x06, 0x11, 0x10, 0xbb, 0x00, 0x00, 0x03, 0x01, 0x00, 0x00, 0x1d, 0x12, 0x20, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        ]
+
+  locLED:
+    reportId: 0x02
+    fields:
+      - data: *ledPrefix
+      - byte: *ledLOC
+      - byte: autopilot/locMode
+      - data: *ledSuffix
+
+  ap1LED:
+    reportId: 0x02
+    fields:
+      - data: *ledPrefix
+      - byte: *ledAP1
+      - byte: autopilot/ap1Mode
+      - data: *ledSuffix
+
+  ap2LED:
+    reportId: 2
+    fields:
+      - data: *ledPrefix
+      - byte: *ledAP2
+      - byte: autopilot/ap2Mode
+      - data: *ledSuffix
+
+  athrLED:
+    reportId: 2
+    fields:
+      - data: *ledPrefix
+      - byte: *ledATHR
+      - byte: autopilot/autoThrottleMode
+      - data: *ledSuffix
+
+  apprLED:
+    reportId: 2
+    fields:
+      - data: *ledPrefix
+      - byte: *ledAPPR
+      - byte: autopilot/approachMode
+      - data: *ledSuffix
+
+
+

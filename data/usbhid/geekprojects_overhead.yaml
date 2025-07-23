@@ -1,0 +1,18 @@
+
+name: GeekProjects.com Overhead Panel
+vendorId: 0x1209
+productId: 0xD201
+
+input:
+  buttons:
+    fields:
+      - bit: lights/landing/on
+      - bit: lights/landing/off
+      - bit: lights/landing/retract
+      - bit: lights/noSmoking/on
+      - bit: lights/noSmoking/off
+      - bit: cabin/chime
+      - bit:
+      - bit:
+
+
