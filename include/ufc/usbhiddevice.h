@@ -32,17 +32,37 @@ struct USBIds
         vendorId = v;
         productId = p;
     }
+
+    friend bool operator<(const USBIds &lhs, const USBIds &rhs)
+    {
+        if (lhs.vendorId < rhs.vendorId)
+            return true;
+        if (rhs.vendorId < lhs.vendorId)
+            return false;
+        return lhs.productId < rhs.productId;
+    }
+
+    friend bool operator==(const USBIds &lhs, const USBIds &rhs)
+    {
+        return lhs.vendorId == rhs.vendorId
+               && lhs.productId == rhs.productId;
+    }
+
+    friend bool operator!=(const USBIds &lhs, const USBIds &rhs)
+    {
+        return !(lhs == rhs);
+    }
 };
 
 class USBHIDDevice : public Device
 {
  private:
     std::vector<USBIds> m_compatibleIds;
-    USBIds m_foundId;
 
     hid_device* m_device = nullptr;
 
  protected:
+    USBIds m_foundId;
     hid_device* getDevice() { return m_device; }
 
  public:

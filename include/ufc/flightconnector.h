@@ -13,6 +13,7 @@
 #include <ufc/datasource.h>
 
 #include "logger.h"
+#include "usbhidconfig.h"
 
 
 namespace UFC
@@ -74,6 +75,7 @@ class FlightConnector final : public Logger
     Config m_config;
     std::shared_ptr<DataSource> m_dataSource;
     std::vector<Device*> m_devices;
+    std::shared_ptr<USBHIDConfigManager> m_usbhidConfigManager;
 
     std::shared_ptr<Airports> m_airports;
 
@@ -199,6 +201,11 @@ class FlightConnector final : public Logger
      * Stop all currently running FlightConnectors
      */
     static void exit();
+
+    void addDevice(Device* device)
+    {
+        m_devices.push_back(device);
+    }
 
     /**
      * Poll devices for updates once

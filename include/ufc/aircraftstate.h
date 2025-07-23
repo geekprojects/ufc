@@ -184,6 +184,8 @@ struct AircraftState
     CabinState cabin;
     WeightState weight;
     FlightPlanState flightPlan;
+
+    int getInt(std::string dataName) const;
 };
 
 }

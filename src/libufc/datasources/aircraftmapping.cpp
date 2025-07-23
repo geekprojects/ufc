@@ -11,7 +11,7 @@
 #include "../lua.h"
 #include "ufc/utils.h"
 
-#include "datadefs.h"
+#include "../datadefs.h"
 
 using namespace std;
 using namespace UFC;
@@ -34,7 +34,6 @@ void AircraftMapping::initDefinitions()
         addDataRef(dataRef);
     }
 }
-
 
 void AircraftMapping::loadDefinitionsForAircraft(
     const string& author,

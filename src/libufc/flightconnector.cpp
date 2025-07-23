@@ -95,6 +95,11 @@ bool FlightConnector::initDevices()
             delete device;
         }
     }
+
+    //m_usbhidConfigManager = make_shared<USBHIDConfigManager>(this, m_config.dataDir);
+    m_usbhidConfigManager = make_shared<USBHIDConfigManager>(this, "../data");
+    m_usbhidConfigManager->scan();
+
     return true;
 }
 
@@ -335,4 +340,3 @@ void FlightConnector::loadConfig(const Config& config)
         configStream.close();
     }
 }
-

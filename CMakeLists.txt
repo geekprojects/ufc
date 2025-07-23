@@ -47,13 +47,9 @@ add_library(ufc SHARED
         include/ufc/flightconnector.h
         include/ufc/logger.h
         include/ufc/data.h
-        src/libufc/devices/arduinotest.cpp
-        src/libufc/devices/arduinotest.h
         include/ufc/usbhiddevice.h
         src/libufc/devices/usbhiddevice.cpp
-        src/libufc/devices/winwingfcu.cpp
-        src/libufc/devices/winwingfcu.h
-        src/libufc/datasources/datadefs.h
+        src/libufc/datadefs.h
         include/ufc/utils.h
         src/libufc/utils/utils.cpp
         include/ufc/airports.h
@@ -62,8 +58,6 @@ add_library(ufc SHARED
         src/libufc/utils/geoutils.cpp
         src/libufc/datasources/xplane/navdata/airports.cpp
         src/libufc/datasources/xplane/navdata/navaids.cpp
-        src/libufc/devices/customradiohid.cpp
-        src/libufc/devices/customradiohid.h
         src/libufc/datasources/datasource.cpp
         src/libufc/datasources/clock.cpp
         src/libufc/datasources/clock.h
@@ -74,6 +68,12 @@ add_library(ufc SHARED
         src/libufc/utils/udp.cpp
         src/libufc/lua.h
         src/libufc/lua.cpp
+        include/ufc/bitbuffer.h
+        src/libufc/utils/bitbuffer.cpp
+        src/libufc/devices/usbhidconfig/device.cpp
+        include/ufc/usbhidconfig.h
+        src/libufc/aircraftstate.cpp
+        src/libufc/devices/usbhidconfig/lcd.h
 )
 
 if(UNIX AND APPLE)

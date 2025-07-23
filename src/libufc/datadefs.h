@@ -5,7 +5,7 @@
 #ifndef DATADEFS_H
 #define DATADEFS_H
 
-#include "xplane/xplane.h"
+#include "datasources/xplane/xplane.h"
 
 namespace UFC
 {
