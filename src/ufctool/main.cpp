@@ -61,7 +61,8 @@ int main(int argc, char** argv)
         }
     }
 
-    FlightConnector flightConnector(config);
+    FlightConnector flightConnector;
+    flightConnector.loadConfig(config);
 
     bool res;
     res = flightConnector.init();

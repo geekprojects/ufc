@@ -16,7 +16,11 @@ using namespace UFC;
 UFC_DATA_SOURCE(XPlane, XPlaneDataSource)
 
 XPlaneDataSource::XPlaneDataSource(FlightConnector* flightConnector) :
-    DataSource(flightConnector, "XPlane", "../data/x-plane", 10)
+    DataSource(
+        flightConnector,
+        "XPlane",
+        flightConnector->getConfig().dataDir + "/x-plane",
+        10)
 {
     m_client = make_shared<XPlaneClient>(
         flightConnector->getConfig().xplaneHost,

@@ -6,10 +6,11 @@
 #include <csignal>
 #include <unistd.h>
 #include <ufc/flightconnector.h>
+#include <ufc/usbhidconfig.h>
+#include <ufc/device.h>
 
 #include "datasources/simulator.h"
 #include "datasources/xplane/xplane.h"
-#include "ufc/device.h"
 #include "lua.h"
 
 using namespace std;
@@ -28,14 +29,7 @@ vector<FlightConnector*> g_flightConnectors;
 FlightConnector::FlightConnector() :
     Logger("FlightConnector")
 {
-    Config config = {};
-    setup(config);
-}
-
-FlightConnector::FlightConnector(const Config& config) :
-    Logger("FlightConnector")
-{
-    setup(config);
+    g_flightConnectors.push_back(this);
 }
 
 FlightConnector::~FlightConnector()
@@ -48,12 +42,6 @@ FlightConnector::~FlightConnector()
             break;
         }
     }
-}
-
-void FlightConnector::setup(const Config &config)
-{
-    loadConfig(config);
-    g_flightConnectors.push_back(this);
 }
 
 bool FlightConnector::init()
@@ -96,8 +84,7 @@ bool FlightConnector::initDevices()
         }
     }
 
-    //m_usbhidConfigManager = make_shared<USBHIDConfigManager>(this, m_config.dataDir);
-    m_usbhidConfigManager = make_shared<USBHIDConfigManager>(this, "../data");
+    m_usbhidConfigManager = make_shared<USBHIDConfigManager>(this);
     m_usbhidConfigManager->scan();
 
     return true;
@@ -140,7 +127,6 @@ void FlightConnector::updateDataSourceThread(FlightConnector* flightConnector)
 {
     flightConnector->updateDataSourceMain();
 }
-
 
 void FlightConnector::start()
 {
@@ -297,7 +283,17 @@ void FlightConnector::loadConfig(const Config& config)
         writeConfig = false;
     }
 
-    // Now override with any command line config
+    setConfig(config);
+
+    if (writeConfig)
+    {
+        FlightConnector::writeConfig();
+    }
+}
+
+void FlightConnector::setConfig(const Config &config)
+{
+    // Override config, if set
     if (!config.dataDir.empty())
     {
         m_config.dataDir = config.dataDir;
@@ -318,25 +314,25 @@ void FlightConnector::loadConfig(const Config& config)
     {
         m_config.arduinoDevice = config.arduinoDevice;
     }
+}
 
-    if (writeConfig)
-    {
-        YAML::Node configNode;
-        configNode["dataDir"] = m_config.dataDir;
-        configNode["dataSource"] = m_config.dataSource;
+void FlightConnector::writeConfig()
+{
+    YAML::Node configNode;
+    configNode["dataDir"] = m_config.dataDir;
+    configNode["dataSource"] = m_config.dataSource;
 
-        YAML::Node xplaneNode;
-        xplaneNode["path"] = m_config.xplanePath;
-        xplaneNode["host"] = m_config.xplaneHost;
-        xplaneNode["port"] = m_config.xplanePort;
-        configNode["xplane"] = xplaneNode;
+    YAML::Node xplaneNode;
+    xplaneNode["path"] = m_config.xplanePath;
+    xplaneNode["host"] = m_config.xplaneHost;
+    xplaneNode["port"] = m_config.xplanePort;
+    configNode["xplane"] = xplaneNode;
 
-        YAML::Node arduinoNode;
-        arduinoNode["device"] = m_config.arduinoDevice;
-        configNode["arduino"] = arduinoNode;
+    YAML::Node arduinoNode;
+    arduinoNode["device"] = m_config.arduinoDevice;
+    configNode["arduino"] = arduinoNode;
 
-        ofstream configStream(m_config.configPath);
-        configStream << configNode;
-        configStream.close();
-    }
+    ofstream configStream(m_config.configPath);
+    configStream << configNode;
+    configStream.close();
 }

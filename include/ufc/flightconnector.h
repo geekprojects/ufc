@@ -13,7 +13,6 @@
 #include <ufc/datasource.h>
 
 #include "logger.h"
-#include "usbhidconfig.h"
 
 
 namespace UFC
@@ -31,6 +30,7 @@ enum class Result
 class DataSource;
 class Device;
 class Airports;
+class USBHIDConfigManager;
 
 struct Config
 {
@@ -96,18 +96,14 @@ class FlightConnector final : public Logger
     static void updateDataSourceThread(FlightConnector* flightConnector);
     void updateDataSourceMain();
 
-    void setup(const Config &config);
-    void loadConfig(const Config &config);
 
  public:
     FlightConnector();
-
-    /**
-     *
-     * @param config Configuration overrides
-     */
-    explicit FlightConnector(const Config &config);
     ~FlightConnector() override;
+
+    void loadConfig(const Config &config);
+    void setConfig(const Config &config);
+    void writeConfig();
 
     /**
      * Initialise this Flight Connector

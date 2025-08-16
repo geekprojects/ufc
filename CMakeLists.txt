@@ -74,6 +74,7 @@ add_library(ufc SHARED
         include/ufc/usbhidconfig.h
         src/libufc/aircraftstate.cpp
         src/libufc/devices/usbhidconfig/lcd.h
+        src/libufc/devices/usbhidconfig/manager.cpp
 )
 
 if(UNIX AND APPLE)

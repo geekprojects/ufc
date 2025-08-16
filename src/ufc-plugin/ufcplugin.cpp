@@ -28,6 +28,8 @@ int UFCPlugin::start(char* outName, char* outSig, char* outDesc)
     strcpy(outSig, "com.geekprojects.ufc.plugin");
     strcpy(outDesc, "Universal Flight Connector");
 
+    XPLMEnableFeature("XPLM_USE_NATIVE_PATHS",1);
+
     m_menuContainer = XPLMAppendMenuItem(XPLMFindPluginsMenu(), "UFC", 0, 0);
     m_menuId = XPLMCreateMenu("UFC", XPLMFindPluginsMenu(), m_menuContainer, menuCallback, this);
     XPLMAppendMenuItem(m_menuId, "Settings", (void *)-1, 1);
@@ -36,6 +38,27 @@ int UFCPlugin::start(char* outName, char* outSig, char* outDesc)
     log(DEBUG, "UFC: XPluginStart: Creating Flight Connector...");
     m_flightConnector = new FlightConnector();
     m_flightConnector->disableExitHandler();
+
+    char xplanePath[512];
+    XPLMGetSystemPath(xplanePath);
+    log(DEBUG, "XPLM Path: %s", xplanePath);
+
+    char dirSep[2];
+    strcpy(dirSep, XPLMGetDirectorySeparator());
+
+    string pluginPath =
+        string(xplanePath) +
+        "Resources" +
+        string(dirSep) +
+        "plugins" +
+        string(dirSep) +
+        "ufc";
+
+    log(DEBUG, "Plugin Path: %s", pluginPath.c_str());
+    Config config;
+    config.dataDir = pluginPath + "/data";
+    config.configPath = pluginPath;
+    m_flightConnector->setConfig(config);
 
     log(DEBUG, "UFC: XPluginStart: Creating Data Source...");
     m_dataSource = make_shared<XPPluginDataSource>(m_flightConnector);

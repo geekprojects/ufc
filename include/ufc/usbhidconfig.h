@@ -8,6 +8,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include "bitbuffer.h"
+#include "flightconnector.h"
 #include "usbhiddevice.h"
 
 namespace UFC
@@ -80,18 +81,14 @@ public:
     void update(const AircraftState &state) override;
 };
 
-class USBHIDConfigManager : Logger
+class USBHIDConfigManager : private Logger
 {
     FlightConnector* m_flightConnector;
     std::string m_baseDir;
     std::map<USBIds, USBHIDConfigDevice*> m_devices;
 
 public:
-    USBHIDConfigManager(FlightConnector* flightConnector, const std::string baseDir) :
-        Logger("USBHIDConfigManager"),
-        m_flightConnector(flightConnector),
-        m_baseDir(baseDir)
-    {}
+    explicit USBHIDConfigManager(FlightConnector* flightConnector);
 
     bool checkDevice(YAML::Node node, USBIds &id);
     void openDevice(const YAML::Node & node, USBIds id);
