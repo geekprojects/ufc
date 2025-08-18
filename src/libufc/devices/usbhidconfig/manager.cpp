@@ -14,13 +14,12 @@ using namespace UFC;
 
 USBHIDConfigManager::USBHIDConfigManager(FlightConnector* flightConnector) :
     Logger("USBHIDConfigManager"),
-    m_flightConnector(flightConnector),
-    m_baseDir(flightConnector->getConfig().dataDir)
+    m_flightConnector(flightConnector)
 {}
 
 void USBHIDConfigManager::scan()
 {
-    filesystem::path defDir(m_baseDir + "/usbhid");
+    filesystem::path defDir(m_flightConnector->getDataPath() + "/usbhid");
     if (!exists(defDir))
     {
         log(WARN, "scan: Unable to find data definition directory: %s", defDir.string().c_str());
@@ -28,7 +27,7 @@ void USBHIDConfigManager::scan()
     }
 
     // Try to find aircraft-specific definitions
-    for (const auto & entry : filesystem::directory_iterator(m_baseDir + "/usbhid"))
+    for (const auto & entry : filesystem::directory_iterator(m_flightConnector->getDataPath() + "/usbhid"))
     {
         log(DEBUG, "scan: Checking: %s", entry.path().filename().string().c_str());
         if (entry.path().extension() == ".yaml")

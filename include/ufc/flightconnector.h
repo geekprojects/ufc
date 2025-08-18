@@ -173,6 +173,11 @@ class FlightConnector final : public Logger
      */
     [[nodiscard]] const Config& getConfig() const { return m_config; }
 
+    [[nodiscard]] std::string getDataPath() const
+    {
+        return m_config.dataDir;
+    }
+
     /**
      *
      * @return A copy of the current aircraft state from the simulator

@@ -84,7 +84,6 @@ public:
 class USBHIDConfigManager : private Logger
 {
     FlightConnector* m_flightConnector;
-    std::string m_baseDir;
     std::map<USBIds, USBHIDConfigDevice*> m_devices;
 
 public:
