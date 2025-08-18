@@ -248,7 +248,7 @@ void USBHIDConfigDevice::updateOutput(const AircraftState& state, Descriptor& ou
 
             case FieldType::PADDING:
                 bitBuffer.flushBits();
-                while ((bitBuffer.size() * 8) < field.length)
+                while ((bitBuffer.size() * 8) < static_cast<size_t>(field.length))
                 {
                     bitBuffer.appendByte(0);
                 }
@@ -483,7 +483,7 @@ void USBHIDConfigDevice::parseFieldValue(Field& field, const YAML::Node& node)
         field.valueType = FieldValueType::VALUE;
         return;
     }
-    catch (YAML::BadConversion)
+    catch (YAML::BadConversion const&)
     {
         // Not an integer!
     }
