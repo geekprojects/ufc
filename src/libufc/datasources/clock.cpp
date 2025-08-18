@@ -99,7 +99,7 @@ bool ClockDataSource::update()
     return true;
 }
 
-void ClockDataSource::executeCommand(const std::string& command, const CommandDefinition& commandDefinition)
+void ClockDataSource::command(const std::string& command)
 {
     log(DEBUG, "command: %s", command.c_str());
     if (command == AUTOPILOT_ALTITUDE_MANAGE)
