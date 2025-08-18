@@ -48,7 +48,7 @@ bool USBHIDDevice::init()
     m_device = hid_open(m_foundId.vendorId, m_foundId.productId, nullptr);
     if (m_device == nullptr)
     {
-        log(ERROR, "init: Could not open USB HID device: %s", hid_error(nullptr));
+        log(ERROR, "init: Could not open USB HID device: %ls", hid_error(nullptr));
         return false;
     }
     return true;
