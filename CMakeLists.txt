@@ -89,12 +89,24 @@ target_link_libraries(ufc
         ${lua_LDFLAGS}
 )
 
+if (UNIX AND APPLE AND CMAKE_BUILD_TYPE STREQUAL "Release")
+    set_target_properties(ufc PROPERTIES
+        XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME YES
+    )
+endif()
+
 install(TARGETS ufc DESTINATION lib)
 
 add_executable(ufctool src/ufctool/main.cpp)
 target_link_libraries(ufctool
         ufc
 )
+
+if (UNIX AND APPLE AND CMAKE_BUILD_TYPE STREQUAL "Release")
+    set_target_properties(ufctool PROPERTIES
+        XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME YES
+    )
+endif()
 
 if (DEFINED ENV{XPLANE_SDK})
     message("Building XPlane plugin: $ENV{XPLANE_SDK}")
@@ -124,6 +136,12 @@ if (DEFINED ENV{XPLANE_SDK})
             ufc
             ${XPLM_LDFLAGS}
     )
+
+    if (UNIX AND APPLE AND CMAKE_BUILD_TYPE STREQUAL "Release")
+        set_target_properties(ufc-plugin PROPERTIES
+                XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME YES
+        )
+    endif()
 endif()
 
 install(DIRECTORY include/ufc DESTINATION include FILES_MATCHING PATTERN "*.h" )
