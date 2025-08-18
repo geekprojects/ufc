@@ -6,6 +6,7 @@
 #define BITBUFFER_H
 
 #include <vector>
+#include <cstdint>
 
 class BitBuffer
 {
