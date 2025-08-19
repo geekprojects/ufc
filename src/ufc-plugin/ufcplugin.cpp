@@ -20,10 +20,6 @@ using namespace UFC;
 
 UFCPlugin g_ufcPlugin;
 
-#if	LIN
-constexpr int STACK_SIZE = SIGSTKSZ;
-#endif
-
 int UFCPlugin::start(char* outName, char* outSig, char* outDesc)
 {
     registerCrashHandler();
@@ -214,13 +210,11 @@ void UFCPlugin::registerCrashHandler()
 
     sigemptyset(&sig_action.sa_mask);
 
-#if	LIN
-    static uint8_t alternate_stack[STACK_SIZE];
-    stack_t ss = {
-        .ss_sp = (void*)alternate_stack,
-        .ss_size = STACK_SIZE,
-        .ss_flags = 0
-    };
+#if LIN
+    stack_t ss = {};
+    ss.ss_sp = new uint8_t[SIGSTKSZ];
+    ss.ss_size = SIGSTKSZ;
+    ss.ss_flags = 0;
 
     sigaltstack(&ss, NULL);
     sig_action.sa_flags = SA_SIGINFO | SA_ONSTACK;
