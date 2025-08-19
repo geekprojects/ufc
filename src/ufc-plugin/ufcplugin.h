@@ -10,8 +10,8 @@
 
 #include <ufc/flightconnector.h>
 
-#include <stdarg.h>
-#include <signal.h>
+#include <cstdarg>
+#include <csignal>
 
 class XPPluginDataSource;
 
@@ -36,22 +36,22 @@ class XPLogPrinter : public UFC::LogPrinter
 class UFCPlugin : public UFC::Logger
 {
  private:
-    XPLMPluginID m_pluginId;
+    XPLMPluginID m_pluginId = -1;
     std::thread::id m_mainThread;
 
-    sigaction m_prev_sigsegv = {};
-    sigaction m_prev_sigabrt = {};
-    sigaction m_prev_sigfpe = {};
-    sigaction m_prev_sigint = {};
-    sigaction m_prev_sigill = {};
-    sigaction m_prev_sigterm = {};
+    struct sigaction m_prev_sigsegv = {};
+    struct sigaction m_prev_sigabrt = {};
+    struct sigaction m_prev_sigfpe = {};
+    struct sigaction m_prev_sigint = {};
+    struct sigaction m_prev_sigill = {};
+    struct sigaction m_prev_sigterm = {};
 
     XPLogPrinter m_logPrinter;
     UFC::FlightConnector* m_flightConnector = nullptr;
     std::shared_ptr<XPPluginDataSource> m_dataSource = nullptr;
 
-    int m_menuContainer;
-    XPLMMenuID m_menuId;
+    int m_menuContainer = -1;
+    XPLMMenuID m_menuId = nullptr;
 
     static float initCallback(float elapsedMe, float elapsedSim, int counter, void * refcon);
     float init(float elapsedMe, float elapsedSim, int counter);

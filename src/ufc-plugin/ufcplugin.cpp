@@ -2,7 +2,8 @@
 #include "xpplugindatasource.h"
 #include "ufcplugin.h"
 
-#include <signal.h>
+#include <ufc/device.h>
+
 #include <XPLMProcessing.h>
 #include <XPLMMenus.h>
 #include <XPLMPlugin.h>
@@ -11,7 +12,8 @@
 #include <unistd.h>
 #include <sys/fcntl.h>
 
-#include "ufc/device.h"
+#include <csignal>
+#include <cstring>
 
 using namespace std;
 using namespace UFC;
@@ -195,7 +197,8 @@ void UFCPlugin::registerCrashHandler()
     m_pluginId = XPLMGetMyID();
 
 #if APL || LIN
-    struct sigaction sig_action = { .sa_sigaction = handlePosixSigCallback };
+    struct sigaction sig_action = {};
+    sig_action.sa_sigaction = handlePosixSigCallback;
 
     sigemptyset(&sig_action.sa_mask);
 
