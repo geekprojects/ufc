@@ -112,7 +112,7 @@ if(UNIX AND APPLE)
     set(XPLM_LDFLAGS ${CMAKE_SOURCE_DIR}/3rdparty/XPlaneSDK/Libraries/Mac/XPLM.framework)
     set(XPLM_CFLAGS -DAPL=1)
 elseif (UNIX AND NOT APPLE)
-    set(XPLM_LDFLAGS ${CMAKE_SOURCE_DIR}/3rdparty/XPlaneSDK/Libraries/Lin/XPLM_64.so)
+    set(XPLM_LDFLAGS -l${CMAKE_SOURCE_DIR}/3rdparty/XPlaneSDK/Libraries/Lin/XPLM_64.so)
     set(XPLM_CFLAGS -DLIN=1)
 endif()
 
