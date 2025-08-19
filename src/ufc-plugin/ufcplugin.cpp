@@ -20,6 +20,10 @@ using namespace UFC;
 
 UFCPlugin g_ufcPlugin;
 
+#if	LIN
+static const int STACK_SIZE = SIGSTKSZ;
+#endif
+
 int UFCPlugin::start(char* outName, char* outSig, char* outDesc)
 {
     registerCrashHandler();
@@ -173,12 +177,20 @@ void UFCPlugin::handleCrash()
     char **names = backtrace_symbols(frames, frame_count);
 
     const int fd = open("backtrace.txt", O_CREAT | O_RDWR | O_TRUNC | O_SYNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-    if(fd >= 0)
+    if (fd >= 0)
     {
-        for(int i = 0; i < frame_count; ++ i)
+        for (int i = 0; i < frame_count; ++ i)
         {
-            write(fd, names[i], strlen(names[i]));
-            write(fd, "\n", 1);
+            ssize_t res = write(fd, names[i], strlen(names[i]));
+            if (res <= 0)
+            {
+                break;
+            }
+            res = write(fd, "\n", 1);
+            if (res <= 0)
+            {
+                break;
+            }
         }
 
         close(fd);
@@ -203,10 +215,10 @@ void UFCPlugin::registerCrashHandler()
     sigemptyset(&sig_action.sa_mask);
 
 #if	LIN
-    static uint8_t alternate_stack[SIGSTKSZ];
+    static uint8_t alternate_stack[STACK_SIZE];
     stack_t ss = {
         .ss_sp = (void*)alternate_stack,
-        .ss_size = SIGSTKSZ,
+        .ss_size = STACK_SIZE,
         .ss_flags = 0
     };
 
