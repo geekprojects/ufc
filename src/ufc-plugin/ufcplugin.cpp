@@ -21,7 +21,7 @@ using namespace UFC;
 UFCPlugin g_ufcPlugin;
 
 #if	LIN
-static const int STACK_SIZE = SIGSTKSZ;
+constexpr int STACK_SIZE = SIGSTKSZ;
 #endif
 
 int UFCPlugin::start(char* outName, char* outSig, char* outDesc)
