@@ -57,8 +57,8 @@ add_library(ufc SHARED
         src/libufc/airport.cpp
         include/ufc/geoutils.h
         src/libufc/utils/geoutils.cpp
-        src/libufc/datasources/xplane/navdata/airports.cpp
-        src/libufc/datasources/xplane/navdata/navaids.cpp
+        src/libufc/navdata/xplane/airports.cpp
+        src/libufc/navdata/xplane/navaids.cpp
         src/libufc/datasources/datasource.cpp
         src/libufc/datasources/clock.cpp
         src/libufc/datasources/clock.h
@@ -76,6 +76,8 @@ add_library(ufc SHARED
         src/libufc/aircraftstate.cpp
         src/libufc/devices/usbhidconfig/lcd.h
         src/libufc/devices/usbhidconfig/manager.cpp
+        src/libufc/navdata/xplane/xplanenavdata.cpp
+        src/libufc/navdata/xplane/xplanenavdata.h
 )
 
 if(UNIX AND APPLE)

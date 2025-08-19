@@ -2,19 +2,19 @@
 // Created by Ian Parker on 14/09/2024.
 //
 
-#include "navdata.h"
-#include "../xplane.h"
-#include <ufc/flightconnector.h>
-#include <ufc/airports.h>
-
+#include "xplanenavdata.h"
 #include "ufc/utils.h"
+#include <ufc/flightconnector.h>
+
+#include "navdata.h"
+#include "ufc/data.h"
 
 using namespace std;
 using namespace UFC;
 
-shared_ptr<Airports> XPlaneDataSource::loadAirports()
+shared_ptr<Airports> XPlaneNavDataSource::loadAirports()
 {
-    string aptData = m_flightConnector->getConfig().xplanePath + "/Global Scenery/Global Airports/Earth nav data/apt.dat";
+    string aptData = getFlightConnector()->getConfig().xplanePath + "/Global Scenery/Global Airports/Earth nav data/apt.dat";
 
     auto data = make_shared<Data>();
     data->load(aptData);

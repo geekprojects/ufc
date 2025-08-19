@@ -6,11 +6,14 @@
 #define UFC_NAVAIDS_H
 
 #include "geoutils.h"
+#include "logger.h"
 
 #include <map>
 
 namespace UFC
 {
+class FlightConnector;
+class Airports;
 
 struct NavDataHeader
 {
@@ -149,6 +152,23 @@ class NavAids : public NavData
         }
         return {};
     }
+};
+
+class NavDataSource : public Logger
+{
+    FlightConnector* m_flightConnector;
+
+ public:
+    explicit NavDataSource(FlightConnector* flightConnector, std::string name) : Logger(name), m_flightConnector(flightConnector)
+    {
+    }
+
+    virtual ~NavDataSource() = default;
+
+    FlightConnector* getFlightConnector() { return m_flightConnector; }
+
+    virtual std::shared_ptr<Airports> loadAirports() { return nullptr; }
+    virtual std::shared_ptr<NavAids> loadNavAids() { return nullptr; }
 };
 
 };

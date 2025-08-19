@@ -2,22 +2,22 @@
 // Created by Ian Parker on 14/04/2024.
 //
 
-#include "navdata.h"
-#include "ufc/navdata.h"
-#include "../xplane.h"
+#include "xplanenavdata.h"
 
 #include <ufc/utils.h>
 
 #include <cstring>
 #include <regex>
 
+#include "navdata.h"
+#include "ufc/data.h"
 #include "ufc/flightconnector.h"
 
 using namespace std;
 using namespace UFC;
 
 
-shared_ptr<NavAids> XPlaneDataSource::loadNavAids()
+shared_ptr<NavAids> XPlaneNavDataSource::loadNavAids()
 {
     auto navData = make_shared<NavAids>();
 
@@ -27,7 +27,7 @@ shared_ptr<NavAids> XPlaneDataSource::loadNavAids()
     return navData;
 }
 
-NavDataHeader XPlaneDataSource::loadHeader(std::string headerStr)
+NavDataHeader XPlaneNavDataSource::loadHeader(std::string headerStr)
 {
     NavDataHeader header;
     regex headerRegex(
@@ -52,9 +52,9 @@ NavDataHeader XPlaneDataSource::loadHeader(std::string headerStr)
     return header;
 }
 
-void XPlaneDataSource::loadFixes(const shared_ptr<NavAids>& navData)
+void XPlaneNavDataSource::loadFixes(const shared_ptr<NavAids>& navData)
 {
-    string fixPath = m_flightConnector->getConfig().xplanePath + "/Custom Data/earth_fix.dat";
+    string fixPath = getFlightConnector()->getConfig().xplanePath + "/Custom Data/earth_fix.dat";
 
     auto fixData = make_shared<Data>();
     fixData->load(fixPath);
@@ -97,9 +97,9 @@ void XPlaneDataSource::loadFixes(const shared_ptr<NavAids>& navData)
     }
 }
 
-void XPlaneDataSource::loadNavAidData(const std::shared_ptr<NavAids>& navData)
+void XPlaneNavDataSource::loadNavAidData(const std::shared_ptr<NavAids>& navData)
 {
-    string fixPath = m_flightConnector->getConfig().xplanePath + "/Custom Data/earth_nav.dat";
+    string fixPath = getFlightConnector()->getConfig().xplanePath + "/Custom Data/earth_nav.dat";
 
     auto fixData = make_shared<Data>();
     fixData->load(fixPath);

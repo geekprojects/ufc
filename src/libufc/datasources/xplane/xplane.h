@@ -10,9 +10,6 @@
 
 #include <map>
 
-#include "../../lua.h"
-#include "ufc/navdata.h"
-
 namespace UFC
 {
 
@@ -24,16 +21,9 @@ class XPlaneDataSource : public DataSource
 
     void update(const std::map<int, float>& values);
 
-    NavDataHeader loadHeader(std::string headerStr);
-    void loadFixes(const std::shared_ptr<NavAids> &navData);
-    void loadNavAidData(const std::shared_ptr<NavAids>& shared);
-
  public:
     explicit XPlaneDataSource(FlightConnector* flightConnector);
     ~XPlaneDataSource() override = default;
-
-    std::shared_ptr<Airports> loadAirports() override;
-    std::shared_ptr<NavAids> loadNavAids() override;
 
     bool connect() override;
     void disconnect() override;
