@@ -17,6 +17,7 @@ endif()
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+
 # Third Party Modules
 add_subdirectory(3rdparty/luacpp/Source EXCLUDE_FROM_ALL)
 
@@ -112,7 +113,6 @@ if(UNIX AND APPLE)
     set(XPLM_LDFLAGS ${CMAKE_SOURCE_DIR}/3rdparty/XPlaneSDK/Libraries/Mac/XPLM.framework)
     set(XPLM_CFLAGS -DAPL=1)
 elseif (UNIX AND NOT APPLE)
-    set(XPLM_LDFLAGS -l${CMAKE_SOURCE_DIR}/3rdparty/XPlaneSDK/Libraries/Lin/XPLM_64.so)
     set(XPLM_CFLAGS -DLIN=1)
 endif()
 
@@ -141,7 +141,10 @@ if (UNIX AND APPLE AND CMAKE_BUILD_TYPE STREQUAL "Release")
     )
 endif()
 
+set(DATADIR ${CMAKE_INSTALL_PREFIX}/share/ufc)
 install(DIRECTORY include/ufc DESTINATION include FILES_MATCHING PATTERN "*.h" )
+install(DIRECTORY data/x-plane DESTINATION ${DATADIR})
+install(DIRECTORY data/usbhid DESTINATION ${DATADIR})
 
 set(PKGCONFIG_CFLAGS_LIST -I${CMAKE_INSTALL_PREFIX}/include ${yamlcpp_CFLAGS} ${hidapi_CFLAGS})
 string(REPLACE ";" " " PKGCONFIG_CFLAGS "${PKGCONFIG_CFLAGS_LIST}")
