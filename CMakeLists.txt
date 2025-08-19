@@ -18,14 +18,14 @@ endif()
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Third Party Modules
-add_subdirectory(luacpp/Source EXCLUDE_FROM_ALL)
+add_subdirectory(3rdparty/luacpp/Source EXCLUDE_FROM_ALL)
 
 set(DATADIR ${CMAKE_INSTALL_PREFIX}/share/ufc)
 SET(FLAGS_COMMON "-Wall -Werror -Wno-vla-cxx-extension -Wno-unused-function -Wno-unknown-warning-option")
 SET(CMAKE_CXX_FLAGS_DEBUG "${FLAGS_COMMON} -O0 -g -fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer")
 SET(CMAKE_CXX_FLAGS_RELEASE  "${FLAGS_COMMON} -O3")
 
-include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/luacpp/Source)
+include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/3rdparty/luacpp/Source)
 add_definitions(${yamlcpp_CFLAGS} ${hidapi_CFLAGS} ${lua_CFLAGS})
 
 add_library(ufc SHARED
@@ -108,40 +108,36 @@ if (UNIX AND APPLE AND CMAKE_BUILD_TYPE STREQUAL "Release")
     )
 endif()
 
-if (DEFINED ENV{XPLANE_SDK})
-    message("Building XPlane plugin: $ENV{XPLANE_SDK}")
+if(UNIX AND APPLE)
+    set(XPLM_LDFLAGS ${CMAKE_SOURCE_DIR}/3rdparty/XPlaneSDK/Libraries/Mac/XPLM.framework)
+    set(XPLM_CFLAGS -DAPL=1)
+elseif (UNIX AND NOT APPLE)
+    # TODO!
+endif()
 
-    if(UNIX AND APPLE)
-        set(XPLM_LDFLAGS $ENV{XPLANE_SDK}/Libraries/Mac/XPLM.framework)
-        set(XPLM_CFLAGS -DAPL=1)
-    elseif (UNIX AND NOT APPLE)
-        # TODO!
-    endif()
+set(XPLANE_INC ${CMAKE_SOURCE_DIR}/3rdparty/XPlaneSDK/CHeaders/XPLM)
 
-    set(XPLANE_INC $ENV{XPLANE_SDK}/CHeaders/XPLM)
+message("XPLM_LDFLAGS: ${XPLM_LDFLAGS}")
+message("XPLANE_INC: ${XPLANE_INC}")
 
-    message("XPLM_LDFLAGS: ${XPLM_LDFLAGS}")
-    message("XPLANE_INC: ${XPLANE_INC}")
+add_library(ufc-plugin SHARED
+        src/ufc-plugin/ufcplugin.cpp
+        src/ufc-plugin/ufcplugin.h
+        src/ufc-plugin/xpplugindatasource.cpp
+        src/ufc-plugin/xpplugindatasource.h
+)
 
-    add_library(ufc-plugin SHARED
-            src/ufc-plugin/ufcplugin.cpp
-            src/ufc-plugin/ufcplugin.h
-            src/ufc-plugin/xpplugindatasource.cpp
-            src/ufc-plugin/xpplugindatasource.h
+target_compile_definitions(ufc-plugin PUBLIC ${XPLM_CFLAGS})
+target_include_directories(ufc-plugin PUBLIC ${XPLANE_INC})
+target_link_libraries(ufc-plugin
+        ufc
+        ${XPLM_LDFLAGS}
+)
+
+if (UNIX AND APPLE AND CMAKE_BUILD_TYPE STREQUAL "Release")
+    set_target_properties(ufc-plugin PROPERTIES
+            XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME YES
     )
-
-    target_compile_definitions(ufc-plugin PUBLIC ${XPLM_CFLAGS})
-    target_include_directories(ufc-plugin PUBLIC ${XPLANE_INC})
-    target_link_libraries(ufc-plugin
-            ufc
-            ${XPLM_LDFLAGS}
-    )
-
-    if (UNIX AND APPLE AND CMAKE_BUILD_TYPE STREQUAL "Release")
-        set_target_properties(ufc-plugin PROPERTIES
-                XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME YES
-        )
-    endif()
 endif()
 
 install(DIRECTORY include/ufc DESTINATION include FILES_MATCHING PATTERN "*.h" )
