@@ -10,6 +10,9 @@
 
 #include <ufc/flightconnector.h>
 
+#include <stdarg.h>
+#include <signal.h>
+
 class XPPluginDataSource;
 
 class XPLogPrinter : public UFC::LogPrinter
