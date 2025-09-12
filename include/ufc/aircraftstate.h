@@ -8,6 +8,7 @@
 #include <string>
 #include <cstdint>
 #include <map>
+#include <vector>
 
 #define DATA_AIRCRAFT_INDICATEDAIRSPEED "aircraft/indicatedAirspeed"
 #define DATA_AIRCRAFT_PITCH "aircraft/pitch"
