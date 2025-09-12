@@ -183,8 +183,9 @@ bool XPlaneDataSource::getDataFloat(const std::string& dataName, float& value)
     auto dataRef = m_mapping.getDataRef(dataName);
     if (dataRef == nullptr || dataRef->mapping.dataRef.empty())
     {
-        log(WARN, "getDataInt: Unhandled data ref: %s", dataName.c_str());
-        return false;
+        log(WARN, "getDataFloat: Unhandled data ref: %s", dataName.c_str());
+        auto res = m_client->read(dataName, value);
+        return res == Result::SUCCESS;;
     }
 
     auto res = m_client->read(dataRef->mapping.dataRef, value);
@@ -196,7 +197,7 @@ bool XPlaneDataSource::getDataString(const std::string& dataName, string& value)
     auto dataRef = m_mapping.getDataRef(dataName);
     if (dataRef == nullptr || dataRef->mapping.dataRef.empty())
     {
-        log(WARN, "getDataInt: Unhandled data ref: %s", dataName.c_str());
+        log(WARN, "getDataString: Unhandled data ref: %s", dataName.c_str());
         return false;
     }
 
