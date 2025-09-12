@@ -5,7 +5,7 @@
 #ifndef UFC_USBHIDDEVICE_H
 #define UFC_USBHIDDEVICE_H
 
-#include "device.h"
+#include <ufc/device.h>
 
 #include <vector>
 
