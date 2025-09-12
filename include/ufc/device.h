@@ -9,6 +9,7 @@
 
 #include <string>
 #include <map>
+#include <memory>
 
 #include "logger.h"
 
@@ -20,7 +21,6 @@ class FlightConnector;
 
 class DeviceInit
 {
- private:
  public:
     DeviceInit() = default;
     virtual ~DeviceInit() = default;
