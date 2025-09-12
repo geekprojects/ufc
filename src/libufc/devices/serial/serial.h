@@ -53,6 +53,7 @@ struct SerialPortInfo
     int vendorId = 0;
     int productId = 0;
     std::string serialNumber;
+    std::string hardwareId;
 };
 
 class SerialConfigDevice : public Device

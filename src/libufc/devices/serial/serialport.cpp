@@ -9,6 +9,8 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 
+#include <cstring>
+
 #ifndef TIOCINQ
 #ifdef FIONREAD
 #define TIOCINQ FIONREAD
