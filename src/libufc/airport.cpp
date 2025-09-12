@@ -15,7 +15,8 @@ Airport::Airport(wstring name, Coordinate location) : m_name(name), m_location(l
 {
 }
 
-Airports::Airports()
+Airports::Airports(NavDataSource* navDataSource, std::string const& name) :
+    NavData(navDataSource, name)
 {
     m_airports = make_shared<QuadTree<Airport>>(-180.0f, -180.0f, 360.0f);
 /*

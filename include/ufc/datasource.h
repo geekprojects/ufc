@@ -96,7 +96,6 @@ class DataSource : public Logger
     std::shared_ptr<UFCLua> m_dataLua;
 
     float transformData(const std::shared_ptr<DataDefinition> &dataRef, float value);
-    virtual void executeCommand(const std::string& command, const CommandDefinition& commandDefinition) {}
 
  public:
     explicit DataSource(FlightConnector* flightConnector, const std::string& name, const std::string& dataPath, int priority);
@@ -106,9 +105,6 @@ class DataSource : public Logger
     [[nodiscard]] std::string getName() const { return m_name; }
     [[nodiscard]] FlightConnector* getFlightConnector() const { return m_flightConnector; }
 
-    virtual std::shared_ptr<Airports> loadAirports() { return nullptr; }
-    virtual std::shared_ptr<NavAids> loadNavAids() { return nullptr; }
-
     virtual bool connect() = 0;
     virtual void disconnect() = 0;
     virtual bool isConnected() { return false; }
@@ -116,6 +112,8 @@ class DataSource : public Logger
     virtual bool update() = 0;
 
     virtual void command(const std::string& command);
+    virtual void executeCommand(const std::string& command, const CommandDefinition& commandDefinition) {}
+
     virtual void setData(const std::string& dataName, float value) {}
 
     // Not all values may be updated in real time or you may not be running

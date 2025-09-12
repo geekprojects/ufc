@@ -12,14 +12,12 @@
 using namespace std;
 using namespace UFC;
 
-shared_ptr<Airports> XPlaneNavDataSource::loadAirports()
+bool XPlaneAirports::init()
 {
     string aptData = getFlightConnector()->getConfig().xplanePath + "/Global Scenery/Global Airports/Earth nav data/apt.dat";
 
     auto data = make_shared<Data>();
     data->load(aptData);
-
-    auto airportData = make_shared<Airports>();
 
     data->readLine();
     string headerStr = data->readLine();
@@ -46,7 +44,7 @@ shared_ptr<Airports> XPlaneNavDataSource::loadAirports()
                 // Flush the current airport
                 if (currentAirport != nullptr)
                 {
-                    airportData->addAirport(currentAirport);
+                    addAirport(currentAirport);
                 }
 
                 currentAirport = make_shared<Airport>();
@@ -148,7 +146,7 @@ Coordinate r1 = runways.at(1).m_startLocation;
     }
     if (currentAirport != nullptr)
     {
-        airportData->addAirport(currentAirport);
+        addAirport(currentAirport);
     }
 
     //airportData->dump();
@@ -160,5 +158,5 @@ Coordinate r1 = runways.at(1).m_startLocation;
     //airportData->findNearest(point);
 
     //printf("Found %zu airports\n", airportData->m_airports.size());
-    return airportData;
+    return true;
 }

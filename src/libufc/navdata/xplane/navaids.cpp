@@ -17,42 +17,22 @@ using namespace std;
 using namespace UFC;
 
 
-shared_ptr<NavAids> XPlaneNavDataSource::loadNavAids()
+bool XPlaneNavAids::init()
 {
-    auto navData = make_shared<NavAids>();
+    if (!loadFixes())
+    {
+        return false;
+    }
+    if (!loadNavAidData())
+    {
+        return false;
+    }
 
-    loadFixes(navData);
-    loadNavAidData(navData);
-
-    return navData;
+    return true;
 }
 
-NavDataHeader XPlaneNavDataSource::loadHeader(std::string headerStr)
-{
-    NavDataHeader header;
-    regex headerRegex(
-        "([0-9]+) Version - data cycle ([0-9]+), build ([0-9]+), metadata ([A-Za-z0-9]+). (.*)",
-        regex_constants::ECMAScript | std::regex_constants::icase);
 
-    auto results = sregex_iterator(headerStr.begin(), headerStr.end(), headerRegex);
-    auto results_end = std::sregex_iterator();
-    if (!results->empty())
-    {
-        const std::smatch& match = *results;
-        header.version = atoi(match[1].str().c_str());
-        header.cycle = atoi(match[2].str().c_str());
-        header.build = atoi(match[3].str().c_str());
-        header.type = match[4];
-        header.copyright = match[5];
-    }
-    else
-    {
-        log(WARN, "Header does not match expected pattern: %s", headerStr.c_str());
-    }
-    return header;
-}
-
-void XPlaneNavDataSource::loadFixes(const shared_ptr<NavAids>& navData)
+bool XPlaneNavAids::loadFixes()
 {
     string fixPath = getFlightConnector()->getConfig().xplanePath + "/Custom Data/earth_fix.dat";
 
@@ -61,13 +41,13 @@ void XPlaneNavDataSource::loadFixes(const shared_ptr<NavAids>& navData)
     fixData->readLine();
     string headerStr = fixData->readLine();
 
-    auto header = loadHeader(headerStr);
+    auto header = NavDataUtils::parseHeader(headerStr);
     if (header.version != 1200)
     {
         log(ERROR, "Unsupported version of earth_fix: version=%d", header.version);
-        return;
+        return false;
     }
-    navData->setHeader(header);
+    setHeader(header);
 
     while (!fixData->eof())
     {
@@ -93,11 +73,12 @@ void XPlaneNavDataSource::loadFixes(const shared_ptr<NavAids>& navData)
         navAid->setLocation(Coordinate(lat, lng));
         navAid->setId(id);
         navAid->setType(NavAidType::FIX);
-        navData->addNavAid(navAid);
+        addNavAid(navAid);
     }
+    return true;
 }
 
-void XPlaneNavDataSource::loadNavAidData(const std::shared_ptr<NavAids>& navData)
+bool XPlaneNavAids::loadNavAidData()
 {
     string fixPath = getFlightConnector()->getConfig().xplanePath + "/Custom Data/earth_nav.dat";
 
@@ -106,13 +87,13 @@ void XPlaneNavDataSource::loadNavAidData(const std::shared_ptr<NavAids>& navData
     fixData->readLine();
     string headerStr = fixData->readLine();
 
-    auto header = loadHeader(headerStr);
+    auto header = NavDataUtils::parseHeader(headerStr);
     if (header.version != 1200)
     {
         log(ERROR, "Unsupported version of earth_nav: version=%d", header.version);
-        return;
+        return false;
     }
-    navData->setHeader(header);
+    setHeader(header);
 
     while (!fixData->eof())
     {
@@ -157,130 +138,9 @@ void XPlaneNavDataSource::loadNavAidData(const std::shared_ptr<NavAids>& navData
         navAid->setType(navAidType);
         navAid->setElevation(elevation);
         navAid->setFrequency(frequency);
-        navData->addNavAid(navAid);
+        addNavAid(navAid);
     }
+
+    return true;
 }
 
-vector<wstring> NavDataUtils::splitLine(wstring line)
-{
-    vector<wstring> parts;
-
-    while (!line.empty())
-    {
-        auto pos = line.find(' ');
-        if (pos == string::npos)
-        {
-            pos = line.find('\t');
-        }
-        if (pos == string::npos)
-        {
-            pos = line.length();
-            if (pos == 0)
-            {
-                break;
-            }
-        }
-        if (pos >= 1)
-        {
-            wstring part = line.substr(0, pos);
-            parts.push_back(part);
-        }
-        if (pos == line.length())
-        {
-            break;
-        }
-        line = line.substr(pos + 1);
-    }
-
-    return parts;
-}
-
-vector<string> NavDataUtils::splitLine(string line)
-{
-    vector<string> parts;
-
-    while (!line.empty())
-    {
-        auto pos = line.find(' ');
-        if (pos == string::npos)
-        {
-            pos = line.find('\t');
-        }
-        if (pos == string::npos)
-        {
-            pos = line.length();
-            if (pos == 0)
-            {
-                break;
-            }
-        }
-        if (pos >= 1)
-        {
-            string part = line.substr(0, pos);
-            parts.push_back(part);
-        }
-        if (pos == line.length())
-        {
-            break;
-        }
-        line = line.substr(pos + 1);
-    }
-
-    return parts;
-}
-
-std::wstring NavDataUtils::joinToEnd(vector<wstring> parts, int startPos)
-{
-    std::wstring result;
-    for (unsigned int i = startPos; i < parts.size(); i++)
-    {
-        if (!result.empty())
-        {
-            result += L" ";
-        }
-        result += parts.at(i);
-    }
-    return result;
-}
-
-std::string NavDataUtils::joinToEnd(vector<string> parts, int startPos)
-{
-    std::string result;
-    for (unsigned int i = startPos; i < parts.size(); i++)
-    {
-        if (!result.empty())
-        {
-            result += " ";
-        }
-        result += parts.at(i);
-    }
-    return result;
-}
-
-wstring NavDataUtils::readLine(FILE* fd)
-{
-    char lineBuffer[2048];
-    char const* res = fgets(lineBuffer, 2048, fd);
-    if (res == nullptr)
-    {
-        return L"";
-    }
-
-    auto len = (int)strnlen(lineBuffer, 2048);
-    if (len == 0)
-    {
-        return L"";
-    }
-    while (len > 0 && (lineBuffer[len-1] == '\r' || lineBuffer[len-1] == '\n'))
-    {
-        lineBuffer[len - 1] = 0;
-        len--;
-    }
-
-    if (len <= 0)
-    {
-        return L"";
-    }
-
-    return UFC::utf82wstring(lineBuffer);
-}

@@ -113,24 +113,19 @@ class Airport : public Locationable
 
 class Airports : public NavData
 {
- private:
     std::shared_ptr<QuadTree<Airport>> m_airports;
     std::vector<std::shared_ptr<Airport>> m_airportList;
     std::map<std::string, std::shared_ptr<Airport>, std::less<>> m_airportsByCode;
 
- public:
-    Airports();
-    ~Airports();
-
+ protected:
     void addAirport(std::shared_ptr<Airport> airport);
 
-    void dump()
-    {
-        //printf("Airports: Loaded %lu airports\n", m_airportList.size());
-        //m_airports->dump();
-    }
 
-    [[nodiscard]] std::shared_ptr<Airport> findNearest(Coordinate point) const
+ public:
+    Airports(NavDataSource* navDataSource, std::string const& name);
+    virtual ~Airports();
+
+    virtual std::shared_ptr<Airport> findNearest(Coordinate point) const
     {
         return m_airports->findNearest(point, [](const std::shared_ptr<Airport>& airport)
         {
@@ -138,7 +133,7 @@ class Airports : public NavData
         });
     }
 
-    std::shared_ptr<Airport> findByCode(const std::string& code);
+    virtual std::shared_ptr<Airport> findByCode(const std::string& code);
 };
 
 }

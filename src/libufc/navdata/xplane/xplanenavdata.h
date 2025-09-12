@@ -10,20 +10,42 @@
 
 namespace UFC
 {
+class XPlaneAirports;
+class XPlaneNavAids;
+
 class XPlaneNavDataSource : public NavDataSource
 {
-
-    NavDataHeader loadHeader(std::string headerStr);
-    void loadFixes(const std::shared_ptr<NavAids> &navData);
-    void loadNavAidData(const std::shared_ptr<NavAids>& shared);
+    std::shared_ptr<XPlaneAirports> m_airports;
+    std::shared_ptr<XPlaneNavAids> m_navAids;
 
 public:
     explicit XPlaneNavDataSource(FlightConnector* flightConnector);
 
-    std::shared_ptr<Airports> loadAirports() override;
-    std::shared_ptr<NavAids> loadNavAids() override;
+    std::shared_ptr<Airports> getAirports() override;
+    std::shared_ptr<NavAids> getNavAids() override;
 
 };
+
+class XPlaneAirports: public Airports
+{
+
+ public:
+    explicit XPlaneAirports(XPlaneNavDataSource* navDataSource) : Airports(navDataSource, "XPlane") {}
+
+    bool init();
+};
+
+class XPlaneNavAids : public NavAids
+{
+    bool loadFixes();
+    bool loadNavAidData();
+
+public:
+    XPlaneNavAids(XPlaneNavDataSource* navDataSource) : NavAids(navDataSource, "XPlane") {}
+
+    bool init();
+};
+
 }
 
 #endif //UNIVERSALFLIGHTCONNECTOR_XPLANENAVDATA_H

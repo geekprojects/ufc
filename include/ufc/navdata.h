@@ -14,6 +14,24 @@ namespace UFC
 {
 class FlightConnector;
 class Airports;
+class NavAids;
+
+class NavDataSource : public Logger
+{
+    FlightConnector* m_flightConnector;
+
+public:
+    explicit NavDataSource(FlightConnector* flightConnector, std::string name) : Logger(name), m_flightConnector(flightConnector)
+    {
+    }
+
+    virtual ~NavDataSource() = default;
+
+    FlightConnector* getFlightConnector() { return m_flightConnector; }
+
+    virtual std::shared_ptr<Airports> getAirports() { return nullptr; }
+    virtual std::shared_ptr<NavAids> getNavAids() { return nullptr; }
+};
 
 struct NavDataHeader
 {
@@ -24,12 +42,19 @@ struct NavDataHeader
     std::string copyright;
 };
 
-class NavData
+class NavData : public Logger
 {
  protected:
-    NavDataHeader m_header;
+    NavDataSource* m_navDataSource;
+    NavDataHeader m_header = {};
 
+    [[nodiscard]] FlightConnector* getFlightConnector() const { return m_navDataSource->getFlightConnector(); }
  public:
+    explicit NavData(NavDataSource* navdataSource, std::string const& name) :
+        Logger("NavData[" + name + "]"),
+        m_navDataSource(navdataSource)
+    {}
+
     void setHeader(const NavDataHeader& header) { m_header = header; }
     [[nodiscard]] int getCycle() const { return m_header.cycle; }
 };
@@ -105,13 +130,7 @@ class NavAids : public NavData
     std::shared_ptr<QuadTree<NavAid>> m_navAids;
     std::map<std::string, std::vector<std::shared_ptr<NavAid>>> m_navAidsById;
 
- public:
-    NavAids()
-    {
-        m_navAids = std::make_shared<QuadTree<NavAid>>(-180.0f, -180.0f, 360.0f);
-    }
-    ~NavAids() = default;
-
+ protected:
     void addNavAid(std::shared_ptr<NavAid> navaid)
     {
         m_navAids->insert(navaid);
@@ -129,13 +148,15 @@ class NavAids : public NavData
         }
     }
 
-    void dump()
+ public:
+    explicit NavAids(NavDataSource* navDataSource, std::string const& name) : NavData(navDataSource, name)
     {
-        //printf("Airports: Loaded %lu airports\n", m_airportList.size());
-        //m_airports->dump();
+        m_navAids = std::make_shared<QuadTree<NavAid>>(-180.0f, -180.0f, 360.0f);
     }
 
-    [[nodiscard]] std::shared_ptr<NavAid> findNearest(const Coordinate point) const
+    ~NavAids() override = default;
+
+    [[nodiscard]] virtual std::shared_ptr<NavAid> findNearest(const Coordinate point) const
     {
         return m_navAids->findNearest(point, [](const std::shared_ptr<NavAid>&)
         {
@@ -143,7 +164,7 @@ class NavAids : public NavData
         });
     }
 
-    [[nodiscard]] std::vector<std::shared_ptr<NavAid>> findById(const std::string& id) const
+    [[nodiscard]] virtual std::vector<std::shared_ptr<NavAid>> findById(const std::string& id) const
     {
         auto it = m_navAidsById.find(id);
         if (it != m_navAidsById.end())
@@ -154,22 +175,6 @@ class NavAids : public NavData
     }
 };
 
-class NavDataSource : public Logger
-{
-    FlightConnector* m_flightConnector;
-
- public:
-    explicit NavDataSource(FlightConnector* flightConnector, std::string name) : Logger(name), m_flightConnector(flightConnector)
-    {
-    }
-
-    virtual ~NavDataSource() = default;
-
-    FlightConnector* getFlightConnector() { return m_flightConnector; }
-
-    virtual std::shared_ptr<Airports> loadAirports() { return nullptr; }
-    virtual std::shared_ptr<NavAids> loadNavAids() { return nullptr; }
-};
 
 };
 
