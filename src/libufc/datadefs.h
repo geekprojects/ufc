@@ -9,9 +9,12 @@
 
 namespace UFC
 {
+
+#define DATA_REF(_name, _type, _field) { _name, _type, offsetof(AircraftState, _field)}
+
 static const std::vector<DataDefinition> g_dataRefsInit =
 {
-    {DATA_AIRCRAFT_INDICATEDAIRSPEED, FLOAT, offsetof(AircraftState, indicatedAirspeed)},
+    DATA_REF(DATA_AIRCRAFT_INDICATEDAIRSPEED, FLOAT, indicatedAirspeed),
     {DATA_AIRCRAFT_PITCH, FLOAT, offsetof(AircraftState, pitch) },
     {DATA_AIRCRAFT_ROLL, FLOAT, offsetof(AircraftState, roll)},
     {DATA_AIRCRAFT_ALTITUDE, FLOAT, offsetof(AircraftState, altitude)},
@@ -61,6 +64,14 @@ static const std::vector<DataDefinition> g_dataRefsInit =
     {DATA_AUTOPILOT_AP2MODE, BOOLEAN, offsetof(AircraftState, autopilot.ap2Mode)},
     {DATA_AUTOPILOT_AUTOTHROTTLEMODE, BOOLEAN, offsetof(AircraftState, autopilot.autoThrottleMode)},
     {DATA_AUTOPILOT_APPROACHMODE, BOOLEAN, offsetof(AircraftState, autopilot.approachMode)},
+
+{DATA_APU_MASTER_ON, BOOLEAN, offsetof(AircraftState, apu.masterOn)},
+{DATA_APU_STARTER_ON, BOOLEAN, offsetof(AircraftState, apu.starterOn)},
+
+    {DATA_LIGHTS_LANDING_LEFT_ON, BOOLEAN, offsetof(AircraftState, lights.landingLeftOn)},
+    {DATA_LIGHTS_LANDING_RIGHT_ON, BOOLEAN, offsetof(AircraftState, lights.landingLeftOn)},
+    {DATA_LIGHTS_LANDING_LEFT_EXTENDED, BOOLEAN, offsetof(AircraftState, lights.landingLeftOn)},
+    {DATA_LIGHTS_LANDING_RIGHT_EXTENDED, BOOLEAN, offsetof(AircraftState, lights.landingLeftOn)},
 
     {DATA_CABIN_CALL, BOOLEAN, offsetof(AircraftState, cabin.call)},
     {DATA_CABIN_SEATBELTSIGN, BOOLEAN, offsetof(AircraftState, cabin.seatBeltSign)},

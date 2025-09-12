@@ -7,6 +7,7 @@
 
 #include <string>
 #include <cstdint>
+#include <map>
 
 #define DATA_AIRCRAFT_INDICATEDAIRSPEED "aircraft/indicatedAirspeed"
 #define DATA_AIRCRAFT_PITCH "aircraft/pitch"
@@ -59,6 +60,14 @@
 #define DATA_AUTOPILOT_AUTOTHROTTLEMODE "autopilot/autoThrottleMode"
 #define DATA_AUTOPILOT_APPROACHMODE "autopilot/approachMode"
 
+#define DATA_APU_MASTER_ON "apu/master/on"
+#define DATA_APU_STARTER_ON "apu/starter/on"
+
+#define DATA_LIGHTS_LANDING_LEFT_ON "lights/landing/left/on"
+#define DATA_LIGHTS_LANDING_RIGHT_ON "lights/landing/right/on"
+#define DATA_LIGHTS_LANDING_LEFT_EXTENDED "lights/landing/left/extended"
+#define DATA_LIGHTS_LANDING_RIGHT_EXTENDED "lights/landing/right/extended"
+
 #define DATA_CABIN_CALL "cabin/call"
 #define DATA_CABIN_SEATBELTSIGN "cabin/seatBeltSign"
 #define DATA_CABIN_NOSMOKINGSIGN "cabin/noSmokingSign"
@@ -107,6 +116,12 @@ struct AutopilotState
     int approachMode = 0;
 };
 
+struct APUState
+{
+    bool masterOn = false;
+    bool starterOn = false;
+};
+
 struct CommunicationState
 {
     uint32_t com1Hz = 0;
@@ -124,6 +139,14 @@ struct FlightDirectorState
     int mode = 0;
     float pitch = 0.0f;
     float roll = 0.0f;
+};
+
+struct LightsState
+{
+    bool landingLeftOn = false;
+    bool landingRightOn = false;
+    bool landingLeftExtended = false;
+    bool landingRightExtended = false;
 };
 
 struct CabinState
@@ -180,10 +203,14 @@ struct AircraftState
     CommunicationState comms;
     FlightDirectorState flightDirector;
     AutopilotState autopilot;
+    APUState apu;
     InstrumentState instrument;
+    LightsState lights;
     CabinState cabin;
     WeightState weight;
     FlightPlanState flightPlan;
+
+    std::vector<std::pair<std::string, std::string>> customValues;
 
     int getInt(std::string dataName) const;
 };

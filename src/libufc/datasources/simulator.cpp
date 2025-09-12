@@ -57,6 +57,7 @@ bool SimulatorDataSource::update()
 
     state.autopilot = m_autopilot;
     state.comms = m_communication;
+    state.apu = m_apu;
 
     m_flightConnector->updateState(state);
 
@@ -101,6 +102,7 @@ bool SimulatorDataSource::update()
         state.magHeading += 0.2f;
         state.autopilot = m_autopilot;
         state.comms = m_communication;
+        state.apu = m_apu;
         state.verticalSpeed = state.pitch * 400.0f;
         m_flightConnector->updateState(state);
         usleep(50000);
@@ -215,6 +217,14 @@ void SimulatorDataSource::command(const std::string& command)
         uint32_t tmp = m_communication.com1Hz;
         m_communication.com1Hz = m_communication.com1StandbyHz;
         m_communication.com1StandbyHz = tmp;
+    }
+    else if (command == APU_MASTER_TOGGLE)
+    {
+        m_apu.masterOn = !m_apu.masterOn;
+    }
+    else if (command == APU_STARTER_TOGGLE)
+    {
+        m_apu.starterOn = !m_apu.starterOn;
     }
     else
     {

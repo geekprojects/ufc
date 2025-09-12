@@ -44,6 +44,9 @@ const std::string COMMS_COM1_STANDBY_UP_FINE = "comms/com1/standby/fine/up";
 const std::string COMMS_COM1_STANDBY_DOWN_FINE = "comms/com1/standby/fine/down";
 const std::string COMMS_COM1_SWAP = "comms/com1/swap";
 
+const std::string APU_MASTER_TOGGLE = "apu/master/toggle";
+const std::string APU_STARTER_TOGGLE = "apu/starter/toggle";
+
 }
 
 #endif //COMMANDS_H

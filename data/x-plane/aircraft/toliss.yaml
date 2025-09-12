@@ -31,10 +31,34 @@ data:
     v2: # No default
     vfeNext: AirbusFBW/VFENext
 
+  apu:
+    master:
+      on: AirbusFBW/APUMaster
+    starter:
+      on: AirbusFBW/APUStarter
+
+  lights:
+    landing:
+      left:
+        on:
+          dataRef: AirbusFBW/OHPLightSwitches[4]
+          lua: value = value == 2
+        extended:
+          dataRef: AirbusFBW/OHPLightSwitches[4]
+          lua: value = value > 0
+      right:
+        on:
+          dataRef: AirbusFBW/OHPLightSwitches[5]
+          lua: value = value == 2
+        extended:
+          dataRef: AirbusFBW/OHPLightSwitches[5]
+          lua: value = value > 0
+
   cabin:
     call: AirbusFBW/fmod/env/cabinChime
     seatBeltSign: AirbusFBW/SeatBeltSignsOn
     noSmokingSign: AirbusFBW/NoSmokingSignsOn
+
   weight:
     passengerCount: AirbusFBW/NoPax
     passengerDistribution: AirbusFBW/PaxDistrib
@@ -71,8 +95,250 @@ commands:
        manage: toliss_airbus/vs_push
        guidance: AirbusFBW/PullVSSel
   cabin:
-    chime: AirbusFBW/CheckCabin
+    chime: AirbusFBW/purser/all
   weight:
     calculateCG: AirbusFBW/SetWeightAndCG
-    
+  lights:
+    landing: # life would be much easier if there were on/extend/off commands!
+      left:
+        on: |
+          lua:
+            lights = data['AirbusFBW/OHPLightSwitches[4]']
+            if lights < 2 then
+              command('toliss_airbus/lightcommands/LLandLightUp')
+            end
+            if lights == 0 then
+              command('toliss_airbus/lightcommands/LLandLightUp')
+            end
+        extend: |
+          lua:
+            lights = data['AirbusFBW/OHPLightSwitches[4]']
+            if lights == 0 then
+              command('toliss_airbus/lightcommands/LLandLightUp')
+            end
+            if lights == 2 then
+              command('toliss_airbus/lightcommands/LLandLightDown')
+            end
+              
+        off: |
+          lua:
+            lights = data['AirbusFBW/OHPLightSwitches[4]']
+            if lights > 0 then
+              command('toliss_airbus/lightcommands/LLandLightDown')
+            end
+            if lights > 1 then
+              command('toliss_airbus/lightcommands/LLandLightDown')
+            end
+      right:
+        on: |
+          lua:
+            lights = data['AirbusFBW/OHPLightSwitches[5]']
+            if lights < 2 then
+              command('toliss_airbus/lightcommands/RLandLightUp')
+            end
+            if lights == 0 then
+              command('toliss_airbus/lightcommands/RLandLightUp')
+            end
+        extend: |
+          lua:
+            lights = data['AirbusFBW/OHPLightSwitches[5]']
+            if lights == 0 then
+              command('toliss_airbus/lightcommands/RLandLightUp')
+            end
+            if lights == 2 then
+              command('toliss_airbus/lightcommands/RLandLightDown')
+            end
+              
+        off: |
+          lua:
+            lights = data['AirbusFBW/OHPLightSwitches[5]']
+            if lights > 0 then
+              command('toliss_airbus/lightcommands/RLandLightDown')
+            end
+            if lights > 1 then
+              command('toliss_airbus/lightcommands/RLandLightDown')
+            end
+    strobe: # life would be much easier if there were on/auto/off commands!
+      on: |
+        lua:
+          lights = data['AirbusFBW/OHPLightSwitches[7]']
+          if lights < 2 then
+            command('toliss_airbus/lightcommands/StrobeLightUp')
+          end
+          if lights == 0 then
+            command('toliss_airbus/lightcommands/StrobeLightUp')
+          end
+      auto: |
+        lua:
+          lights = data['AirbusFBW/OHPLightSwitches[7]']
+          if lights == 0 then
+            command('toliss_airbus/lightcommands/StrobeLightUp')
+          end
+          if lights == 2 then
+            command('toliss_airbus/lightcommands/StrobeLightDown')
+          end
+      off: |
+        lua:
+          lights = data['AirbusFBW/OHPLightSwitches[7]']
+          if lights > 0 then
+            command('toliss_airbus/lightcommands/StrobeLightDown')
+          end
+          if lights > 1 then
+            command('toliss_airbus/lightcommands/StrobeLightDown')
+          end
+
+    nav: # life would be much easier if there were on/auto/off commands!
+      2: |
+        lua:
+          lights = data['AirbusFBW/OHPLightSwitches[2]']
+          if lights < 2 then
+            command('toliss_airbus/lightcommands/NavLightUp')
+          end
+          if lights == 0 then
+            command('toliss_airbus/lightcommands/NavLightUp')
+          end
+      1: |
+        lua:
+          lights = data['AirbusFBW/OHPLightSwitches[2]']
+          if lights == 0 then
+            command('toliss_airbus/lightcommands/NavLightUp')
+          end
+          if lights == 2 then
+            command('toliss_airbus/lightcommands/NavLightDown')
+          end
+      off: |
+        lua:
+          lights = data['AirbusFBW/OHPLightSwitches[2]']
+          if lights > 0 then
+            command('toliss_airbus/lightcommands/NavLightDown')
+          end
+          if lights > 1 then
+            command('toliss_airbus/lightcommands/NavLightDown')
+          end
+
+
+ 
+    beacon:
+      on: toliss_airbus/lightcommands/BeaconOn
+      off: toliss_airbus/lightcommands/BeaconOff
+    wing:
+      on: toliss_airbus/lightcommands/WingLightOn
+      off: toliss_airbus/lightcommands/WingLightOff
+    noSmoking:
+      on: toliss_airbus/lightcommands/FSBSignOn
+      off: toliss_airbus/lightcommands/FSBSignOff
+    runwayturnoff:
+      on: toliss_airbus/lightcommands/TurnoffLightOn
+      off: toliss_airbus/lightcommands/TurnoffLightOff
+
+  adirs:
+    1:
+      off: |
+        lua:
+          adirs = data['AirbusFBW/ADIRUSwitchArray[0]']
+          if adirs > 0 then
+            command('toliss_airbus/adirucommands/ADIRU1SwitchDown')
+          end
+          if adirs > 1 then
+            command('toliss_airbus/adirucommands/ADIRU1SwitchDown')
+          end
+      nav: |
+        lua:
+          adirs = data['AirbusFBW/ADIRUSwitchArray[0]']
+          if adirs == 0 then
+            command('toliss_airbus/adirucommands/ADIRU1SwitchUp')
+          end
+          if adirs == 2 then
+            command('toliss_airbus/adirucommands/ADIRU1SwitchDown')
+          end
+      att: |
+        lua:
+          adirs = data['AirbusFBW/ADIRUSwitchArray[0]']
+          if adirs < 2 then
+            command('toliss_airbus/adirucommands/ADIRU1SwitchUp')
+          end
+          if adirs < 1 then
+            command('toliss_airbus/adirucommands/ADIRU1SwitchUp')
+          end
+    2:
+      off: |
+        lua:
+          adirs = data['AirbusFBW/ADIRUSwitchArray[1]']
+          if adirs > 0 then
+            command('toliss_airbus/adirucommands/ADIRU2SwitchDown')
+          end
+          if adirs > 1 then
+            command('toliss_airbus/adirucommands/ADIRU2SwitchDown')
+          end
+      nav: |
+        lua:
+          adirs = data['AirbusFBW/ADIRUSwitchArray[1]']
+          if adirs == 0 then
+            command('toliss_airbus/adirucommands/ADIRU2SwitchUp')
+          end
+          if adirs == 2 then
+            command('toliss_airbus/adirucommands/ADIRU2SwitchDown')
+          end
+      att: |
+        lua:
+          adirs = data['AirbusFBW/ADIRUSwitchArray[1]']
+          if adirs < 2 then
+            command('toliss_airbus/adirucommands/ADIRU2SwitchUp')
+          end
+          if adirs < 1 then
+            command('toliss_airbus/adirucommands/ADIRU2SwitchUp')
+          end
+    3:
+      off: |
+        lua:
+          adirs = data['AirbusFBW/ADIRUSwitchArray[2]']
+          if adirs > 0 then
+            command('toliss_airbus/adirucommands/ADIRU3SwitchDown')
+          end
+          if adirs > 1 then
+            command('toliss_airbus/adirucommands/ADIRU3SwitchDown')
+          end
+      nav: |
+        lua:
+          adirs = data['AirbusFBW/ADIRUSwitchArray[2]']
+          if adirs == 0 then
+            command('toliss_airbus/adirucommands/ADIRU3SwitchUp')
+          end
+          if adirs == 2 then
+            command('toliss_airbus/adirucommands/ADIRU3SwitchDown')
+          end
+      att: |
+        lua:
+          adirs = data['AirbusFBW/ADIRUSwitchArray[2]']
+          if adirs < 2 then
+            command('toliss_airbus/adirucommands/ADIRU3SwitchUp')
+          end
+          if adirs < 1 then
+            command('toliss_airbus/adirucommands/ADIRU3SwitchUp')
+          end
+
+  apu:
+    master:
+      toggle: toliss_airbus/apucommands/MasterToggle
+    starter:
+      toggle: toliss_airbus/apucommands/StarterToggle
+    bleed:
+      toggle: toliss_airbus/apucommands/BleedToggle
+
+  elec:
+    battery:
+      1:
+        toggle: toliss_airbus/eleccommands/Bat1Toggle
+      2:
+        toggle: toliss_airbus/eleccommands/Bat2Toggle
+    external:
+      toggle: toliss_airbus/eleccommands/ExtPowToggle
+
+  aircond:
+    pack:
+      1:
+        toggle: toliss_airbus/aircondcommands/Pack1Toggle
+      2:
+        toggle: toliss_airbus/aircondcommands/Pack2Toggle
+
 

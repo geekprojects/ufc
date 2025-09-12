@@ -14,6 +14,7 @@ class SimulatorDataSource : public DataSource
 {
     AutopilotState m_autopilot;
     CommunicationState m_communication;
+    APUState m_apu;
 
  public:
     explicit SimulatorDataSource(FlightConnector* flightConnector);
