@@ -54,16 +54,16 @@ glob(const vector<string>& patterns)
 
     glob_t glob_results;
 
-    int glob_retval = glob(patterns[0].c_str(), 0, NULL, &glob_results);
+    glob(patterns[0].c_str(), 0, NULL, &glob_results);
 
     vector<string>::const_iterator iter = patterns.begin();
 
     while(++iter != patterns.end())
     {
-        glob_retval = glob(iter->c_str(), GLOB_APPEND, NULL, &glob_results);
+        glob(iter->c_str(), GLOB_APPEND, NULL, &glob_results);
     }
 
-    for(int path_index = 0; path_index < glob_results.gl_pathc; path_index++)
+    for(size_t path_index = 0; path_index < glob_results.gl_pathc; path_index++)
     {
         paths_found.push_back(glob_results.gl_pathv[path_index]);
     }
@@ -220,7 +220,7 @@ format(const char* format, ...)
 {
     va_list ap;
 
-    size_t buffer_size_bytes = 256;
+    int buffer_size_bytes = 256;
 
     string result;
 
