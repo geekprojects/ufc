@@ -11,16 +11,26 @@ namespace UFC
 {
 class FlightConnector;
 
-class UFCMetaObject : public LuaCpp::LuaMetaObject
+class UFCDataMetaObject : public LuaCpp::LuaMetaObject
 {
     UFC::FlightConnector* m_flightConnector;
 
 public:
-    UFCMetaObject(UFC::FlightConnector* flightConnector) : m_flightConnector(flightConnector) {}
+    UFCDataMetaObject(UFC::FlightConnector* flightConnector) : m_flightConnector(flightConnector) {}
 
     bool Exists(const std::string &name);
     std::shared_ptr<LuaType> getValue(std::string &name);
     void setValue(std::string &name, std::shared_ptr<LuaType> val);
+};
+
+class UFCCommandMetaObject : public LuaCpp::LuaMetaObject
+{
+    UFC::FlightConnector* m_flightConnector;
+
+public:
+    UFCCommandMetaObject(UFC::FlightConnector* flightConnector) : m_flightConnector(flightConnector) {}
+
+    int Execute(LuaCpp::Engine::LuaState &L) override;
 };
 
 class UFCLua
@@ -29,7 +39,8 @@ class UFCLua
     UFC::FlightConnector* m_flightConnector;
 
     LuaCpp::LuaContext m_lua;
-    std::shared_ptr<UFCMetaObject> m_ufcMetaObject;
+    std::shared_ptr<UFCDataMetaObject> m_ufcDataMetaObject;
+    std::shared_ptr<UFCCommandMetaObject> m_ufcCommandMetaObject;
     std::shared_ptr<LuaCpp::Engine::LuaTTable> m_stateTable;
 
  public:
