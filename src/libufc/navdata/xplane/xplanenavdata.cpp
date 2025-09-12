@@ -8,6 +8,7 @@
 #include <ufc/utils.h>
 
 #include <regex>
+#include <cstring>
 
 using namespace std;
 using namespace UFC;
