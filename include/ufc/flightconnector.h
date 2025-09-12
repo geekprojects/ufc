@@ -31,6 +31,7 @@ class DataSource;
 class Device;
 class Airports;
 class USBHIDConfigManager;
+class SerialConfigManager;
 
 struct Config
 {
@@ -49,6 +50,8 @@ struct Config
      */
     std::string dataSource;
 
+    std::string navDataSource;
+
     // X-Plane specific
     std::string xplanePath;
     std::string xplaneHost;
@@ -56,6 +59,9 @@ struct Config
 
     // Arduino specific
     std::string arduinoDevice;
+
+    // Little Nav Map Nav Data
+    std::string littleNavMapPath;
 
     void dump() const
     {
@@ -74,10 +80,12 @@ class FlightConnector final : public Logger
  private:
     Config m_config;
     std::shared_ptr<DataSource> m_dataSource;
-    std::vector<Device*> m_devices;
-    std::shared_ptr<USBHIDConfigManager> m_usbhidConfigManager;
 
-    std::shared_ptr<Airports> m_airports;
+    std::vector<std::shared_ptr<Device>> m_devices;
+    std::shared_ptr<USBHIDConfigManager> m_usbhidConfigManager;
+    std::shared_ptr<SerialConfigManager> m_serialConfigManager;
+
+    std::shared_ptr<NavDataSource> m_navDataSource;
 
     std::mutex m_stateMutex;
     AircraftState m_state;
@@ -203,7 +211,7 @@ class FlightConnector final : public Logger
      */
     static void exit();
 
-    void addDevice(Device* device)
+    void addDevice(std::shared_ptr<Device> device)
     {
         m_devices.push_back(device);
     }
@@ -216,7 +224,7 @@ class FlightConnector final : public Logger
     /**
      * @return All currently discovered and initialised Devices.
      */
-    const std::vector<Device*>& getDevices() { return m_devices; }
+    const std::vector<std::shared_ptr<Device>>& getDevices() { return m_devices; }
 
     /**
      * Disables the exit handling that is usually set by the FlightConnector.
@@ -243,6 +251,8 @@ class FlightConnector final : public Logger
         const std::thread::id thread_id = std::this_thread::get_id();
         return m_threads.contains(thread_id);
     }
+
+    std::shared_ptr<NavDataSource> getNavDataSource();
 };
 
 }

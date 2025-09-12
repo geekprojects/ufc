@@ -6,12 +6,14 @@
 #include <csignal>
 #include <unistd.h>
 #include <ufc/flightconnector.h>
-#include <ufc/usbhidconfig.h>
 #include <ufc/device.h>
 
 #include "datasources/simulator.h"
 #include "datasources/xplane/xplane.h"
 #include "lua.h"
+#include "devices/usbhidconfig/usbhidconfig.h"
+#include "devices/serial/serial.h"
+#include "navdata/xplane/xplanenavdata.h"
 
 using namespace std;
 using namespace UFC;
@@ -65,7 +67,7 @@ bool FlightConnector::initDevices()
     DeviceRegistry* deviceRegistry = DeviceRegistry::getDeviceRegistry();
     for (const auto& dev : deviceRegistry->getDevices())
     {
-        Device* device = dev.second->create(this);
+        auto device = dev.second->create(this);
         if (device->detect())
         {
             log(INFO, "init: Detected device: %s", dev.first.c_str());
@@ -73,19 +75,14 @@ bool FlightConnector::initDevices()
             {
                 m_devices.push_back(device);
             }
-            else
-            {
-                delete device;
-            }
-        }
-        else
-        {
-            delete device;
         }
     }
 
     m_usbhidConfigManager = make_shared<USBHIDConfigManager>(this);
     m_usbhidConfigManager->scan();
+
+    m_serialConfigManager = make_shared<SerialConfigManager>(this);
+    m_serialConfigManager->scan();
 
     return true;
 }
@@ -137,7 +134,7 @@ void FlightConnector::start()
 
 void FlightConnector::stop()
 {
-    for (Device* device : m_devices)
+    for (auto device : m_devices)
     {
         device->close();
     }
@@ -201,13 +198,18 @@ void FlightConnector::updateDevices()
     }
 }
 
+std::shared_ptr<NavDataSource> FlightConnector::getNavDataSource()
+{
+    return make_shared<XPlaneNavDataSource>(this);
+}
+
 void FlightConnector::updateDeviceMain()
 {
     registerThread();
     while (m_running)
     {
         updateDevices();
-        usleep(1000000 / 50);
+        usleep(1000000ULL / 10ULL);
     }
     unregisterThread();
 }

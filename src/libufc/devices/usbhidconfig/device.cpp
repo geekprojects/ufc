@@ -1,4 +1,3 @@
-#include <ufc/usbhidconfig.h>
 
 #include <ufc/bitbuffer.h>
 #include <ufc/flightconnector.h>
@@ -6,6 +5,7 @@
 #include <hidapi.h>
 #include <yaml-cpp/yaml.h>
 
+#include "usbhidconfig.h"
 #include "lcd.h"
 
 using namespace std;

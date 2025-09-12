@@ -7,12 +7,18 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(yamlcpp REQUIRED yaml-cpp)
 pkg_check_modules(lua REQUIRED lua)
 
+find_library(SQLITE3_LIBRARY NAMES sqlite3 )
+
 if(UNIX AND NOT APPLE)
-pkg_check_modules(hidapi REQUIRED hidapi-libusb)
+    pkg_check_modules(hidapi REQUIRED hidapi-libusb)
+    set(OS_LIBS )
 elseif(UNIX AND APPLE)
-pkg_check_modules(hidapi REQUIRED hidapi)
+    pkg_check_modules(hidapi REQUIRED hidapi)
+    find_library(IOKIT_LIBRARY IOKit)
+    find_library(FOUNDATION_LIBRARY Foundation)
+    set(OS_LIBS ${IOKIT_LIBRARY} ${FOUNDATION_LIBRARY})
 else()
-message(FATAL_ERROR "Unsupported platform")
+    message(FATAL_ERROR "Unsupported platform")
 endif()
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -72,12 +78,26 @@ add_library(ufc SHARED
         include/ufc/bitbuffer.h
         src/libufc/utils/bitbuffer.cpp
         src/libufc/devices/usbhidconfig/device.cpp
-        include/ufc/usbhidconfig.h
+        src/libufc/devices/usbhidconfig/usbhidconfig.h
         src/libufc/aircraftstate.cpp
         src/libufc/devices/usbhidconfig/lcd.h
         src/libufc/devices/usbhidconfig/manager.cpp
         src/libufc/navdata/xplane/xplanenavdata.cpp
         src/libufc/navdata/xplane/xplanenavdata.h
+        src/libufc/navdata/littlenavmap/lnmnavdata.cpp
+        src/libufc/navdata/littlenavmap/lnmnavdata.h
+        src/libufc/devices/serial/serialmanager.cpp
+        src/libufc/devices/serial/serial.h
+        src/libufc/devices/serial/lib/list_ports_linux.cpp
+        src/libufc/devices/serial/lib/list_ports_osx.cpp
+        src/libufc/devices/serial/lib/list_ports_win.cpp
+        src/libufc/devices/serial/lib/serial_unix.cpp
+        src/libufc/devices/serial/lib/serial_win.cpp
+        src/libufc/devices/serial/lib/serial.cpp
+        src/libufc/devices/serial/device.cpp
+        src/libufc/utils/database.cpp
+        src/libufc/devices/serial/serialport.cpp
+        src/libufc/devices/serial/serialport.h
 )
 
 if(UNIX AND APPLE)
@@ -90,6 +110,8 @@ target_link_libraries(ufc
         ${yamlcpp_LDFLAGS}
         ${hidapi_LDFLAGS}
         ${lua_LDFLAGS}
+        ${OS_LIBS}
+        ${SQLITE3_LIBRARY}
 )
 
 if (UNIX AND APPLE AND CMAKE_BUILD_TYPE STREQUAL "Release")

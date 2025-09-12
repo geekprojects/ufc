@@ -2,7 +2,7 @@
 // Created by Ian Parker on 22/07/2025.
 //
 
-#include <ufc/usbhidconfig.h>
+#include "usbhidconfig.h"
 #include <ufc/flightconnector.h>
 
 #include <filesystem>
@@ -26,12 +26,12 @@ void USBHIDConfigManager::scan()
         return;
     }
 
-    // Try to find aircraft-specific definitions
+    // Try to find device-specific definitions
     for (const auto & entry : filesystem::directory_iterator(m_flightConnector->getDataPath() + "/usbhid"))
     {
-        log(DEBUG, "scan: Checking: %s", entry.path().filename().string().c_str());
         if (entry.path().extension() == ".yaml")
         {
+            log(DEBUG, "scan: Checking: %s", entry.path().filename().string().c_str());
             auto configFile = YAML::LoadFile(entry.path());
             USBIds id;
             if (checkDevice(configFile, id))
@@ -69,7 +69,7 @@ bool USBHIDConfigManager::checkDevice(YAML::Node node, USBIds& id)
 void USBHIDConfigManager::openDevice(const YAML::Node &node, USBIds id)
 {
     string name = node["name"].as<string>();
-    USBHIDConfigDevice* device = new USBHIDConfigDevice(
+    auto device = make_shared<USBHIDConfigDevice>(
         m_flightConnector,
         name,
         id.vendorId,

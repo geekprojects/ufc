@@ -25,7 +25,7 @@ class DeviceInit
     DeviceInit() = default;
     virtual ~DeviceInit() = default;
 
-    virtual Device* create(FlightConnector* app) { return nullptr; }
+    virtual std::shared_ptr<Device> create(FlightConnector* app) { return nullptr; }
 
     virtual std::string getName() { return ""; }
 };
@@ -59,9 +59,9 @@ class DeviceRegistry
         { \
             return #_name; \
         } \
-        _class* create(UFC::FlightConnector* app) override \
+        std::shared_ptr<Device> create(UFC::FlightConnector* app) override \
         { \
-            return new _class(app); \
+            return std::make_shared<_class>(app); \
         } \
     }; \
     _name##Init* const _name##Init::init = new _name##Init();
