@@ -1,0 +1,184 @@
+
+type: USB
+vendorId: 0x2341
+productId: 0x0042
+
+detect: "PANEL:OVERHEAD"
+
+input:
+  #- regex: "HELLO:OVERHEAD"
+    #reply: "STATE:ENABLE"
+
+  - regex: 'S:([0-9]+)=([0-9]+);'
+    id: 1
+    value: 2
+    matches:
+      - id: '1'
+        value: 1
+        command: cabin/oxygen/crew/toggle
+
+      - id: '2'
+        value: 1
+        command:
+          - aircond/pack/1/toggle
+          - aircond/pack/2/toggle
+
+      - id: '3'
+        value: 1
+        command: apu/bleed/toggle
+
+      - id: '4'
+        value: 1
+        command: fuel/pumps/toggle
+
+      - id: '5'
+        value: 1
+        command:
+          - elec/battery/1/toggle
+          - elec/battery/2/toggle
+
+      - id: '6'
+        value: 1
+        command: elec/external/toggle
+
+      - id: '7'
+        value: 1
+        command: apu/master/toggle
+
+      - id: '8'
+        value: 1
+        command: antiice/wing/toggle
+
+      - id: '9'
+        value: 1
+        command:
+          - antiice/engine/1/toggle
+          - antiice/engine/2/toggle
+
+      - id: '10'
+        value: 1
+        command: apu/starter/toggle
+
+      # Cabin call
+      - id: '11'
+        value: 1
+        command: cabin/chime
+
+      # ADIRS
+      - id: 20
+        value: 0
+        command:
+          - adirs/1/off
+          - adirs/2/off
+          - adirs/3/off
+      - id: 20
+        value: 1
+        command:
+          - adirs/1/nav
+          - adirs/2/nav
+          - adirs/3/nav
+      - id: 20
+        value: 2
+        command:
+          - adirs/1/att
+          - adirs/2/att
+          - adirs/3/att
+
+      # Strobe
+      - id: 21
+        value: 0
+        command: lights/strobe/off
+      - id: 21
+        value: 1
+        command: lights/strobe/auto
+      - id: 21
+        value: 2
+        command: lights/strobe/on
+
+      # Beacons
+      - id: '22'
+        value: 1
+        command: lights/beacon/on
+      - id: '22'
+        value: 0
+        command: lights/beacon/off
+
+      # Wing
+      - id: '23'
+        value: 1
+        command: lights/wing/on
+      - id: '23'
+        value: 0
+        command: lights/wing/off
+
+      # Navigation & Logo
+      - id: 24
+        value: 0
+        command:
+          - lights/nav/off
+      - id: 24
+        value: 1
+        command:
+          - lights/nav/1
+      - id: 24
+        value: 2
+        command:
+          - lights/nav/2
+
+      # Runway Turnoff Lights
+      - id: '25'
+        value: 1
+        command: lights/runwayturnoff/on
+      - id: '25'
+        value: 0
+        command: lights/runwayturnoff/off
+
+
+      # Landing Lights
+      - id: '26'
+        value: 0
+        command:
+          - lights/landing/left/off
+      - id: '26'
+        value: 1
+        command:
+          - lights/landing/left/extend
+      - id: '26'
+        value: 2
+        command:
+          - lights/landing/left/on
+
+      # Nose Lights
+      - id: '28'
+        value: 0
+        command: lights/taxi/off
+      - id: '28'
+        value: 1
+        command: lights/taxi/on
+      - id: '28'
+        value: 2
+        command: lights/taxi/takeoff
+
+
+      # No Smoking
+      - id: '100'
+        value: 1
+        command: lights/noSmoking/on
+      - id: '100'
+        value: 0
+        command: lights/noSmoking/off
+
+outputs:
+  - parts:
+      - string: 'L:1='
+      - data: oxygen/crew/on
+  - parts:
+      - string: 'L:3='
+      - data: apu/bleed/on
+  - parts:
+      - string: 'L:7='
+      - data: apu/master/on
+  - parts:
+      - string: 'L:10='
+      - data: apu/starter/on
+
