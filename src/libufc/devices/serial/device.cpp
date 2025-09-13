@@ -95,7 +95,7 @@ bool SerialConfigDevice::init()
             auto written = m_serial->write(initStr);
             if (written != (ssize_t)initStr.length())
             {
-                log(WARN, "init: Only written %d bytes, %d expected", written, initStr.length());
+                log(WARN, "init: Only written %lu bytes, %lu expected", written, initStr.length());
             }
         }
     }
@@ -192,7 +192,7 @@ void SerialConfigDevice::update(shared_ptr<AircraftState> state)
         size_t res = m_serial->write(line);
         if (res != line.length())
         {
-            log(WARN, "update: Only written %d bytes, %d expected", res, line.length());
+            log(WARN, "update: Only written %lu bytes, %lu expected", res, line.length());
         }
     }
     m_serial->flush();
