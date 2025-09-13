@@ -93,7 +93,7 @@ bool SerialConfigDevice::init()
             log(DEBUG, "init: Sending: %s", initStr.c_str());
             initStr += "\n";
             auto written = m_serial->write(initStr);
-            if (written != initStr.length())
+            if (written != (ssize_t)initStr.length())
             {
                 log(WARN, "init: Only written %d bytes, %d expected", written, initStr.length());
             }
