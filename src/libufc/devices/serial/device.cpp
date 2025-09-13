@@ -146,7 +146,7 @@ void SerialConfigDevice::close()
     m_serial->close();
 }
 
-void SerialConfigDevice::update(const AircraftState &state)
+void SerialConfigDevice::update(shared_ptr<AircraftState> state)
 {
     while (m_serial->available() > 0)
     {
@@ -182,7 +182,7 @@ void SerialConfigDevice::update(const AircraftState &state)
             if (step["data"])
             {
                 string dataRef = step["data"].as<string>();
-                int value = state.getInt(dataRef);
+                int value = state->getInt(dataRef);
 //                log(DEBUG, "dataRef=%s, value=%d", dataRef.c_str(), value);
                 line += to_string(value);
             }
@@ -237,7 +237,7 @@ void SerialConfigDevice::handleInput(const SerialInput& input, const smatch& cm)
                     {
                         log(DEBUG, "update: Sending command: %s", command.c_str());
 
-                        m_flightConnector->getDataSource()->command(command);
+                        getFlightConnector()->getDataSource()->command(command);
                     }
                     break;
                 }

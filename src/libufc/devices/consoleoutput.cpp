@@ -4,6 +4,8 @@
 
 #include "consoleoutput.h"
 
+#include "ufc/flightconnector.h"
+
 using namespace UFC;
 
 UFC_DEVICE(Console, ConsoleOutput)
@@ -13,9 +15,9 @@ ConsoleOutput::ConsoleOutput(FlightConnector* flightConnector) : Device(flightCo
     log(DEBUG, "Here!");
 }
 
-void ConsoleOutput::update(const AircraftState& state)
+void ConsoleOutput::update(std::shared_ptr<AircraftState> state)
 {
-    if (!state.connected && m_connected)
+    if (!getFlightConnector()->getDataSource()->isConnected() && m_connected)
     {
         printf("ConsoleOutput::update: Not connected\n");
         m_connected = false;

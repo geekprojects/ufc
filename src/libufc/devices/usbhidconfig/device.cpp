@@ -58,7 +58,7 @@ bool USBHIDConfigDevice::init()
 
     hid_set_nonblocking(getDevice(), true);
 
-    AircraftState state = {};
+    auto state = make_shared<AircraftState>();
     map<string, uint8_t> displayValues;
     for (auto& initDesc : m_init)
     {
@@ -69,7 +69,7 @@ bool USBHIDConfigDevice::init()
 
 void USBHIDConfigDevice::close()
 {
-    AircraftState state = {};
+    auto state = make_shared<AircraftState>();
     map<string, uint8_t> displayValues;
     for (auto& closeDesc : m_close)
     {
@@ -78,19 +78,20 @@ void USBHIDConfigDevice::close()
     USBHIDDevice::close();
 }
 
-map<string, uint8_t> USBHIDConfigDevice::createDisplayValues(const AircraftState &state)
+map<string, uint8_t> USBHIDConfigDevice::createDisplayValues(const shared_ptr<AircraftState>& state)
 {
     map<string, uint8_t> displayValues;
-    if (state.autopilot.displaySpeed)
+    if (state->getInt("autopilot/displaySpeed"))
     {
+        float apSpeed = state->getFloat("autopilot/speed");
         int speed;
-        if (!state.autopilot.speedMach)
+        if (!state->getInt("autopilot/speedMach"))
         {
-            speed = (int) state.autopilot.speed;
+            speed = (int)apSpeed;
         }
         else
         {
-            speed = (int) (state.autopilot.speed * 1000.0f);
+            speed = (int) (apSpeed * 1000.0f);
         }
 
         displayValues.try_emplace("display/speed[2]", getLCDDigit(speed, 2));
@@ -104,9 +105,9 @@ map<string, uint8_t> USBHIDConfigDevice::createDisplayValues(const AircraftState
         displayValues.try_emplace("display/speed[0]", 2);
     }
 
-    if (state.autopilot.displayHeading)
+    if (state->getInt("autopilot/displayHeading"))
     {
-        int heading = (int)floor(state.autopilot.heading);
+        int heading = (int)floor(state->getFloat("autopilot/heading"));
         displayValues.try_emplace("display/heading[2]", getLCDDigit(heading, 2));
         displayValues.try_emplace("display/heading[1]", getLCDDigit(heading, 1));
         displayValues.try_emplace("display/heading[0]", getLCDDigit(heading, 0));
@@ -118,9 +119,9 @@ map<string, uint8_t> USBHIDConfigDevice::createDisplayValues(const AircraftState
         displayValues.try_emplace("display/heading[0]", 2);
     }
 
-    if (state.autopilot.displayAltitude)
+    if (state->getInt("autopilot/displayAltitude"))
     {
-        int altitude = (int) state.autopilot.altitude;
+        int altitude = (int) state->getFloat("autopilot/altitude");
         displayValues.try_emplace("display/altitude[4]", getLCDDigit(altitude, 4));
         displayValues.try_emplace("display/altitude[3]", getLCDDigit(altitude, 3));
         displayValues.try_emplace("display/altitude[2]", getLCDDigit(altitude, 2));
@@ -136,15 +137,16 @@ map<string, uint8_t> USBHIDConfigDevice::createDisplayValues(const AircraftState
         displayValues.try_emplace("display/altitude[0]", 2);
     }
 
-    if (state.autopilot.displayVerticalSpeed)
+    if (state->getInt("autopilot/displayVerticalSpeed"))
     {
-        displayValues.try_emplace("display/negativeVerticalSpeed", (state.autopilot.verticalSpeed < 0));
+        float verticalSpeed = state->getFloat("autopilot/verticalSpeed");
+        displayValues.try_emplace("display/negativeVerticalSpeed", (verticalSpeed < 0));
 
-        int vs = abs((int) state.autopilot.verticalSpeed);
+        int vs = abs((int) verticalSpeed);
         displayValues.try_emplace("display/verticalSpeed[3]", getLCDDigit(vs, 3));
         displayValues.try_emplace("display/verticalSpeed[2]", getLCDDigit(vs, 2));
 
-        if (!state.autopilot.verticalSpeedFPAMode)
+        if (!state->getInt("autopilot/verticalSpeedFPAMode"))
         {
             displayValues.try_emplace("display/verticalSpeed[1]", 0x1b);
             displayValues.try_emplace("display/verticalSpeed[0]", 0x1b);
@@ -173,12 +175,11 @@ map<string, uint8_t> USBHIDConfigDevice::createDisplayValues(const AircraftState
     return displayValues;
 }
 
-void USBHIDConfigDevice::update(const AircraftState &state)
+void USBHIDConfigDevice::update(shared_ptr<AircraftState> state)
 {
     updateInput(state);
 
     map<string, uint8_t> displayValues = createDisplayValues(state);
-
 
     for (auto& output : m_outputs)
     {
@@ -186,7 +187,10 @@ void USBHIDConfigDevice::update(const AircraftState &state)
     }
 }
 
-void USBHIDConfigDevice::updateOutput(const AircraftState& state, Descriptor& output, const map<string, uint8_t>& displayValues)
+void USBHIDConfigDevice::updateOutput(
+    const shared_ptr<AircraftState>& state,
+    const Descriptor& output,
+    const map<string, uint8_t>& displayValues)
 {
     BitBuffer bitBuffer;
     if (output.hasReportId)
@@ -265,7 +269,7 @@ void USBHIDConfigDevice::updateOutput(const AircraftState& state, Descriptor& ou
     hid_write(getDevice(), bitBuffer.data(), bitBuffer.size());
 }
 
-void USBHIDConfigDevice::updateInput(const AircraftState &state)
+void USBHIDConfigDevice::updateInput(shared_ptr<AircraftState> state)
 {
     uint8_t buffer[1024];
     while (true)
@@ -296,7 +300,7 @@ void USBHIDConfigDevice::updateInput(const AircraftState &state)
     }
 }
 
-void USBHIDConfigDevice::updateInput(const AircraftState &state, Descriptor &input, BitBuffer& buffer)
+void USBHIDConfigDevice::updateInput(shared_ptr<AircraftState> state, Descriptor &input, BitBuffer& buffer)
 {
     for (auto& field: input.fields)
     {
@@ -311,7 +315,7 @@ void USBHIDConfigDevice::updateInput(const AircraftState &state, Descriptor &inp
                     if (value && !field.dataRef.empty())
                     {
                         log(DEBUG, "updateInput: Executing %s", field.dataRef.c_str());
-                        m_flightConnector->getDataSource()->command(field.dataRef);
+                        getFlightConnector()->getDataSource()->command(field.dataRef);
                     }
                     field.previousState = value;
                 }
@@ -326,7 +330,7 @@ void USBHIDConfigDevice::updateInput(const AircraftState &state, Descriptor &inp
 }
 
 
-int USBHIDConfigDevice::getValue(const AircraftState& state, const Field &field, const map<string, uint8_t>& displayValues)
+int USBHIDConfigDevice::getValue(shared_ptr<AircraftState> state, const Field &field, const map<string, uint8_t>& displayValues)
 {
     if (field.valueType == FieldValueType::VALUE)
     {
@@ -353,7 +357,7 @@ int USBHIDConfigDevice::getValue(const AircraftState& state, const Field &field,
     }
     else
     {
-        value = state.getInt(dataRef);
+        value = state->getInt(dataRef);
     }
     if (negate)
     {
@@ -486,6 +490,7 @@ void USBHIDConfigDevice::parseFieldValue(Field& field, const YAML::Node& node)
     catch (YAML::BadConversion const&)
     {
         // Not an integer!
+        field.value = 0;
     }
 
     field.valueType = FieldValueType::DATAREF;

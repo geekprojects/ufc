@@ -16,27 +16,26 @@ using namespace UFC;
 UFC_DATA_SOURCE(Clock, ClockDataSource)
 
 ClockDataSource::ClockDataSource(FlightConnector* fc) :
-    DataSource(fc, "Clock", "", 0)
+    DataSource(fc, "Clock", "")
 {
 }
 
 bool ClockDataSource::connect()
 {
+    setRunning(true);
     return true;
 }
 
 void ClockDataSource::disconnect()
 {
-    m_running = false;
+    setRunning(false);
 }
 
 bool ClockDataSource::update()
 {
-    while (m_running)
+    while (isRunning())
     {
-        AircraftState state = m_flightConnector->getState();
-
-        state.connected = true;
+        auto state = getFlightConnector()->getState();
 
         time_t timestamp;
         time(&timestamp);
@@ -48,33 +47,39 @@ bool ClockDataSource::update()
         if (!m_24Hour && hour > 12)
         {
             hour -= 12;
-            state.autopilot.speedManaged = true;
+            state->set(DATA_AUTOPILOT_SPEEDMANAGED, true);
         }
         else
         {
-            state.autopilot.speedManaged = false;
+            state->set(DATA_AUTOPILOT_SPEEDMANAGED, false);
         }
 
         int minutes = local_time.tm_min;
 
+        int speed;
+        int heading;
         if (m_showSeconds)
         {
-            state.autopilot.speed = hour * 10;
-            state.autopilot.speed += minutes / 10;
+            speed = hour * 10;
+            speed += minutes / 10;
 
-            state.autopilot.heading = (minutes % 10) * 100;
-            state.autopilot.heading += local_time.tm_sec;
+            heading = (minutes % 10) * 100;
+            heading += local_time.tm_sec;
         }
         else
         {
-            state.autopilot.speed = hour;
-            state.autopilot.heading = minutes;
+            speed = hour;
+            heading = minutes;
         }
-        state.autopilot.headingManaged = !(local_time.tm_sec % 2);
+        state->set(DATA_AUTOPILOT_SPEED, speed);
+        state->set(DATA_AUTOPILOT_HEADING, heading);
+
+
+        state->set(DATA_AUTOPILOT_HEADINGMANAGED, !(local_time.tm_sec % 2));
 
         if (m_showYear)
         {
-            state.autopilot.altitude = local_time.tm_year + 1900;
+            state->set(DATA_AUTOPILOT_ALTITUDE, local_time.tm_year + 1900);
 
             time_t diff = timestamp - m_showYearTime;
             if (diff >= 5)
@@ -84,14 +89,12 @@ bool ClockDataSource::update()
         }
         else
         {
-            state.autopilot.altitude = local_time.tm_mday;
+            state->set(DATA_AUTOPILOT_ALTITUDE, local_time.tm_mday);
         }
-        state.autopilot.verticalSpeed = (local_time.tm_mon + 1) * 100;
+        state->set(DATA_AUTOPILOT_VERTICALSPEED, (local_time.tm_mon + 1) * 100);
 
-        state.comms.com1Hz = (hour * 10000) + (minutes * 100) + (local_time.tm_sec);
-        state.comms.com1StandbyHz = (local_time.tm_mday * 10000) + ((local_time.tm_mon + 1) * 100) + ((local_time.tm_year + 1900) % 100);
-
-        m_flightConnector->updateState(state);
+        state->set(DATA_COMMS_COM1HZ, (hour * 10000) + (minutes * 100) + (local_time.tm_sec));
+        state->set(DATA_COMMS_COM1STANDBYHZ, (local_time.tm_mday * 10000) + ((local_time.tm_mon + 1) * 100) + ((local_time.tm_year + 1900) % 100));
 
         this_thread::sleep_for(chrono::milliseconds(100));
     }

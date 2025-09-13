@@ -18,8 +18,7 @@ XPlaneDataSource::XPlaneDataSource(FlightConnector* flightConnector) :
     DataSource(
         flightConnector,
         "XPlane",
-        flightConnector->getConfig().dataDir + "/x-plane",
-        10)
+        flightConnector->getConfig().dataDir + "/x-plane")
 {
     m_client = make_shared<XPlaneClient>(
         flightConnector->getConfig().xplaneHost,
@@ -34,7 +33,7 @@ bool XPlaneDataSource::connect()
         return false;
     }
 
-    AircraftState state = m_flightConnector->getState();
+    auto state = getFlightConnector()->getState();
 
     log(INFO, "init: Requesting details from X-Plane...");
     while (true)
@@ -55,18 +54,23 @@ bool XPlaneDataSource::connect()
         return false;
     }
 
-    m_client->readString("sim/aircraft/view/acf_studio", 64, state.aircraftAuthor);
-    if (state.aircraftAuthor.empty())
+    string aircraftAuthor;
+    m_client->readString("sim/aircraft/view/acf_studio", 64, aircraftAuthor);
+    if (aircraftAuthor.empty())
     {
-        m_client->readString("sim/aircraft/view/acf_author", 64, state.aircraftAuthor);
+        m_client->readString("sim/aircraft/view/acf_author", 64, aircraftAuthor);
     }
-    m_client->readString("sim/aircraft/view/acf_ICAO", 10, state.aircraftICAO);
+    state->set("aircraft/author", aircraftAuthor);
+
+    string aircraftICAO;
+    m_client->readString("sim/aircraft/view/acf_ICAO", 10, aircraftICAO);
+    state->set("aircraft/icao", aircraftICAO);
 
     log(INFO, "X-Plane version: %d", m_xPlaneVersion);
-    log(INFO, "Author: %s", state.aircraftAuthor.c_str());
-    log(INFO, "Aircraft ICAO type: %s", state.aircraftICAO.c_str());
+    log(INFO, "Author: %s", aircraftAuthor.c_str());
+    log(INFO, "Aircraft ICAO type: %s", aircraftICAO.c_str());
 
-    m_mapping.loadDefinitionsForAircraft(state.aircraftAuthor, state.aircraftICAO);
+    getMapping().loadDefinitionsForAircraft(aircraftAuthor, aircraftICAO);
 
     return true;
 }
@@ -85,14 +89,16 @@ bool XPlaneDataSource::update()
 {
     vector<pair<int, string>> datarefs;
 
+    auto state = getFlightConnector()->getState();
     int idx = 1;
-    for (const auto& dataRef : m_mapping.getDataRefs())
+    for (const auto& dataRef : getMapping().getDataRefs())
     {
+        log(DEBUG, "update: %s -> %s", dataRef->id.c_str(), dataRef->mapping.dataRef.c_str());
         if (!dataRef->mapping.dataRef.empty() &&
-            dataRef->mapping.dataRef != "null" &&
-            dataRef->pos != -1)
+            dataRef->mapping.dataRef != "null")
         {
-            dataRef->idx = idx;
+            dataRef->value = state->getOrCreateValue(dataRef->id);
+            log(DEBUG, "update: %s idx=%d, value idx=%d", dataRef->id.c_str(), idx, dataRef->value->getIndex());
             datarefs.emplace_back(idx, dataRef->mapping.dataRef);
         }
         idx++;
@@ -108,9 +114,7 @@ bool XPlaneDataSource::update()
 
 void XPlaneDataSource::update(const map<int, float>& values)
 {
-    AircraftState state = m_flightConnector->getState();
-
-    state.connected = true;
+    auto state = getFlightConnector()->getState();
 
     for (const auto& [idx, value] : values)
     {
@@ -119,36 +123,43 @@ void XPlaneDataSource::update(const map<int, float>& values)
             continue;
         }
 
-        const auto& dataRef = m_mapping.getDataRefs()[idx - 1];
+        const auto& dataRef = getMapping().getDataRefs()[idx - 1];
 
-        float v = transformData(dataRef, value);
+        auto v = transformData(dataRef, value);
         switch (dataRef->type)
         {
-            case FLOAT:
-                m_mapping.writeFloat(state, dataRef, v);
+            case DataRefType::FLOAT:
+                getMapping().writeFloat(dataRef, v);
                 break;
-            case INTEGER:
-                m_mapping.writeInt(state, dataRef, (int32_t)v);
+            case DataRefType::BOOLEAN:
+                getMapping().writeBoolean(dataRef, static_cast<bool>(v));
                 break;
-            case BOOLEAN:
-                m_mapping.writeBoolean(state, dataRef, (int32_t)v);
+            case DataRefType::INTEGER:
+                getMapping().writeInt(dataRef, static_cast<int>(v));
                 break;
-            case STRING:
-                // Ignored!
+            default:
+                if (dataRef->value != nullptr)
+                {
+                    getMapping().writeFloat(dataRef, v);
+                }
+                else
+                {
+                    log(WARN, "update: Unknown value for %s", dataRef->id.c_str());
+                }
                 break;
         }
     }
-    m_flightConnector->updateState(state);
 }
 
 void XPlaneDataSource::executeCommand(const string& commandName, const CommandDefinition& commandDefinition)
 {
+    log(DEBUG, "executeCommand: %s", commandName.c_str());
     m_client->sendCommand(commandName);
 }
 
 void XPlaneDataSource::setData(const std::string& dataName, float value)
 {
-    auto dataRef = m_mapping.getDataRef(dataName);
+    auto dataRef = getMapping().getDataRef(dataName);
     if (dataRef == nullptr)
     {
         // Not mapped. Try setting directly
@@ -167,7 +178,7 @@ void XPlaneDataSource::setData(const std::string& dataName, float value)
 
 bool XPlaneDataSource::getDataInt(const std::string& dataName, int& value)
 {
-    auto dataRef = m_mapping.getDataRef(dataName);
+    auto dataRef = getMapping().getDataRef(dataName);
     if (dataRef == nullptr || dataRef->mapping.dataRef.empty())
     {
         log(WARN, "getDataInt: Unhandled data ref: %s", dataName.c_str());
@@ -180,12 +191,12 @@ bool XPlaneDataSource::getDataInt(const std::string& dataName, int& value)
 
 bool XPlaneDataSource::getDataFloat(const std::string& dataName, float& value)
 {
-    auto dataRef = m_mapping.getDataRef(dataName);
+    auto dataRef = getMapping().getDataRef(dataName);
     if (dataRef == nullptr || dataRef->mapping.dataRef.empty())
     {
         log(WARN, "getDataFloat: Unhandled data ref: %s", dataName.c_str());
         auto res = m_client->read(dataName, value);
-        return res == Result::SUCCESS;;
+        return res == Result::SUCCESS;
     }
 
     auto res = m_client->read(dataRef->mapping.dataRef, value);
@@ -194,7 +205,7 @@ bool XPlaneDataSource::getDataFloat(const std::string& dataName, float& value)
 
 bool XPlaneDataSource::getDataString(const std::string& dataName, string& value)
 {
-    auto dataRef = m_mapping.getDataRef(dataName);
+    auto dataRef = getMapping().getDataRef(dataName);
     if (dataRef == nullptr || dataRef->mapping.dataRef.empty())
     {
         log(WARN, "getDataString: Unhandled data ref: %s", dataName.c_str());

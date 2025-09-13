@@ -12,11 +12,10 @@ using namespace UFC;
 
 static DataSourceRegistry* g_dataSourceRegistry = nullptr;
 
-DataSource::DataSource(FlightConnector* flightConnector, const std::string& name, const std::string& dataPath, int priority) :
+DataSource::DataSource(FlightConnector* flightConnector, const std::string& name, const std::string& dataPath) :
     Logger("DataSource[" + name + "]"),
     m_flightConnector(flightConnector),
     m_name(name),
-    m_priority(priority),
     m_mapping(this, dataPath)
 {
     m_commandLua = make_shared<UFCLua>(flightConnector);
@@ -61,10 +60,11 @@ void DataSource::command(const std::string& commandName)
     }
 }
 
-float DataSource::transformData(const shared_ptr<DataDefinition>& dataRef, float value)
+float DataSource::transformData(const shared_ptr<DataDefinition>& dataRef, float value) const
 {
     if (!dataRef->mapping.luaScript.empty())
     {
+        //log(DEBUG, "transformData: Calling LUA script:\n%s", dataRef->mapping.luaScript.c_str());
         value = m_dataLua->execute(dataRef->mapping.luaScript, "value", value);
     }
     return value;

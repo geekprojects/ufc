@@ -32,10 +32,13 @@ FlightConnector::FlightConnector() :
     Logger("FlightConnector")
 {
     g_flightConnectors.push_back(this);
+    m_state = make_shared<AircraftState>();
+    m_state->init();
 }
 
 FlightConnector::~FlightConnector()
 {
+    m_state->dump();
     for (auto it = g_flightConnectors.begin(); it != g_flightConnectors.end(); it++)
     {
         if (*it == this)
@@ -134,7 +137,7 @@ void FlightConnector::start()
 
 void FlightConnector::stop()
 {
-    for (auto device : m_devices)
+    for (const auto& device : m_devices)
     {
         device->close();
     }
@@ -191,10 +194,9 @@ void FlightConnector::exit()
 
 void FlightConnector::updateDevices()
 {
-    const auto state = getState();
     for (auto device : m_devices)
     {
-        device->update(state);
+        device->update(m_state);
     }
 }
 
@@ -318,7 +320,7 @@ void FlightConnector::setConfig(const Config &config)
     }
 }
 
-void FlightConnector::writeConfig()
+void FlightConnector::writeConfig() const
 {
     YAML::Node configNode;
     configNode["dataDir"] = m_config.dataDir;

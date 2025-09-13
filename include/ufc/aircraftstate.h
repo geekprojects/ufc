@@ -10,6 +10,10 @@
 #include <map>
 #include <vector>
 
+#include "logger.h"
+
+#define DATA_AIRCRAFT_AUTHOR "aircraft/author"
+#define DATA_AIRCRAFT_ICAO "aircraft/ico"
 #define DATA_AIRCRAFT_INDICATEDAIRSPEED "aircraft/indicatedAirspeed"
 #define DATA_AIRCRAFT_PITCH "aircraft/pitch"
 #define DATA_AIRCRAFT_ROLL "aircraft/roll"
@@ -84,136 +88,174 @@
 namespace UFC
 {
 
-struct AutopilotState
+enum class DataRefType
 {
-    bool displaySpeed = true;
-    bool speedManaged = false;
-    float speed = 0.0f;
-    bool speedMach = false;
-
-    bool displayHeading = true;
-    bool headingManaged = false;
-    bool headingTrkMode = false;
-    bool headingWindowOpen = false;
-    float heading = 0.0f;
-
-    bool displayAltitude = true;
-    bool altitudeManaged = false;
-    bool altitudeStep1000 = false;
-    float altitude = 0.0f;
-
-    bool displayVerticalSpeed = true;
-    bool verticalSpeedFPAMode = false;
-    float verticalSpeed = 0.0f;
-
-    bool fmsVnav = false;
-    int gpssStatus = 0;
-    bool speedWindowOpen = false;
-
-    int locMode = 0;
-    int ap1Mode = 0;
-    int ap2Mode = 0;
-    int autoThrottleMode = 0;
-    int approachMode = 0;
+    UNKNOWN,
+    FLOAT,
+    BOOLEAN,
+    INTEGER,
+    STRING,
 };
 
-struct APUState
+class AircraftValue
 {
-    bool masterOn = false;
-    bool starterOn = false;
+    int m_index = -1;
+    DataRefType m_type = DataRefType::UNKNOWN;
+    union
+    {
+        int i;
+        float f;
+    } m_value;
+    std::string m_string;
+
+ public:
+    explicit AircraftValue(int idx)
+    {
+        m_value.i = 0;
+        m_index = idx;
+    }
+
+    [[nodiscard]] int getIndex() const
+    {
+        return m_index;
+    }
+
+    void set(bool b)
+    {
+        m_type = DataRefType::BOOLEAN;
+        m_value.i = b;
+    }
+
+    void set(int i)
+    {
+        m_type = DataRefType::INTEGER;
+        m_value.i = i;
+    }
+
+    void set(float f)
+    {
+        m_type = DataRefType::FLOAT;
+        m_value.f = f;
+    }
+
+    void set(std::string const& str)
+    {
+        m_type = DataRefType::STRING;
+        m_string = str;
+    }
+
+    [[nodiscard]] int getInt() const
+    {
+        switch (m_type)
+        {
+            case DataRefType::BOOLEAN:
+            case DataRefType::INTEGER:
+                return m_value.i;
+            case DataRefType::FLOAT:
+                return (int)m_value.f;
+            default:
+                return 0;
+        }
+    }
+
+    [[nodiscard]] float getFloat() const
+    {
+        switch (m_type)
+        {
+            case DataRefType::BOOLEAN:
+            case DataRefType::INTEGER:
+                return (float)m_value.i;
+            case DataRefType::FLOAT:
+                return m_value.f;
+            default:
+                return 0.0;
+        }
+    }
+
+    [[nodiscard]] std::string getString() const
+    {
+        switch (m_type)
+        {
+            case DataRefType::BOOLEAN:
+            case DataRefType::INTEGER:
+                return std::to_string(m_value.i);
+            case DataRefType::FLOAT:
+                return std::to_string(m_value.f);
+            case DataRefType::STRING:
+                return m_string;
+            default:
+                return "";
+        }
+    }
 };
 
-struct CommunicationState
+class AircraftState : public Logger
 {
-    uint32_t com1Hz = 0;
-    uint32_t com1StandbyHz = 0;
-    uint32_t com2Hz = 0;
-    uint32_t com2StandbyHz = 0;
-    uint32_t nav1Hz = 0;
-    uint32_t nav1StandbyHz = 0;
-    uint32_t nav2Hz = 0;
-    uint32_t nav2StandbyHz = 0;
-};
+    int m_nextIndex = 1;
+    std::mutex m_mutex;
 
-struct FlightDirectorState
-{
-    int mode = 0;
-    float pitch = 0.0f;
-    float roll = 0.0f;
-};
+    std::map<std::string, std::shared_ptr<AircraftValue>, std::less<>> valuesByName;
+    std::map<int, std::shared_ptr<AircraftValue>> valuesByIndex;
 
-struct LightsState
-{
-    bool landingLeftOn = false;
-    bool landingRightOn = false;
-    bool landingLeftExtended = false;
-    bool landingRightExtended = false;
-};
+ public:
+    AircraftState() : Logger("AircraftState") {}
 
-struct CabinState
-{
-    bool call = false;
-    bool seatBeltSign = false;
-    bool noSmokingSign = false;
-};
+    int getIndex(const std::string& name);
+    std::shared_ptr<AircraftValue> getOrCreateValue(const std::string &dataName);
+    std::shared_ptr<AircraftValue> getValue(const std::string &dataName);
 
-struct WeightState
-{
-    int passengerCount = 0;
-    float passengerDistribution = 0.0;
-};
+    void init();
 
-struct FlightPlanState
-{
-    std::string flightNumber;
-    std::string departureAirport;
-    int cruiseAltitude = 0;
-    std::string destinationAirport;
-    float distanceToDestination = 0.0f;
-};
+    bool isSet(const std::string &dataName)
+    {
+        return getValue(dataName) != nullptr;
+    }
 
-struct InstrumentState
-{
-    float v1;
-    float vr;
-    float v2;
-    float vfeNext;
+    void set(int idx, bool b)
+    {
+        valuesByIndex[idx]->set(b);
+    }
 
-    float radioAltitude;
-};
+    void set(int idx, int i)
+    {
+        valuesByIndex[idx]->set(i);
+    }
 
-struct AircraftState
-{
-    std::string dataSource;
-    std::string dataSourceVersion;
-    bool connected = false;
+    void set(int idx, float f)
+    {
+        valuesByIndex[idx]->set(f);
+    }
 
-    std::string aircraftAuthor;
-    std::string aircraftICAO;
+    void set(int idx, const std::string& str)
+    {
+        valuesByIndex[idx]->set(str);
+    }
 
-    float indicatedAirspeed = 0.0f;
-    float indicatedMach = 0.0f;
-    float roll = 0.0f;
-    float pitch = 0.0f;
-    float altitude = 0.0f;
-    float verticalSpeed = 0.0f;
-    float magHeading = 0.0f;
-    float barometerHG = 0.0f;
-    bool parkingBrake = false;
+    void set(std::string const& name, bool b)
+    {
+        getOrCreateValue(name)->set(b);
+    }
 
-    CommunicationState comms;
-    FlightDirectorState flightDirector;
-    AutopilotState autopilot;
-    APUState apu;
-    InstrumentState instrument;
-    LightsState lights;
-    CabinState cabin;
-    WeightState weight;
-    FlightPlanState flightPlan;
+    void set(std::string const& name, int i)
+    {
+        getOrCreateValue(name)->set(i);
+    }
 
-    std::vector<std::pair<std::string, std::string>> customValues;
+    void set(std::string const& name, float f)
+    {
+        getOrCreateValue(name)->set(f);
+    }
 
-    int getInt(std::string dataName) const;
+    void set(std::string const& name, const std::string& str)
+    {
+        getOrCreateValue(name)->set(str);
+    }
+
+    float getFloat(const std::string& dataName);
+    int getInt(const std::string& dataName);
+    std::string getString(const std::string& dataName);
+
+    void dump();
 };
 
 }

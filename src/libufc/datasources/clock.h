@@ -10,6 +10,7 @@
 class ClockDataSource : public UFC::DataSource
 {
  private:
+
     bool m_24Hour = true;
     bool m_showYear = false;
     time_t m_showYearTime = 0;

@@ -54,7 +54,7 @@ class DataSourceRegistry
         return nullptr;
     }
 
-    const std::map<std::string, DataSourceInit*, std::less<>>& getDataSources() const { return m_dataSources; }
+    [[nodiscard]] const std::map<std::string, DataSourceInit*, std::less<>>& getDataSources() const { return m_dataSources; }
 };
 
 #define UFC_DATA_SOURCE(_name, _class)  \
@@ -83,10 +83,8 @@ class DataSourceRegistry
 
 class DataSource : public Logger
 {
- protected:
     FlightConnector* m_flightConnector;
     std::string m_name;
-    int m_priority = 0;
 
     bool m_running = true;
 
@@ -95,15 +93,20 @@ class DataSource : public Logger
     std::shared_ptr<UFCLua> m_commandLua;
     std::shared_ptr<UFCLua> m_dataLua;
 
-    float transformData(const std::shared_ptr<DataDefinition> &dataRef, float value);
+ protected:
+    [[nodiscard]] float transformData(const std::shared_ptr<DataDefinition> &dataRef, float value) const;
+
+    void setRunning(bool running) { m_running = running; }
+    [[nodiscard]] bool isRunning() const { return m_running; }
 
  public:
-    explicit DataSource(FlightConnector* flightConnector, const std::string& name, const std::string& dataPath, int priority);
+    explicit DataSource(FlightConnector* flightConnector, const std::string& name, const std::string& dataPath);
 
     ~DataSource() override = default;
 
     [[nodiscard]] std::string getName() const { return m_name; }
     [[nodiscard]] FlightConnector* getFlightConnector() const { return m_flightConnector; }
+    AircraftMapping& getMapping() { return m_mapping; }
 
     virtual bool connect() = 0;
     virtual void disconnect() = 0;

@@ -26,7 +26,7 @@ float updateCallback(
 }
 
 XPPluginDataSource::XPPluginDataSource(UFC::FlightConnector* flightConnector) :
-    DataSource(flightConnector, "XPPlugin", "Resources/plugins/ufc/data/x-plane", 100)
+    DataSource(flightConnector, "XPPlugin", "Resources/plugins/ufc/data/x-plane")
 {
 }
 
@@ -90,24 +90,26 @@ bool XPPluginDataSource::reloadAircraft()
         aircraftAuthor = getString(m_authorDataRef);
     }
 
-    AircraftState state = m_flightConnector->getState();
-    if (aircraftICAO == state.aircraftICAO && aircraftAuthor == state.aircraftAuthor)
+    auto state = getFlightConnector()->getState();
+    if (aircraftICAO == state->getString(DATA_AIRCRAFT_ICAO) &&
+        aircraftAuthor == state->getString(DATA_AIRCRAFT_AUTHOR))
     {
         // Aircraft definitions are already loaded, nothing to do!
         return true;
     }
 
-    state.aircraftICAO = aircraftICAO;
-    state.aircraftAuthor = aircraftAuthor;
+    state->set(DATA_AIRCRAFT_AUTHOR, aircraftAuthor);
+    state->set(DATA_AIRCRAFT_ICAO, aircraftICAO);
 
-    log(DEBUG, "UFC: New Aircraft: ICAO: %s, author: %s", state.aircraftICAO.c_str(), state.aircraftAuthor.c_str());
+    log(DEBUG, "UFC: New Aircraft: ICAO: %s, author: %s", aircraftICAO.c_str(), aircraftAuthor.c_str());
 
-    m_mapping.loadDefinitionsForAircraft(state.aircraftAuthor, state.aircraftICAO);
+    getMapping().loadDefinitionsForAircraft(aircraftAuthor, aircraftICAO);
 
-    for (auto& mapping : m_mapping.getDataRefs())
+    for (auto& mapping : getMapping().getDataRefs())
     {
         if (!mapping->mapping.dataRef.empty())
         {
+            mapping->value = state->getOrCreateValue(mapping->id);
             mapping->data = XPLMFindDataRef(mapping->mapping.dataRef.c_str());
         }
         else
@@ -118,7 +120,7 @@ bool XPPluginDataSource::reloadAircraft()
         log(DEBUG, "UFC: Data: %s -> %s (%p)", mapping->id.c_str(), mapping->mapping.dataRef.c_str(), mapping->data);
     }
 
-    for (auto& commandMapping : m_mapping.getCommands())
+    for (auto& commandMapping : getMapping().getCommands())
     {
         for (auto const& command : commandMapping.second.commands)
         {
@@ -128,8 +130,6 @@ bool XPPluginDataSource::reloadAircraft()
             }
         }
     }
-
-    m_flightConnector->updateState(state);
 
     return true;
 }
@@ -146,30 +146,28 @@ bool XPPluginDataSource::update()
 
 bool XPPluginDataSource::updateDataRefs()
 {
-    AircraftState state = m_flightConnector->getState();
-    for (const auto& mapping : m_mapping.getDataRefs())
+    auto state = getFlightConnector()->getState();
+    for (const auto& mapping : getMapping().getDataRefs())
     {
         if (mapping->data == nullptr)
         {
             continue;
         }
+        //auto v = transformData(dataRef, value);
         switch (mapping->type)
         {
-            case FLOAT:
-                m_mapping.writeFloat(state, mapping, XPLMGetDataf(mapping->data));
+            case DataRefType::BOOLEAN:
+                getMapping().writeBoolean(mapping, XPLMGetDatai(mapping->data));
                 break;
-            case BOOLEAN:
-                m_mapping.writeBoolean(state, mapping, XPLMGetDatai(mapping->data));
+            case DataRefType::INTEGER:
+                getMapping().writeInt(mapping, XPLMGetDatai(mapping->data));
                 break;
-            case INTEGER:
-                m_mapping.writeInt(state, mapping, XPLMGetDatai(mapping->data));
-                break;
-            case STRING:
-                // Unhandled
+            case DataRefType::FLOAT:
+            default:
+                getMapping().writeFloat(mapping, XPLMGetDataf(mapping->data));
                 break;
         }
     }
-    m_flightConnector->updateState(state);
 
     std::scoped_lock lock(m_commandQueueMutex);
     for (auto command : m_commandQueue)
@@ -197,7 +195,7 @@ void XPPluginDataSource::setData(const std::string &dataName, float value)
     log(DEBUG, "setData: %s -> %f", dataName.c_str(), value);
     string dataRefName = dataName;
 
-    auto dataRef = m_mapping.getDataRef(dataName);
+    auto dataRef = getMapping().getDataRef(dataName);
     if (dataRef != nullptr && !dataRef->mapping.dataRef.empty())
     {
         dataRefName = dataRef->mapping.dataRef;
@@ -234,7 +232,7 @@ void XPPluginDataSource::setData(const std::string &dataName, float value)
 
 bool XPPluginDataSource::getDataInt(const std::string &dataName, int &value)
 {
-    auto dataRef = m_mapping.getDataRef(dataName);
+    auto dataRef = getMapping().getDataRef(dataName);
     if (dataRef == nullptr || dataRef->mapping.dataRef.empty())
     {
         log(WARN, "getDataInt: Unhandled data ref: %s", dataName.c_str());
@@ -247,7 +245,7 @@ bool XPPluginDataSource::getDataInt(const std::string &dataName, int &value)
 
 bool XPPluginDataSource::getDataFloat(const std::string &dataName, float &value)
 {
-    auto dataRef = m_mapping.getDataRef(dataName);
+    auto dataRef = getMapping().getDataRef(dataName);
     if (dataRef == nullptr || dataRef->mapping.dataRef.empty())
     {
         log(WARN, "getDataInt: Unhandled data ref: %s", dataName.c_str());
@@ -260,7 +258,7 @@ bool XPPluginDataSource::getDataFloat(const std::string &dataName, float &value)
 
 bool XPPluginDataSource::getDataString(const std::string &dataName, std::string &value)
 {
-    auto dataRef = m_mapping.getDataRef(dataName);
+    auto dataRef = getMapping().getDataRef(dataName);
     if (dataRef == nullptr || dataRef->mapping.dataRef.empty())
     {
         log(WARN, "getDataInt: Unhandled data ref: %s", dataName.c_str());

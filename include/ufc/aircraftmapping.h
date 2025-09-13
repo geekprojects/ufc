@@ -5,7 +5,6 @@
 #ifndef MAPPING_H
 #define MAPPING_H
 
-
 #include "ufc/logger.h"
 
 #include <string>
@@ -22,13 +21,6 @@ namespace UFC
 class DataSource;
 }
 
-enum DataRefType
-{
-    FLOAT,
-    BOOLEAN,
-    INTEGER,
-    STRING,
-};
 
 enum class DataMappingType
 {
@@ -48,11 +40,11 @@ struct DataMapping
 struct DataDefinition
 {
     std::string id;
-    DataRefType type;
-    int pos;
+    UFC::DataRefType type;
     int len = 1;
 
     DataMapping mapping;
+    std::shared_ptr<UFC::AircraftValue> value;
     int idx;
     void* data;
 };
@@ -66,7 +58,6 @@ struct CommandDefinition
 
 class AircraftMapping : UFC::Logger
 {
- private:
     UFC::DataSource* m_dataSource;
     std::string m_baseDir;
 
@@ -83,30 +74,31 @@ class AircraftMapping : UFC::Logger
         const std::filesystem::directory_entry &entry,
         YAML::Node aircraftFile);
 
-    void addDataDefinition(std::string id, YAML::Node definitionNode);
+    void parseDataDefinition(const std::string& parent, YAML::Node definitionNode);
+    void addDataDefinition(const std::string &id, YAML::Node definitionNode);
 
     void addDataRef(const DataDefinition& dataRef);
 
     static DataMapping parseMapping(std::string mapping);
 
     void loadDefinitions(YAML::Node config);
-    void loadCommands(YAML::Node node, std::string id);
+    void loadCommands(YAML::Node node, const std::string& id);
 
  public:
     AircraftMapping(UFC::DataSource* dataSource, const std::string &baseDir);
 
     void loadDefinitionsForAircraft(const std::string &author, const std::string &icaoType);
 
-    const CommandDefinition& getCommand(std::string command);
+    const CommandDefinition& getCommand(const std::string &command);
 
     std::vector<std::shared_ptr<DataDefinition>>& getDataRefs() { return m_dataRefs; }
     std::map<std::string, CommandDefinition>& getCommands() { return m_commands; }
     std::shared_ptr<DataDefinition> getDataRef(const std::string &id);
 
-    void writeFloat(UFC::AircraftState& state, const std::shared_ptr<DataDefinition> &dataDef, float value);
-    void writeInt(UFC::AircraftState& state, const std::shared_ptr<DataDefinition> &dataDef, int32_t value);
-    void writeBoolean(UFC::AircraftState &state, const std::shared_ptr<DataDefinition> &dataDef, int32_t value);
-    void writeString(UFC::AircraftState& state, const std::shared_ptr<DataDefinition> &dataDef, std::string value);
+    void writeFloat(const std::shared_ptr<DataDefinition> &dataDef, float value);
+    void writeInt(const std::shared_ptr<DataDefinition> &dataDef, int32_t value);
+    void writeBoolean(const std::shared_ptr<DataDefinition> &dataDef, int32_t value);
+    void writeString(const std::shared_ptr<DataDefinition> &dataDef, const std::string& value);
 };
 
 #endif //MAPPING_H

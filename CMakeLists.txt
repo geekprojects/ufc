@@ -56,7 +56,6 @@ add_library(ufc SHARED
         include/ufc/data.h
         include/ufc/usbhiddevice.h
         src/libufc/devices/usbhiddevice.cpp
-        src/libufc/datadefs.h
         include/ufc/utils.h
         src/libufc/utils/utils.cpp
         include/ufc/airports.h

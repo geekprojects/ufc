@@ -81,7 +81,7 @@ class SerialConfigDevice : public Device
 
     void handleInput(const SerialInput &input, const std::smatch &cm);
 
-    void update(const AircraftState &state) override;
+    void update(std::shared_ptr<AircraftState> state) override;
 
     std::string readLine();
 

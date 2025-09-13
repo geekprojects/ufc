@@ -11,8 +11,6 @@
 #include "../lua.h"
 #include "ufc/utils.h"
 
-#include "../datadefs.h"
-
 using namespace std;
 using namespace UFC;
 
@@ -28,11 +26,6 @@ void AircraftMapping::initDefinitions()
     m_dataRefs.clear();
     m_dataRefsById.clear();
     m_commands.clear();
-
-    for (const auto& dataRef : g_dataRefsInit)
-    {
-        addDataRef(dataRef);
-    }
 }
 
 void AircraftMapping::loadDefinitionsForAircraft(
@@ -144,51 +137,77 @@ void AircraftMapping::loadDefinitions(YAML::Node config)
     }
 
     YAML::Node dataNode = config["data"];
-    for (YAML::const_iterator it=dataNode.begin(); it!=dataNode.end(); ++it)
-    {
-        auto categoryName = it->first.as<string>();
-        for (auto dataIt = it->second.begin(); dataIt != it->second.end(); ++dataIt)
-        {
-            if (dataIt->second)
-            {
-                auto name = dataIt->first.as<string>();
-                auto id = categoryName + "/" + name;
-                auto definitionNode = dataIt->second;
-
-                addDataDefinition(id, definitionNode);
-            }
-        }
-    }
+    parseDataDefinition("", dataNode);
 
     loadCommands(config["commands"], "");
 }
 
-void AircraftMapping::addDataDefinition(string id, YAML::Node definitionNode)
+void AircraftMapping::parseDataDefinition(const string& parent, YAML::Node node)
 {
-    auto dataRefIt = m_dataRefsById.find(id);
-    if (dataRefIt == m_dataRefsById.end())
+    for (YAML::const_iterator it = node.begin(); it!=node.end(); ++it)
     {
-        log(WARN, "addDataDefinition: Unknown data ref: %s", id.c_str());
-        return;
+        auto nodeName = it->first.as<string>();
+        string id;
+        if (!parent.empty())
+        {
+            id = parent + "/";
+        }
+        id += nodeName;
+        auto child = it->second;
+
+        if (child.Type() == YAML::NodeType::Map)
+        {
+            if (child["dataRef"] || child["lua"])
+            {
+                addDataDefinition(id, child);
+            }
+            else
+            {
+                parseDataDefinition(id, child);
+            }
+        }
+        else
+        {
+            addDataDefinition(id, child);
+        }
+    }
+
+}
+
+void AircraftMapping::addDataDefinition(const string& id, YAML::Node definitionNode)
+{
+    shared_ptr<DataDefinition> dataRef;
+
+    auto it = m_dataRefsById.find(id);
+    if (it != m_dataRefsById.end())
+    {
+        dataRef = it->second;
+    }
+    else
+    {
+        dataRef = make_shared<DataDefinition>();
+        dataRef->id = id;
+        m_dataRefsById.try_emplace(id, dataRef);
+        m_dataRefs.push_back(dataRef);
     }
 
     if (definitionNode.Type() == YAML::NodeType::Map)
     {
-        auto dataRef = definitionNode["dataRef"].as<string>();
+        auto dataRefNode = definitionNode["dataRef"].as<string>();
         auto lua = definitionNode["lua"].as<string>();
-        dataRefIt->second->mapping.dataRef = dataRef;
-        dataRefIt->second->mapping.luaScript = lua;
-        log(DEBUG, "addDataDefinition: %s -> %s (With lua script)", id.c_str(), dataRef.c_str());
+        dataRef->mapping.dataRef = dataRefNode;
+        dataRef->mapping.luaScript = lua;
+        log(DEBUG, "addDataDefinition: %s -> %s (With lua script)", id.c_str(), dataRefNode.c_str());
     }
     else
     {
         auto value = definitionNode.as<string>();
-        dataRefIt->second->mapping = parseMapping(value);
+        dataRef->mapping = parseMapping(value);
         log(DEBUG, "addDataDefinition: %s -> %s", id.c_str(), value.c_str());
     }
 }
 
-void AircraftMapping::loadCommands(YAML::Node commandsNode, std::string id)
+void AircraftMapping::loadCommands(YAML::Node commandsNode, const std::string& id)
 {
     for (YAML::const_iterator it=commandsNode.begin();it!=commandsNode.end();++it)
     {
@@ -213,14 +232,14 @@ void AircraftMapping::loadCommands(YAML::Node commandsNode, std::string id)
             {
                 for (auto commandIt : node)
                 {
-                    string command = commandIt.as<string>();
+                    auto command = commandIt.as<string>();
                     commandDefinition.commands.push_back(command);
                     log(DEBUG, "loadCommands: command %s -> %s", categoryName.c_str(), command.c_str());
                 }
             }
             else
             {
-                string command = node.as<string>();
+                auto command = node.as<string>();
                 log(DEBUG, "loadCommands: command %s -> %s", categoryName.c_str(), command.c_str());
                 commandDefinition.commands.push_back(command);
             }
@@ -261,7 +280,7 @@ void AircraftMapping::addDataRef(const DataDefinition& dataRef)
 }
 
 const CommandDefinition nullCommand = {};
-const CommandDefinition& AircraftMapping::getCommand(std::string command)
+const CommandDefinition& AircraftMapping::getCommand(const std::string &command)
 {
     auto it = m_commands.find(command);
 
@@ -284,27 +303,12 @@ std::shared_ptr<DataDefinition> AircraftMapping::getDataRef(const std::string& i
     return nullptr;
 }
 
-void AircraftMapping::writeFloat(AircraftState& state, const shared_ptr<DataDefinition> &dataDef, float value)
+void AircraftMapping::writeFloat(const shared_ptr<DataDefinition> &dataDef, float value)
 {
-    auto d = (float*)((char*)&state + dataDef->pos);
-    *d = value;
-}
-
-void AircraftMapping::writeInt(AircraftState& state, const shared_ptr<DataDefinition> &dataDef, int32_t value)
-{
-    auto d = (int32_t*)((char*)&state + dataDef->pos);
-    *d = value;
-}
-
-void AircraftMapping::writeBoolean(AircraftState& state, const shared_ptr<DataDefinition> &dataDef, int32_t value)
-{
-    auto d = (bool*)((char*)&state + dataDef->pos);
-
     switch (dataDef->mapping.type)
     {
         case DataMappingType::VALUE:
             // Just use the value as-is
-            value = static_cast<bool>(value);
             break;
 
         case DataMappingType::EQUALS:
@@ -315,11 +319,34 @@ void AircraftMapping::writeBoolean(AircraftState& state, const shared_ptr<DataDe
             value = !static_cast<bool>(value);
             break;
     }
-    *d = value;
+    dataDef->value->set(value);
 }
 
-void AircraftMapping::writeString(AircraftState& state, const shared_ptr<DataDefinition> &dataDef, string value)
+void AircraftMapping::writeInt(const shared_ptr<DataDefinition> &dataDef, int32_t value)
 {
-    auto d = (string*)((char*)&state + dataDef->pos);
-    *d = value;
+    switch (dataDef->mapping.type)
+    {
+        case DataMappingType::VALUE:
+            // Just use the value as-is
+            break;
+
+        case DataMappingType::EQUALS:
+            value = value == dataDef->mapping.operand;
+            break;
+
+        case DataMappingType::NEGATE:
+            value = !static_cast<bool>(value);
+            break;
+    }
+    dataDef->value->set(value);
+}
+
+void AircraftMapping::writeBoolean(const shared_ptr<DataDefinition>& dataDef, int32_t value)
+{
+    writeInt(dataDef, value);
+}
+
+void AircraftMapping::writeString([[maybe_unused]] const shared_ptr<DataDefinition>& dataDef, [[maybe_unused]] const string& value)
+{
+    log(ERROR, "writeString: Not implemented!");
 }

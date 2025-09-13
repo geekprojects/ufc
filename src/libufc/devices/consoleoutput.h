@@ -17,7 +17,7 @@ class ConsoleOutput : public Device
     explicit ConsoleOutput(FlightConnector* flightConnector);
     ~ConsoleOutput() override = default;
 
-    void update(const AircraftState& state) override;
+    void update(std::shared_ptr<AircraftState> state) override;
 
     bool detect() override { return false; }
 };

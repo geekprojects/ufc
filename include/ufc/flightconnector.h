@@ -87,8 +87,7 @@ class FlightConnector final : public Logger
 
     std::shared_ptr<NavDataSource> m_navDataSource;
 
-    std::mutex m_stateMutex;
-    AircraftState m_state;
+    std::shared_ptr<AircraftState> m_state;
 
     bool m_running = false;
     std::shared_ptr<std::thread> m_updateDeviceThread = nullptr;
@@ -104,14 +103,13 @@ class FlightConnector final : public Logger
     static void updateDataSourceThread(FlightConnector* flightConnector);
     void updateDataSourceMain();
 
-
  public:
     FlightConnector();
     ~FlightConnector() override;
 
     void loadConfig(const Config &config);
     void setConfig(const Config &config);
-    void writeConfig();
+    void writeConfig() const;
 
     /**
      * Initialise this Flight Connector
@@ -190,20 +188,9 @@ class FlightConnector final : public Logger
      *
      * @return A copy of the current aircraft state from the simulator
      */
-    AircraftState getState()
+    std::shared_ptr<AircraftState> getState()
     {
-        std::scoped_lock lock(m_stateMutex);
         return m_state;
-    }
-
-    /**
-     *
-     * @param state The Aircraft state data to update with
-     */
-    void updateState(const AircraftState& state)
-    {
-        std::scoped_lock lock(m_stateMutex);
-        m_state = state;
     }
 
     /**
@@ -211,7 +198,7 @@ class FlightConnector final : public Logger
      */
     static void exit();
 
-    void addDevice(std::shared_ptr<Device> device)
+    void addDevice(const std::shared_ptr<Device>& device)
     {
         m_devices.push_back(device);
     }

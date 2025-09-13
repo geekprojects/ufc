@@ -9,102 +9,106 @@
 
 #include <unistd.h>
 
-#include "../datadefs.h"
-
 using namespace UFC;
 
 UFC_DATA_SOURCE(Simulator, SimulatorDataSource)
 
-SimulatorDataSource::SimulatorDataSource(FlightConnector* flightConnector) : DataSource(flightConnector, "Simulator", "", 0)
+SimulatorDataSource::SimulatorDataSource(FlightConnector* flightConnector) : DataSource(flightConnector, "Simulator", "")
 {
 
 }
 
 bool SimulatorDataSource::connect()
 {
-    AircraftState state = m_flightConnector->getState();
-    state.connected = true;
-    m_flightConnector->updateState(state);
-
+    setRunning(true);
     return true;
 }
 
 void SimulatorDataSource::disconnect()
 {
     printf("SimulatorDataSource::disconnect: Stopping...\n");
-    m_running = false;
+    setRunning(false);
 }
 
 bool SimulatorDataSource::update()
 {
     int rollDir = 1;
     int pitchDir = 1;
-    AircraftState state = m_flightConnector->getState();
-    state.connected = true;
+    auto state = getFlightConnector()->getState();
 
-    state.pitch = 10.0f;
+    state->set(DATA_AIRCRAFT_PITCH, 10.0f);
 
-    state.flightDirector.mode = 1;
-    state.flightDirector.pitch = 0.0f;
-    state.flightDirector.roll = 0.0f;
+    state->set(DATA_FLIGHTDIRECTOR_MODE, 1);
+    state->set(DATA_FLIGHTDIRECTOR_PITCH, 0.0f);
+    state->set(DATA_FLIGHTDIRECTOR_ROLL, 0.0f);
 
-    m_communication.com1Hz = 118900;
-    m_communication.com1StandbyHz = 136125;
+    state->set(DATA_COMMS_COM1HZ, 118900);
+    state->set(DATA_COMMS_COM1STANDBYHZ, 136125);
 
-    m_autopilot.speed = 50.0f;
-    m_autopilot.altitude = 1000.0f;
-    m_autopilot.heading = 90.0f;
+    state->set(DATA_AUTOPILOT_SPEED, 50.0f);
+    state->set(DATA_AUTOPILOT_ALTITUDE, 1000.0f);
+    state->set(DATA_AUTOPILOT_HEADING, 90.0f);
 
-    state.autopilot = m_autopilot;
-    state.comms = m_communication;
-    state.apu = m_apu;
-
-    m_flightConnector->updateState(state);
-
-    while (m_running)
+    while (isRunning())
     {
-        state = m_flightConnector->getState();
-        state.connected = true;
+        state = getFlightConnector()->getState();
+
+        float roll = state->getFloat(DATA_FLIGHTDIRECTOR_ROLL);
         if (rollDir == 1)
         {
-            state.roll += 1;
-            if (state.roll >= 45)
+            roll += 1;
+            if (roll >= 45)
             {
                 rollDir = -1;
             }
         }
         else
         {
-            state.roll -= 1;
-            if (state.roll <= -45)
+            roll -= 1;
+            if (roll <= -45)
             {
                 rollDir = 1;
             }
         }
+        state->set(DATA_FLIGHTDIRECTOR_ROLL, roll);
+
+        float pitch = state->getFloat(DATA_FLIGHTDIRECTOR_PITCH);
         if (pitchDir == 1)
         {
-            state.pitch += 0.1;
-            if (state.pitch > 20.0f)
+            pitch += 0.1f;
+            if (pitch > 20.0f)
             {
                 pitchDir = -1;
             }
         }
         else
         {
-            state.pitch -= 0.1;
-            if (state.pitch < -20.0f)
+            pitch -= 0.1f;
+            if (pitch < -20.0f)
             {
                 pitchDir = 1;
             }
         }
-        state.indicatedAirspeed += 0.1f;
-        state.altitude += 0.5f;
-        state.magHeading += 0.2f;
-        state.autopilot = m_autopilot;
-        state.comms = m_communication;
-        state.apu = m_apu;
-        state.verticalSpeed = state.pitch * 400.0f;
-        m_flightConnector->updateState(state);
+        state->set(DATA_FLIGHTDIRECTOR_PITCH, pitch);
+
+        state->set(DATA_AIRCRAFT_INDICATEDAIRSPEED, state->getFloat(DATA_AIRCRAFT_INDICATEDAIRSPEED) + 0.1f);
+        state->set(DATA_AIRCRAFT_ALTITUDE, state->getFloat(DATA_AIRCRAFT_ALTITUDE) + 0.5f);
+        state->set(DATA_AIRCRAFT_MAGHEADING, state->getFloat(DATA_AIRCRAFT_MAGHEADING) + 0.2f);
+        state->set(DATA_AIRCRAFT_VERTICALSPEED, pitch * 400.0f);
+
+        state->set(DATA_AUTOPILOT_HEADING, m_autopilot.heading);
+        state->set(DATA_AUTOPILOT_SPEED, m_autopilot.speed);
+        state->set(DATA_AUTOPILOT_ALTITUDE, m_autopilot.altitude);
+        state->set(DATA_AUTOPILOT_ALTITUDESTEP1000, m_autopilot.altitudeStep1000);
+        state->set(DATA_AUTOPILOT_AP1MODE, m_autopilot.ap1Mode);
+        state->set(DATA_AUTOPILOT_AP2MODE, m_autopilot.ap2Mode);
+
+        state->set(DATA_COMMS_COM1HZ, (int)m_communication.com1Hz);
+        state->set(DATA_COMMS_COM1STANDBYHZ, (int)m_communication.com1StandbyHz);
+
+        state->set(DATA_APU_MASTER_ON, m_apu.masterOn);
+        state->set(DATA_APU_STARTER_ON, m_apu.starterOn);
+
         usleep(50000);
     }
     return true;

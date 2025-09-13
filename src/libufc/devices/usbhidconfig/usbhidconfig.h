@@ -60,14 +60,16 @@ class USBHIDConfigDevice : public USBHIDDevice
     std::vector<Descriptor> m_inputs;
     std::vector<Descriptor> m_outputs;
 
-    void updateOutput(const AircraftState &state, Descriptor& output, const std::map<std::string, unsigned char> &displayValues);
-    void updateInput(const AircraftState &state);
-    void updateInput(const AircraftState &state, Descriptor &input, BitBuffer &buffer);
+    void updateOutput(const std::shared_ptr<AircraftState> &state, const Descriptor &output, const std::map<std::string, unsigned char> &
+                      displayValues);
+    void updateInput(std::shared_ptr<AircraftState> state);
+    void updateInput(std::shared_ptr<AircraftState> state, Descriptor &input, BitBuffer &buffer);
 
-    int getValue(const AircraftState &state, const Field &field, const std::map<std::string, unsigned char> &displayValues);
+    int getValue(std::shared_ptr<AircraftState> state, const Field &field, const std::map<std::string, unsigned char> &displayValues);
 
     void parseDescriptor(const YAML::Node &descriptorNode, Descriptor &descriptor);
-    void parseFieldValue(Field &field, const YAML::Node &node);
+
+    static void parseFieldValue(Field &field, const YAML::Node &node);
 
 public:
     USBHIDConfigDevice(FlightConnector* flightConnector, const std::string &name, uint16_t vendorId, uint16_t productId);
@@ -77,9 +79,9 @@ public:
     bool init() override;
     void close() override;
 
-    std::map<std::string, unsigned char> createDisplayValues(const AircraftState &state);
+    static std::map<std::string, unsigned char> createDisplayValues(const std::shared_ptr<AircraftState> &state);
 
-    void update(const AircraftState &state) override;
+    void update(std::shared_ptr<AircraftState> state) override;
 };
 
 class USBHIDConfigManager : private Logger

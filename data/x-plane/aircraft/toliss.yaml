@@ -21,6 +21,7 @@ data:
     displayHeading: "!AirbusFBW/HDGdashed"
     headingManaged: AirbusFBW/HDGmanaged
 
+    displayAltitude: "!AirbusFBW/HDGdashed"
     altitudeManaged: AirbusFBW/ALTmanaged
 
     displayVerticalSpeed: "!AirbusFBW/VSdashed"
@@ -32,27 +33,44 @@ data:
     vfeNext: AirbusFBW/VFENext
 
   apu:
-    master:
+    masterOn:
       on: AirbusFBW/APUMaster
     starter:
       on: AirbusFBW/APUStarter
+
+  elec:
+    battery:
+      1:
+        on: AirbusFBW/BatOHPArray[0]
+      2:
+        on: AirbusFBW/BatOHPArray[1]
+    external:
+      available: AirbusFBW/ExtPowOHPArray[0] == 2
+      on: AirbusFBW/ExtPowOHPArray[0] == 1
+
+  aircond:
+    packs:
+      1:
+        on: 
+        fault: 
 
   lights:
     landing:
       left:
         on:
           dataRef: AirbusFBW/OHPLightSwitches[4]
-          lua: value = value == 2
+          lua: return value == 2
         extended:
           dataRef: AirbusFBW/OHPLightSwitches[4]
-          lua: value = value > 0
+          lua: return value > 0
       right:
         on:
           dataRef: AirbusFBW/OHPLightSwitches[5]
-          lua: value = value == 2
+          lua: return value == 2
         extended:
           dataRef: AirbusFBW/OHPLightSwitches[5]
-          lua: value = value > 0
+          lua: return value > 0
+
 
   cabin:
     call: AirbusFBW/fmod/env/cabinChime

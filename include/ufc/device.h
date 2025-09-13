@@ -32,7 +32,6 @@ class DeviceInit
 
 class DeviceRegistry
 {
- private:
     std::map<std::string, DeviceInit*> m_devices;
 
  public:
@@ -68,9 +67,11 @@ class DeviceRegistry
 
 class Device : public Logger
 {
- protected:
     FlightConnector* m_flightConnector;
     std::string m_name;
+
+ protected:
+    [[nodiscard]] FlightConnector* getFlightConnector() const { return m_flightConnector; }
 
  public:
     explicit Device(FlightConnector* flightConnector, const std::string &name);
@@ -85,9 +86,9 @@ class Device : public Logger
 
     virtual std::string getName() { return m_name; }
 
-    virtual void update(const AircraftState& state) = 0;
+    virtual void update(std::shared_ptr<AircraftState> state) = 0;
 };
 
 }
 
-#endif //DEVICE_H
+#endif
