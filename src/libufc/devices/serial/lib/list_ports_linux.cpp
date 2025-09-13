@@ -22,9 +22,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "serial/serial.h"
+#include "../serial.h"
 
-using serial::PortInfo;
 using std::istringstream;
 using std::ifstream;
 using std::getline;
@@ -32,6 +31,7 @@ using std::vector;
 using std::string;
 using std::cout;
 using std::endl;
+using namespace UFC;
 
 static vector<string> glob(const vector<string>& patterns);
 static string basename(const string& path);
@@ -54,16 +54,16 @@ glob(const vector<string>& patterns)
 
     glob_t glob_results;
 
-    int glob_retval = glob(patterns[0].c_str(), 0, NULL, &glob_results);
+    glob(patterns[0].c_str(), 0, NULL, &glob_results);
 
     vector<string>::const_iterator iter = patterns.begin();
 
     while(++iter != patterns.end())
     {
-        glob_retval = glob(iter->c_str(), GLOB_APPEND, NULL, &glob_results);
+        glob(iter->c_str(), GLOB_APPEND, NULL, &glob_results);
     }
 
-    for(int path_index = 0; path_index < glob_results.gl_pathc; path_index++)
+    for(size_t path_index = 0; path_index < glob_results.gl_pathc; path_index++)
     {
         paths_found.push_back(glob_results.gl_pathv[path_index]);
     }
@@ -220,7 +220,7 @@ format(const char* format, ...)
 {
     va_list ap;
 
-    size_t buffer_size_bytes = 256;
+    int buffer_size_bytes = 256;
 
     string result;
 
@@ -294,10 +294,10 @@ usb_sysfs_hw_string(const string& sysfs_path)
     return format("USB VID:PID=%s:%s %s", vid.c_str(), pid.c_str(), serial_number.c_str() );
 }
 
-vector<PortInfo>
-serial::list_ports()
+vector<UFC::SerialPortInfo>
+SerialConfigManager::listPorts()
 {
-    vector<PortInfo> results;
+    vector<UFC::SerialPortInfo> results;
 
     vector<string> search_globs;
     search_globs.push_back("/dev/ttyACM*");
@@ -321,10 +321,10 @@ serial::list_ports()
 
         string hardware_id = sysfs_info[1];
 
-        PortInfo device_entry;
+        UFC::SerialPortInfo device_entry;
         device_entry.port = device;
         device_entry.description = friendly_name;
-        device_entry.hardware_id = hardware_id;
+        device_entry.hardwareId = hardware_id;
 
         results.push_back( device_entry );
 
