@@ -9,6 +9,8 @@
 #include <cstdint>
 #include <map>
 #include <vector>
+#include <mutex>
+#include <memory>
 
 #include "logger.h"
 
