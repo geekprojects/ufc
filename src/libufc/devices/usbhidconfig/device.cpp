@@ -59,11 +59,7 @@ bool USBHIDConfigDevice::init()
     hid_set_nonblocking(getDevice(), true);
 
     auto state = make_shared<AircraftState>();
-    map<string, uint8_t> displayValues;
-    for (auto& initDesc : m_init)
-    {
-        updateOutput(state, initDesc, displayValues);
-    }
+    update(state);
     return true;
 }
 
