@@ -81,6 +81,7 @@ class FlightConnector final : public Logger
     Config m_config;
     std::shared_ptr<DataSource> m_dataSource;
 
+    std::mutex m_devicesMutex;
     std::vector<std::shared_ptr<Device>> m_devices;
     std::shared_ptr<USBHIDConfigManager> m_usbhidConfigManager;
     std::shared_ptr<SerialConfigManager> m_serialConfigManager;
@@ -130,6 +131,13 @@ class FlightConnector final : public Logger
     bool initDevices();
 
     /**
+     * Detect new devices.
+     *
+     * Assumes initDevices has been called.
+     */
+    void scanDevices();
+
+    /**
      * Find and open the default data source set in configuration
      *
      * @return The DataSource
@@ -173,6 +181,8 @@ class FlightConnector final : public Logger
      */
     void wait() const;
 
+    [[nodiscard]] bool isRunning() const { return m_running; }
+
     /**
      *
      * @return The current configuration
@@ -200,6 +210,7 @@ class FlightConnector final : public Logger
 
     void addDevice(const std::shared_ptr<Device>& device)
     {
+        std::scoped_lock lock(m_devicesMutex);
         m_devices.push_back(device);
     }
 

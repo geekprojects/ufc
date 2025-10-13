@@ -34,14 +34,9 @@ void USBHIDConfigManager::scan()
             log(DEBUG, "scan: Checking: %s", entry.path().filename().string().c_str());
             auto configFile = YAML::LoadFile(entry.path());
             USBIds id;
-            if (checkDevice(configFile, id))
+            auto it = m_devices.find(id);
+            if (it == m_devices.end() && checkDevice(configFile, id))
             {
-                auto it = m_devices.find(id);
-                if (it != m_devices.end())
-                {
-                    // We've already found this device!
-                    continue;
-                }
                 openDevice(configFile, id);
             }
         }

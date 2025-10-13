@@ -110,7 +110,7 @@ bool XPlaneNavAids::loadNavAidData()
         }
 
         int type = atoi(line[0].c_str());
-        if (!(type == 2 || type == 3 || /* type == 4 || type == 5 || */ type == 12 || type == 13))
+        if (!(type == 2 || type == 3 || /* type == 4 || */ type == 5 || type == 12 || type == 13))
         {
             continue;
         }
@@ -121,7 +121,7 @@ bool XPlaneNavAids::loadNavAidData()
             case 2: navAidType = NavAidType::NDB; break;
             case 3: navAidType = NavAidType::VOR; break;
             //case 4:
-            //case 5: navAidType = NavAidType::LOC; break;
+            case 5: navAidType = NavAidType::LOC; break;
             case 12:
             case 13: navAidType = NavAidType::DME; break;
         }

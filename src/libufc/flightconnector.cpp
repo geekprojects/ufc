@@ -82,12 +82,17 @@ bool FlightConnector::initDevices()
     }
 
     m_usbhidConfigManager = make_shared<USBHIDConfigManager>(this);
-    m_usbhidConfigManager->scan();
-
     m_serialConfigManager = make_shared<SerialConfigManager>(this);
-    m_serialConfigManager->scan();
+
+    scanDevices();
 
     return true;
+}
+
+void FlightConnector::scanDevices()
+{
+    m_usbhidConfigManager->scan();
+    m_serialConfigManager->scan();
 }
 
 shared_ptr<DataSource> FlightConnector::openDefaultDataSource()
@@ -194,6 +199,7 @@ void FlightConnector::exit()
 
 void FlightConnector::updateDevices()
 {
+    std::scoped_lock lock(m_devicesMutex);
     for (auto device : m_devices)
     {
         device->update(m_state);

@@ -53,6 +53,7 @@ class UFCPlugin : public UFC::Logger
     int m_menuContainer = -1;
     XPLMMenuID m_menuId = nullptr;
 
+    void startFlightConnector();
     static float initCallback(float elapsedMe, float elapsedSim, int counter, void * refcon);
     float init(float elapsedMe, float elapsedSim, int counter);
 
@@ -67,6 +68,8 @@ class UFCPlugin : public UFC::Logger
 
  public:
     UFCPlugin() : Logger("UFCPlugin") {}
+
+    void buildMenu();
 
     int start(char* outName, char* outSig, char* outDesc);
     void stop();

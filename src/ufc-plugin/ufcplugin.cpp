@@ -20,6 +20,7 @@ using namespace UFC;
 
 UFCPlugin g_ufcPlugin;
 
+
 int UFCPlugin::start(char* outName, char* outSig, char* outDesc)
 {
     registerCrashHandler();
@@ -34,8 +35,6 @@ int UFCPlugin::start(char* outName, char* outSig, char* outDesc)
 
     m_menuContainer = XPLMAppendMenuItem(XPLMFindPluginsMenu(), "UFC", 0, 0);
     m_menuId = XPLMCreateMenu("UFC", XPLMFindPluginsMenu(), m_menuContainer, menuCallback, this);
-    XPLMAppendMenuItem(m_menuId, "Settings", (void *)-1, 1);
-    XPLMAppendMenuSeparator(m_menuId);
 
     log(DEBUG, "UFC: XPluginStart: Creating Flight Connector...");
     m_flightConnector = new FlightConnector();
@@ -70,22 +69,9 @@ int UFCPlugin::start(char* outName, char* outSig, char* outDesc)
     m_flightConnector->init();
     m_flightConnector->initDevices();
 
-    for (const auto& device : m_flightConnector->getDevices())
-    {
-        string name = "Device: " + device->getName();
-        XPLMAppendMenuItem(m_menuId, name.c_str(), nullptr, 1);
-    }
-    XPLMAppendMenuSeparator(m_menuId);
-    XPLMAppendMenuItem(m_menuId, "Detect devices...", (void*)-1, 1);
+    buildMenu();
 
-    if (!m_flightConnector->getDevices().empty())
-    {
-        XPLMRegisterFlightLoopCallback(initCallback, -1, this);
-    }
-    else
-    {
-        log(WARN, "UFC: No devices found. Not Starting.");
-    }
+    startFlightConnector();
 
     return 1;
 }
@@ -131,6 +117,15 @@ void UFCPlugin::receiveMessage(XPLMPluginID inFrom, int inMsg, void* inParam)
 #endif
 }
 
+void UFCPlugin::startFlightConnector()
+{
+    if (!m_flightConnector->getDevices().empty() && !m_flightConnector->isRunning())
+    {
+        // We didn't initially find any devices, now we've found some, start Flight Connector
+        XPLMRegisterFlightLoopCallback(initCallback, -1, this);
+    }
+}
+
 float UFCPlugin::initCallback(float elapsedMe, float elapsedSim, int counter, void * refcon)
 {
     return ((UFCPlugin*)refcon)->init(elapsedMe, elapsedSim, counter);
@@ -153,7 +148,17 @@ void UFCPlugin::menuCallback(void* menuRef, void* itemRef)
 
 void UFCPlugin::menu(void* itemRef)
 {
-    log(DEBUG, "menu: itemRef=%p", itemRef);
+    auto menuNum = (int)(intptr_t)itemRef;
+
+    log(DEBUG, "menu: menuNum=%d", menuNum);
+    if (menuNum == 1000)
+    {
+        log(DEBUG, "menu: Detecting devices!");
+        m_flightConnector->scanDevices();
+        buildMenu();
+
+        startFlightConnector();
+    }
 }
 
 void UFCPlugin::handlePosixSigCallback(int sig, siginfo_t *siginfo, void *context)
@@ -298,6 +303,27 @@ bool UFCPlugin::isExecuting()
     }
 
     return m_flightConnector->isOurThread();
+}
+
+void UFCPlugin::buildMenu()
+{
+    XPLMClearAllMenuItems(m_menuId);
+
+    XPLMAppendMenuItem(m_menuId, "Settings", (void *)-1, 1);
+    XPLMAppendMenuSeparator(m_menuId);
+    if (m_flightConnector->getDevices().empty())
+    {
+        XPLMAppendMenuItem(m_menuId, "No Devices Found", nullptr, 1);
+    }
+
+    for (const auto& device : m_flightConnector->getDevices())
+    {
+        string name = "Device: " + device->getName();
+        XPLMAppendMenuItem(m_menuId, name.c_str(), nullptr, 1);
+    }
+
+    XPLMAppendMenuSeparator(m_menuId);
+    XPLMAppendMenuItem(m_menuId, "Detect devices...", (void*)1000, 1);
 }
 
 PLUGIN_API int XPluginStart(char* outName, char* outSig, char* outDesc)

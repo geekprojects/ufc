@@ -63,6 +63,13 @@ std::shared_ptr<SerialConfigDevice> SerialConfigManager::checkDevice(
         return nullptr;
     }
 
+    auto it = m_devices.find(devicePort.port);
+    if (it != m_devices.end())
+    {
+        // We've already got a device on this port
+        return nullptr;
+    }
+
     auto device = make_shared<SerialConfigDevice>(m_flightConnector, node, devicePort);
     if (!device->detect())
     {
