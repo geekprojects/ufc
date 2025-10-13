@@ -94,7 +94,11 @@ bool XPlaneDataSource::update()
     for (const auto& dataRef : getMapping().getDataRefs())
     {
         log(DEBUG, "update: %s -> %s", dataRef->id.c_str(), dataRef->mapping.dataRef.c_str());
-        if (!dataRef->mapping.dataRef.empty() &&
+        if (dataRef->mapping.type == DataMappingType::STATIC)
+        {
+            getFlightConnector()->getState()->set(dataRef->id, dataRef->mapping.value);
+        }
+        else if (!dataRef->mapping.dataRef.empty() &&
             dataRef->mapping.dataRef != "null")
         {
             dataRef->value = state->getOrCreateValue(dataRef->id);
@@ -115,6 +119,7 @@ bool XPlaneDataSource::update()
 void XPlaneDataSource::update(const map<int, float>& values)
 {
     auto state = getFlightConnector()->getState();
+    auto& mapping = getMapping();
 
     for (const auto& [idx, value] : values)
     {
@@ -129,13 +134,13 @@ void XPlaneDataSource::update(const map<int, float>& values)
         switch (dataRef->type)
         {
             case DataRefType::FLOAT:
-                getMapping().writeFloat(dataRef, v);
+                mapping.writeFloat(dataRef, v);
                 break;
             case DataRefType::BOOLEAN:
-                getMapping().writeBoolean(dataRef, static_cast<bool>(v));
+                mapping.writeBoolean(dataRef, static_cast<bool>(v));
                 break;
             case DataRefType::INTEGER:
-                getMapping().writeInt(dataRef, static_cast<int>(v));
+                mapping.writeInt(dataRef, static_cast<int>(v));
                 break;
             default:
                 if (dataRef->value != nullptr)

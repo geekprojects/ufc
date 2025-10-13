@@ -21,7 +21,7 @@ data:
     displayHeading: "!AirbusFBW/HDGdashed"
     headingManaged: AirbusFBW/HDGmanaged
 
-    displayAltitude: "!AirbusFBW/HDGdashed"
+    displayAltitude: true
     altitudeManaged: AirbusFBW/ALTmanaged
 
     displayVerticalSpeed: "!AirbusFBW/VSdashed"

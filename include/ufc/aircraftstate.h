@@ -111,6 +111,10 @@ class AircraftValue
     std::string m_string;
 
  public:
+    AircraftValue()
+    {
+    }
+
     explicit AircraftValue(int idx)
     {
         m_value.i = 0;
@@ -144,6 +148,24 @@ class AircraftValue
     {
         m_type = DataRefType::STRING;
         m_string = str;
+    }
+
+    void set(AircraftValue const & b)
+    {
+        m_type = b.m_type;
+        if (m_type == DataRefType::STRING)
+        {
+            m_string = b.m_string;
+        }
+        else
+        {
+            m_value = b.m_value;
+        }
+    }
+
+    [[nodiscard]] DataRefType getType() const
+    {
+        return m_type;
     }
 
     [[nodiscard]] int getInt() const
@@ -251,6 +273,11 @@ class AircraftState : public Logger
     void set(std::string const& name, const std::string& str)
     {
         getOrCreateValue(name)->set(str);
+    }
+
+    void set(std::string const& name, AircraftValue const& value)
+    {
+        getOrCreateValue(name)->set(value);
     }
 
     float getFloat(const std::string& dataName);

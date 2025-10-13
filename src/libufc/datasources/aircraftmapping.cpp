@@ -251,6 +251,15 @@ void AircraftMapping::loadCommands(YAML::Node commandsNode, const std::string& i
 DataMapping AircraftMapping::parseMapping(std::string mappingStr)
 {
     DataMapping mapping;
+
+    if (mappingStr == "true" || mappingStr == "false")
+    {
+        mapping.type = DataMappingType::STATIC;
+        mapping.value.set(mappingStr == "true");
+        log(DEBUG, "parseMapping: STATIC: %d", mapping.value.getInt());
+        return mapping;
+    }
+
     auto idx = mappingStr.find("==");
 
     if (idx != string::npos)
@@ -258,12 +267,13 @@ DataMapping AircraftMapping::parseMapping(std::string mappingStr)
         mapping.type = DataMappingType::EQUALS;
         mapping.dataRef = StringUtils::trim(mappingStr.substr(0, idx));
         mapping.operand = atoi(StringUtils::trim(mappingStr.substr(idx + 2)).c_str());
-        printf("parseMapping: EQUALS: '%s' -> %d\n", mapping.dataRef.c_str(), mapping.operand);
+        log(DEBUG, "parseMapping: EQUALS: '%s' -> %d", mapping.dataRef.c_str(), mapping.operand);
     }
     else if (mappingStr.at(0) == '!')
     {
         mapping.type = DataMappingType::NEGATE;
         mapping.dataRef = mappingStr.substr(1);
+        log(DEBUG, "parseMapping: NEGATE: %s", mapping.dataRef.c_str());
     }
     else
     {
@@ -312,11 +322,15 @@ void AircraftMapping::writeFloat(const shared_ptr<DataDefinition> &dataDef, floa
             break;
 
         case DataMappingType::EQUALS:
-            value = value == dataDef->mapping.operand;
+            value = value == static_cast<float>(dataDef->mapping.operand);
             break;
 
         case DataMappingType::NEGATE:
             value = !static_cast<bool>(value);
+            log(DEBUG, "writeFloat: NEGATE: %s -> %d", dataDef->id.c_str(), value);
+            break;
+        case DataMappingType::STATIC:
+            value = dataDef->mapping.value.getFloat();
             break;
     }
     dataDef->value->set(value);
@@ -336,6 +350,11 @@ void AircraftMapping::writeInt(const shared_ptr<DataDefinition> &dataDef, int32_
 
         case DataMappingType::NEGATE:
             value = !static_cast<bool>(value);
+            log(DEBUG, "writeInt: NEGATE: %s -> %d", dataDef->id.c_str(), value);
+            break;
+
+        case DataMappingType::STATIC:
+            value = dataDef->mapping.value.getInt();
             break;
     }
     dataDef->value->set(value);
@@ -349,4 +368,25 @@ void AircraftMapping::writeBoolean(const shared_ptr<DataDefinition>& dataDef, in
 void AircraftMapping::writeString([[maybe_unused]] const shared_ptr<DataDefinition>& dataDef, [[maybe_unused]] const string& value)
 {
     log(ERROR, "writeString: Not implemented!");
+}
+
+void AircraftMapping::writeValue(const std::shared_ptr<DataDefinition> &dataDef, const UFC::AircraftValue &value)
+{
+    switch (value.getType())
+    {
+        case DataRefType::BOOLEAN:
+            writeBoolean(dataDef, value.getInt());
+            break;
+        case DataRefType::INTEGER:
+            writeInt(dataDef, value.getInt());
+            break;
+        case DataRefType::FLOAT:
+            writeFloat(dataDef, value.getFloat());
+            break;
+        case DataRefType::STRING:
+            writeString(dataDef, value.getString());
+            break;
+        default:
+            break;
+    }
 }

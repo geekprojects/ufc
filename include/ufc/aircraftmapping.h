@@ -26,7 +26,8 @@ enum class DataMappingType
 {
     VALUE,
     EQUALS,
-    NEGATE
+    NEGATE,
+    STATIC,
 };
 
 struct DataMapping
@@ -35,6 +36,7 @@ struct DataMapping
     int32_t operand = 0;
     std::string dataRef;
     std::string luaScript;
+    UFC::AircraftValue value;
 };
 
 struct DataDefinition
@@ -79,7 +81,7 @@ class AircraftMapping : UFC::Logger
 
     void addDataRef(const DataDefinition& dataRef);
 
-    static DataMapping parseMapping(std::string mapping);
+    DataMapping parseMapping(std::string mapping);
 
     void loadDefinitions(YAML::Node config);
     void loadCommands(YAML::Node node, const std::string& id);
@@ -99,6 +101,7 @@ class AircraftMapping : UFC::Logger
     void writeInt(const std::shared_ptr<DataDefinition> &dataDef, int32_t value);
     void writeBoolean(const std::shared_ptr<DataDefinition> &dataDef, int32_t value);
     void writeString(const std::shared_ptr<DataDefinition> &dataDef, const std::string& value);
+    void writeValue(const std::shared_ptr<DataDefinition> &dataDef, const UFC::AircraftValue& value);
 };
 
 #endif //MAPPING_H
