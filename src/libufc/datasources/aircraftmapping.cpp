@@ -327,7 +327,6 @@ void AircraftMapping::writeFloat(const shared_ptr<DataDefinition> &dataDef, floa
 
         case DataMappingType::NEGATE:
             value = !static_cast<bool>(value);
-            log(DEBUG, "writeFloat: NEGATE: %s -> %d", dataDef->id.c_str(), value);
             break;
         case DataMappingType::STATIC:
             value = dataDef->mapping.value.getFloat();
@@ -350,7 +349,6 @@ void AircraftMapping::writeInt(const shared_ptr<DataDefinition> &dataDef, int32_
 
         case DataMappingType::NEGATE:
             value = !static_cast<bool>(value);
-            log(DEBUG, "writeInt: NEGATE: %s -> %d", dataDef->id.c_str(), value);
             break;
 
         case DataMappingType::STATIC:
