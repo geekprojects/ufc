@@ -60,6 +60,16 @@ void DataSource::command(const std::string& commandName)
     }
 }
 
+int DataSource::transformData(const std::shared_ptr<DataDefinition> &dataRef, int value) const
+{
+    if (!dataRef->mapping.luaScript.empty())
+    {
+        //log(DEBUG, "transformData: Calling LUA script:\n%s", dataRef->mapping.luaScript.c_str());
+        value = (int)m_dataLua->execute(dataRef->mapping.luaScript, "value", (float)value);
+    }
+    return value;
+}
+
 float DataSource::transformData(const shared_ptr<DataDefinition>& dataRef, float value) const
 {
     if (!dataRef->mapping.luaScript.empty())

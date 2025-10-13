@@ -101,26 +101,39 @@ bool XPPluginDataSource::reloadAircraft()
     state->set(DATA_AIRCRAFT_AUTHOR, aircraftAuthor);
     state->set(DATA_AIRCRAFT_ICAO, aircraftICAO);
 
-    log(DEBUG, "UFC: New Aircraft: ICAO: %s, author: %s", aircraftICAO.c_str(), aircraftAuthor.c_str());
+    log(DEBUG, "reloadAircraft: New Aircraft: ICAO: %s, author: %s", aircraftICAO.c_str(), aircraftAuthor.c_str());
 
     getMapping().loadDefinitionsForAircraft(aircraftAuthor, aircraftICAO);
 
     for (auto& mapping : getMapping().getDataRefs())
     {
+        mapping->value = state->getOrCreateValue(mapping->id);
         if (!mapping->mapping.dataRef.empty())
         {
-            mapping->value = state->getOrCreateValue(mapping->id);
             mapping->data = XPLMFindDataRef(mapping->mapping.dataRef.c_str());
+            auto type = XPLMGetDataRefTypes(mapping->data);
+            if (!!(type & xplmType_Float) || !!(type & xplmType_Double))
+            {
+                mapping->type = DataRefType::FLOAT;
+            }
+            else if (!!(type & xplmType_Int))
+            {
+                mapping->type = DataRefType::INTEGER;
+            }
+            else
+            {
+                log(WARN, "reloadAircraft: Unhandled type for dataRef %s: %d", mapping->mapping.dataRef.c_str(), type);
+                mapping->data = nullptr;
+            }
         }
         else
         {
-            log(WARN, "UFC: Unable to find data ref: %s", mapping->mapping.dataRef.c_str());
             mapping->data = nullptr;
         }
-        log(DEBUG, "UFC: Data: %s -> %s (%p)", mapping->id.c_str(), mapping->mapping.dataRef.c_str(), mapping->data);
+        log(DEBUG, "reloadAircraft: Data: %s -> %s (%p)", mapping->id.c_str(), mapping->mapping.dataRef.c_str(), mapping->data);
     }
 
-    for (auto& commandMapping : getMapping().getCommands())
+    for (const auto& commandMapping : getMapping().getCommands())
     {
         for (auto const& command : commandMapping.second.commands)
         {
@@ -149,23 +162,42 @@ bool XPPluginDataSource::updateDataRefs()
     auto state = getFlightConnector()->getState();
     for (const auto& mapping : getMapping().getDataRefs())
     {
+        if (mapping->mapping.type == DataMappingType::STATIC)
+        {
+            getMapping().writeValue(mapping, mapping->mapping.value);
+            continue;
+        }
         if (mapping->data == nullptr)
         {
             continue;
         }
-        //auto v = transformData(dataRef, value);
+
         switch (mapping->type)
         {
             case DataRefType::BOOLEAN:
-                getMapping().writeBoolean(mapping, XPLMGetDatai(mapping->data));
+            {
+                auto i = XPLMGetDatai(mapping->data);
+                i = transformData(mapping, i);
+                getMapping().writeBoolean(mapping, i);
                 break;
+            }
+
             case DataRefType::INTEGER:
-                getMapping().writeInt(mapping, XPLMGetDatai(mapping->data));
+            {
+                auto i = XPLMGetDatai(mapping->data);
+                i = transformData(mapping, i);
+                getMapping().writeInt(mapping, i);
                 break;
+            }
+
             case DataRefType::FLOAT:
             default:
-                getMapping().writeFloat(mapping, XPLMGetDataf(mapping->data));
+            {
+                auto f = XPLMGetDataf(mapping->data);
+                f = transformData(mapping, f);
+                getMapping().writeFloat(mapping, f);
                 break;
+            }
         }
     }
 

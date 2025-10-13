@@ -94,6 +94,7 @@ class DataSource : public Logger
     std::shared_ptr<UFCLua> m_dataLua;
 
  protected:
+    [[nodiscard]] int transformData(const std::shared_ptr<DataDefinition> &dataRef, int value) const;
     [[nodiscard]] float transformData(const std::shared_ptr<DataDefinition> &dataRef, float value) const;
 
     void setRunning(bool running) { m_running = running; }
