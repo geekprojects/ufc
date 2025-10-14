@@ -77,6 +77,9 @@ public:
     bool loadConfig(const YAML::Node & node);
 
     bool init() override;
+
+    void clear();
+
     void close() override;
 
     static std::map<std::string, unsigned char> createDisplayValues(const std::shared_ptr<AircraftState> &state);
