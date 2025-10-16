@@ -34,24 +34,30 @@ data:
     speedMach: sim/cockpit/autopilot/airspeed_is_mach
     speed: sim/cockpit2/autopilot/airspeed_dial_kts_mach
     speedWindowOpen: sim/cockpit2/autopilot/vnav_speed_window_open
+    displaySpeed: true
 
     # Heading
+    displayHeading: true
+    headingManaged: false
     heading: sim/cockpit/autopilot/heading_mag
     headingWindowOpen: # No default
     gpssStatus: sim/cockpit2/autopilot/gpss_status
 
     # Altitude
+    displayAltitude: true
+    altitudeManaged: false
     altitude: sim/cockpit2/autopilot/altitude_dial_ft
 
     # Vertical Speed
+    displayVerticalSpeed: true
     verticalSpeed: sim/cockpit/autopilot/vertical_velocity
 
     fmsVnav: sim/cockpit2/autopilot/sim/cockpit2/autopilot/fms_vnav
 
-    locMode: # No default
+    locMode: false
     ap1Mode: sim/cockpit/autopilot/autopilot_mode == 2
-    ap2Mode: # No default
-    autoThrottleMode: # No default
+    ap2Mode: false
+    autoThrottleMode: false
     approachMode: sim/cockpit2/autopilot/approach_status
 
   instrument:
