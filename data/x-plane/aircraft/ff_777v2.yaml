@@ -4,13 +4,20 @@ icao: B772
 
 data:
   autopilot:
+    ap1Mode: 1-sim/ckpt/lampsGlow/mcpCaptAP
+    ap2Mode: 1-sim/ckpt/lampsGlow/mcpFoAP
+    autoThrottleMode: 1-sim/ckpt/lampsGlow/mcpAT
+    locMode: 1-sim/ckpt/lampsGlow/mcpLOC
+    approachMode: 1-sim/ckpt/lampsGlow/mcpAPP
     heading: 1-sim/output/mcp/hdg
     speed: 1-sim/output/mcp/spd
     altitude: 1-sim/output/mcp/alt
     verticalSpeed: 1-sim/output/mcp/vs
     fmsVnav: 1-sim/ckpt/lamps/mcpVNAV
-    headingTrkMode: 1-sim/output/mcp/isHdgTrg
-    verticalSpeedFPAMode: 1-sim/output/mcp/isVsTrg
+    headingTrkMode: "!1-sim/output/mcp/isHdgTrg"
+    verticalSpeedFPAMode: "!1-sim/output/mcp/isVsTrg"
+    displaySpeed: 1-sim/output/mcp/isSpdOpen
+    displayVerticalSpeed: 1-sim/output/mcp/isVsOpen
 
 commands:
   autopilot:
