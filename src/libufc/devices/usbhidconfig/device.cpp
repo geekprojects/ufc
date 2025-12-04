@@ -1,7 +1,7 @@
 
 #include <ufc/bitbuffer.h>
 #include <ufc/flightconnector.h>
-#include <ufc/lua.h>
+#include "../../lua.h"
 
 #include <hidapi.h>
 #include <yaml-cpp/yaml.h>
