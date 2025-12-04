@@ -18,6 +18,10 @@ data:
     verticalSpeedFPAMode: "!1-sim/output/mcp/isVsTrg"
     displaySpeed: 1-sim/output/mcp/isSpdOpen
     displayVerticalSpeed: 1-sim/output/mcp/isVsOpen
+  aircraft:
+    barometer:
+      pilot:
+        mode: 1-sim/ckpt/cptHsiBaroModeRotary/anim
 
 commands:
   autopilot:
@@ -54,4 +58,20 @@ commands:
       toggle: 1-sim/command/mcpHdgTrkButton_button
     vsFpa:
       toggle: 1-sim/command/mcpVsFpaButton_button
+  aircraft:
+    barometer:
+      pilot:
+        up: 1-sim/command/cptHsiBaroRotary_rotary+
+        down: 1-sim/command/cptHsiBaroRotary_rotary-
+        std: 1-sim/command/cptHsiStdButton_button
+        mode:
+          inHg: 1-sim/command/cptHsiBaroModeRotary_switch-
+          hPa: 1-sim/command/cptHsiBaroModeRotary_switch+
+  efis:
+    nd:
+      constraints/toggle: 1-sim/command/cptHsiDataButton_button
+      waypoint/toggle: 1-sim/command/cptHsiWptButton_button
+      vor/toggle: 1-sim/command/cptHsiStaButton_button
+      ndb/toggle: 1-sim/command/cptHsiStaButton_button
+      airport/toggle: 1-sim/command/cptHsiArptButton_button
 
