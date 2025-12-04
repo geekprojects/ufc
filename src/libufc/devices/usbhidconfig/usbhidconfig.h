@@ -15,6 +15,12 @@
 namespace UFC
 {
 
+#define DIGIT_DASH '-'
+#define DIGIT_SPACE ' '
+#define DIGIT_S 'S'
+#define DIGIT_T 'T'
+#define DIGIT_D 'D'
+
 enum class FieldType
 {
     BIT,
@@ -23,13 +29,15 @@ enum class FieldType
     UINT16,
     UINT32,
     DATA,
+    DIGIT,
     PADDING
 };
 
 enum class FieldValueType
 {
     VALUE,
-    DATAREF
+    DATAREF,
+    LUA
 };
 
 struct Field
@@ -40,6 +48,8 @@ struct Field
     int value;
     std::string dataRef;
     std::vector<uint8_t> data;
+    std::string format;
+    std::string lua;
 
     bool previousState = false;
 };
@@ -59,6 +69,10 @@ class USBHIDConfigDevice : public USBHIDDevice
     std::vector<Descriptor> m_close;
     std::vector<Descriptor> m_inputs;
     std::vector<Descriptor> m_outputs;
+
+    std::shared_ptr<UFCLua> m_lua = nullptr;
+
+    uint8_t formatDigit(uint8_t uint8, const std::string & string);
 
     void updateOutput(const std::shared_ptr<AircraftState> &state, const Descriptor &output, const std::map<std::string, unsigned char> &
                       displayValues);
@@ -82,7 +96,7 @@ public:
 
     void close() override;
 
-    static std::map<std::string, unsigned char> createDisplayValues(const std::shared_ptr<AircraftState> &state);
+    std::map<std::string, unsigned char> createDisplayValues(const std::shared_ptr<AircraftState> &state);
 
     void update(std::shared_ptr<AircraftState> state) override;
 };

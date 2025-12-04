@@ -96,6 +96,10 @@ bool ClockDataSource::update()
         state->set(DATA_COMMS_COM1HZ, (hour * 10000) + (minutes * 100) + (local_time.tm_sec));
         state->set(DATA_COMMS_COM1STANDBYHZ, (local_time.tm_mday * 10000) + ((local_time.tm_mon + 1) * 100) + ((local_time.tm_year + 1900) % 100));
 
+        state->set(DATA_AIRCRAFT_BAROMETER_PILOT_MODE, 0);
+        float timef = (float)hour + ((float)minutes / 100.0f);
+        state->set(DATA_AIRCRAFT_BAROMETER_PILOT_HG, timef);
+
         this_thread::sleep_for(chrono::milliseconds(100));
     }
 

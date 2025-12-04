@@ -46,17 +46,39 @@ void USBHIDConfigManager::scan()
 bool USBHIDConfigManager::checkDevice(YAML::Node node, USBIds& id)
 {
     const auto vendorId = node["vendorId"].as<uint16_t>();
-    const auto productId = node["productId"].as<uint16_t>();
-    auto handle = hid_open(vendorId, productId, nullptr);
-    if (handle != nullptr)
-    {
-        auto name = node["name"].as<string>();
-        log(INFO, "USBHIDConfigManager::checkDevice: Found: %s\n", name.c_str());
-        hid_close(handle);
 
-        id.productId = productId;
-        id.vendorId = vendorId;
-        return true;
+    vector<uint16_t> productIds;
+    auto productIdsNode = node["productId"];
+
+    if (productIdsNode.IsScalar())
+    {
+        log(DEBUG, "USBHIDConfigManager::checkDevice: Got one id...");
+        productIds.push_back(productIdsNode.as<uint16_t>());
+    }
+    else
+    {
+        log(DEBUG, "USBHIDConfigManager::checkDevice: Got multiple ids...");
+        for (auto productIdValue : productIdsNode)
+        {
+            log(DEBUG, "USBHIDConfigManager::checkDevice: %d", productIdValue.as<uint16_t>());
+            productIds.push_back(productIdValue.as<uint16_t>());
+        }
+    }
+
+    for (auto productId : productIds)
+    {
+        log(DEBUG, "USBHIDConfigManager::checkDevice: Checking: %04x:%04x", vendorId, productId);
+        auto handle = hid_open(vendorId, productId, nullptr);
+        if (handle != nullptr)
+        {
+            auto name = node["name"].as<string>();
+            log(INFO, "USBHIDConfigManager::checkDevice: Found: %s\n", name.c_str());
+            hid_close(handle);
+
+            id.productId = productId;
+            id.vendorId = vendorId;
+            return true;
+        }
     }
     return false;
 }

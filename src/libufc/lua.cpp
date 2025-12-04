@@ -23,10 +23,16 @@ bool UFCDataMetaObject::Exists(const std::string &name)
 
 std::shared_ptr<LuaType> UFCDataMetaObject::getValue(std::string &name)
 {
+    if (m_flightConnector->getDataSource() == nullptr)
+    {
+        return std::make_shared<LuaTNil>();
+    }
+
     float value;
     bool res = m_flightConnector->getDataSource()->getDataFloat(name, value);
     if (!res)
     {
+        printf("XXX: UFCDataMetaObject::getValue: NOT FOUND: %s\n", name.c_str());
         return std::make_shared<LuaTNil>();
     }
     return std::make_shared<LuaTNumber>(value);

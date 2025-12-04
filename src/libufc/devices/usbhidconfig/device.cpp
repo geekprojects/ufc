@@ -1,12 +1,15 @@
 
 #include <ufc/bitbuffer.h>
 #include <ufc/flightconnector.h>
+#include <ufc/lua.h>
 
 #include <hidapi.h>
 #include <yaml-cpp/yaml.h>
 
 #include "usbhidconfig.h"
 #include "lcd.h"
+
+#include "Engine/LuaState.hpp"
 
 using namespace std;
 using namespace UFC;
@@ -46,6 +49,8 @@ USBHIDConfigDevice::USBHIDConfigDevice(
 {
     m_foundId.vendorId = vendorId;
     m_foundId.productId = productId;
+
+    m_lua = make_shared<UFCLua>(flightConnector);
 }
 
 bool USBHIDConfigDevice::init()
@@ -91,47 +96,47 @@ map<string, uint8_t> USBHIDConfigDevice::createDisplayValues(const shared_ptr<Ai
             speed = (int) (apSpeed * 1000.0f);
         }
 
-        displayValues.try_emplace("display/speed[2]", getLCDDigit(speed, 2));
-        displayValues.try_emplace("display/speed[1]", getLCDDigit(speed, 1));
-        displayValues.try_emplace("display/speed[0]", getLCDDigit(speed, 0));
+        displayValues.try_emplace("display/speed[2]", getDigit(speed, 2));
+        displayValues.try_emplace("display/speed[1]", getDigit(speed, 1));
+        displayValues.try_emplace("display/speed[0]", getDigit(speed, 0));
     }
     else
     {
-        displayValues.try_emplace("display/speed[2]", 2);
-        displayValues.try_emplace("display/speed[1]", 2);
-        displayValues.try_emplace("display/speed[0]", 2);
+        displayValues.try_emplace("display/speed[2]", DIGIT_DASH);
+        displayValues.try_emplace("display/speed[1]", DIGIT_DASH);
+        displayValues.try_emplace("display/speed[0]", DIGIT_DASH);
     }
 
     if (state->getInt("autopilot/displayHeading"))
     {
-        int heading = (int)floor(state->getFloat("autopilot/heading"));
-        displayValues.try_emplace("display/heading[2]", getLCDDigit(heading, 2));
-        displayValues.try_emplace("display/heading[1]", getLCDDigit(heading, 1));
-        displayValues.try_emplace("display/heading[0]", getLCDDigit(heading, 0));
+        auto heading = static_cast<int>(state->getFloat("autopilot/heading"));
+        displayValues.try_emplace("display/heading[2]", getDigit(heading, 2));
+        displayValues.try_emplace("display/heading[1]", getDigit(heading, 1));
+        displayValues.try_emplace("display/heading[0]", getDigit(heading, 0));
     }
     else
     {
-        displayValues.try_emplace("display/heading[2]", 2);
-        displayValues.try_emplace("display/heading[1]", 2);
-        displayValues.try_emplace("display/heading[0]", 2);
+        displayValues.try_emplace("display/heading[2]", DIGIT_DASH);
+        displayValues.try_emplace("display/heading[1]", DIGIT_DASH);
+        displayValues.try_emplace("display/heading[0]", DIGIT_DASH);
     }
 
     if (state->getInt("autopilot/displayAltitude"))
     {
-        int altitude = (int) state->getFloat("autopilot/altitude");
-        displayValues.try_emplace("display/altitude[4]", getLCDDigit(altitude, 4));
-        displayValues.try_emplace("display/altitude[3]", getLCDDigit(altitude, 3));
-        displayValues.try_emplace("display/altitude[2]", getLCDDigit(altitude, 2));
-        displayValues.try_emplace("display/altitude[1]", getLCDDigit(altitude, 1));
-        displayValues.try_emplace("display/altitude[0]", getLCDDigit(altitude, 0));
+        auto altitude = static_cast<int>(state->getFloat("autopilot/altitude"));
+        displayValues.try_emplace("display/altitude[4]", getDigit(altitude, 4));
+        displayValues.try_emplace("display/altitude[3]", getDigit(altitude, 3));
+        displayValues.try_emplace("display/altitude[2]", getDigit(altitude, 2));
+        displayValues.try_emplace("display/altitude[1]", getDigit(altitude, 1));
+        displayValues.try_emplace("display/altitude[0]", getDigit(altitude, 0));
     }
     else
     {
-        displayValues.try_emplace("display/altitude[4]", 2);
-        displayValues.try_emplace("display/altitude[3]", 2);
-        displayValues.try_emplace("display/altitude[2]", 2);
-        displayValues.try_emplace("display/altitude[1]", 2);
-        displayValues.try_emplace("display/altitude[0]", 2);
+        displayValues.try_emplace("display/altitude[4]", DIGIT_DASH);
+        displayValues.try_emplace("display/altitude[3]", DIGIT_DASH);
+        displayValues.try_emplace("display/altitude[2]", DIGIT_DASH);
+        displayValues.try_emplace("display/altitude[1]", DIGIT_DASH);
+        displayValues.try_emplace("display/altitude[0]", DIGIT_DASH);
     }
 
     if (state->getInt("autopilot/displayVerticalSpeed"))
@@ -140,8 +145,8 @@ map<string, uint8_t> USBHIDConfigDevice::createDisplayValues(const shared_ptr<Ai
         displayValues.try_emplace("display/negativeVerticalSpeed", (verticalSpeed < 0));
 
         int vs = abs((int) verticalSpeed);
-        displayValues.try_emplace("display/verticalSpeed[3]", getLCDDigit(vs, 3));
-        displayValues.try_emplace("display/verticalSpeed[2]", getLCDDigit(vs, 2));
+        displayValues.try_emplace("display/verticalSpeed[3]", getDigit(vs, 3));
+        displayValues.try_emplace("display/verticalSpeed[2]", getDigit(vs, 2));
 
         if (!state->getInt("autopilot/verticalSpeedFPAMode"))
         {
@@ -150,17 +155,44 @@ map<string, uint8_t> USBHIDConfigDevice::createDisplayValues(const shared_ptr<Ai
         }
         else
         {
-            displayValues.try_emplace("display/verticalSpeed[1]", 0);
-            displayValues.try_emplace("display/verticalSpeed[0]", 0);
+            displayValues.try_emplace("display/verticalSpeed[1]", DIGIT_DASH);
+            displayValues.try_emplace("display/verticalSpeed[0]", DIGIT_DASH);
         }
     }
     else
     {
-        displayValues.try_emplace("display/verticalSpeed[3]", 2);
-        displayValues.try_emplace("display/verticalSpeed[2]", 2);
-        displayValues.try_emplace("display/verticalSpeed[1]", 2);
-        displayValues.try_emplace("display/verticalSpeed[0]", 2);
+        displayValues.try_emplace("display/verticalSpeed[3]", DIGIT_DASH);
+        displayValues.try_emplace("display/verticalSpeed[2]", DIGIT_DASH);
+        displayValues.try_emplace("display/verticalSpeed[1]", DIGIT_DASH);
+        displayValues.try_emplace("display/verticalSpeed[0]", DIGIT_DASH);
     }
+
+    if (!state->getInt("aircraft/barometer/pilot/std"))
+    {
+        int mode = state->getInt("aircraft/barometer/pilot/mode");
+        float qnh = state->getFloat("aircraft/barometer/pilot/in_hg");
+        if (mode == 1)
+        {
+            qnh *= 33.86389f;
+        }
+        else
+        {
+            qnh *= 100.0f;
+        }
+        auto qnhInt = static_cast<int>(qnh);
+        displayValues.try_emplace("display/qnh[3]", getDigit(qnhInt, 3));
+        displayValues.try_emplace("display/qnh[2]", getDigit(qnhInt, 2));
+        displayValues.try_emplace("display/qnh[1]", getDigit(qnhInt, 1));
+        displayValues.try_emplace("display/qnh[0]", getDigit(qnhInt, 0));
+    }
+    else
+    {
+        displayValues.try_emplace("display/qnh[3]", DIGIT_SPACE);
+        displayValues.try_emplace("display/qnh[2]", DIGIT_S);
+        displayValues.try_emplace("display/qnh[1]", DIGIT_T);
+        displayValues.try_emplace("display/qnh[0]", DIGIT_D);
+    }
+
 
 #ifdef DEBUG_USBHIDCONFIG
     for (auto dv : displayValues)
@@ -174,13 +206,81 @@ map<string, uint8_t> USBHIDConfigDevice::createDisplayValues(const shared_ptr<Ai
 
 void USBHIDConfigDevice::update(shared_ptr<AircraftState> state)
 {
+    if (getFlightConnector()->getDataSource() == nullptr)
+    {
+        return;
+    }
     updateInput(state);
 
     map<string, uint8_t> displayValues = createDisplayValues(state);
 
-    for (auto& output : m_outputs)
+    for (auto const& output : m_outputs)
     {
         updateOutput(state, output, displayValues);
+    }
+}
+
+uint8_t USBHIDConfigDevice::formatDigit(uint8_t number, const std::string& format)
+{
+    if (format == "winwing1")
+    {
+        switch (number)
+        {
+            /*
+             *    --40--
+             *  04|    |20
+             *    --02--
+             *  01|    |10
+             *    --08--
+             */
+            using enum LCDDigit;
+            case 0: return static_cast<uint8_t>(NUMBER_0);
+            case 1: return static_cast<uint8_t>(NUMBER_1);
+            case 2: return static_cast<uint8_t>(NUMBER_2);
+            case 3: return static_cast<uint8_t>(NUMBER_3);
+            case 4: return static_cast<uint8_t>(NUMBER_4);
+            case 5: return static_cast<uint8_t>(NUMBER_5);
+            case 6: return static_cast<uint8_t>(NUMBER_6);
+            case 7: return static_cast<uint8_t>(NUMBER_7);
+            case 8: return static_cast<uint8_t>(NUMBER_8);
+            case 9: return static_cast<uint8_t>(NUMBER_9);
+            case DIGIT_DASH: return static_cast<uint8_t>(2);
+            default: return 0;
+        }
+    }
+    else if (format == "winwing2")
+    {
+
+        switch (number)
+        {
+            /*
+             *    --10--
+             *  01|    |20
+             *    --02--
+             *  04|    |40
+             *    --08--
+             */
+            case 0: return 0x7d;
+            case 1: return 0x60;
+            case 2: return 0x3e;
+            case 3: return 0x7a;
+            case 4: return 0x63;
+            case 5: return 0x5b;
+            case 6: return 0x5f;
+            case 7: return 0x70;
+            case 8: return 0x7f;
+            case 9: return 0x7b;
+            case DIGIT_DASH: return 2;
+            case DIGIT_SPACE: return 0x0;
+            case DIGIT_S: return 0x5b;
+            case DIGIT_T: return 0x0f;
+            case DIGIT_D: return 0x6e;
+            default: return 0;
+        }
+    }
+    else
+    {
+        return 0;
     }
 }
 
@@ -246,6 +346,18 @@ void USBHIDConfigDevice::updateOutput(
                     bitBuffer.appendByte(value);
                 }
                 break;
+
+            case FieldType::DIGIT:
+            {
+                uint8_t value = getValue(state, field, displayValues);
+                value = formatDigit(value, field.format);
+                for (int i = 0; i < field.length; i++)
+                {
+                    int v = (value >> i) & 0x1;
+                    bitBuffer.appendBit(v);
+                }
+                break;
+            }
 
             case FieldType::PADDING:
                 bitBuffer.flushBits();
@@ -329,6 +441,10 @@ void USBHIDConfigDevice::updateInput(shared_ptr<AircraftState> state, Descriptor
 
 int USBHIDConfigDevice::getValue(shared_ptr<AircraftState> state, const Field &field, const map<string, uint8_t>& displayValues)
 {
+    if (field.valueType == FieldValueType::LUA)
+    {
+        return m_lua->execute(field.lua, "value", 0.0f);
+    }
     if (field.valueType == FieldValueType::VALUE)
     {
         return field.value;
@@ -457,6 +573,21 @@ void USBHIDConfigDevice::parseDescriptor(const YAML::Node& descriptorNode, Descr
                 field.length += 8;
             }
         }
+        else if (fieldNode["digit"])
+        {
+            auto bits = fieldNode["digit"];
+            field.type = FieldType::DIGIT;
+            field.length = bits["size"].as<int>();
+            if (bits["format"])
+            {
+                field.format = bits["format"].as<string>();
+            }
+
+            if (bits["value"])
+            {
+                parseFieldValue(field, bits["value"]);
+            }
+        }
         else if (fieldNode["padding"])
         {
             int length = fieldNode["padding"].as<int>() * 8;
@@ -470,6 +601,14 @@ void USBHIDConfigDevice::parseDescriptor(const YAML::Node& descriptorNode, Descr
 
 void USBHIDConfigDevice::parseFieldValue(Field& field, const YAML::Node& node)
 {
+    if (!node.IsScalar() && node["lua"])
+    {
+        field.valueType = FieldValueType::LUA;
+        field.lua = node["lua"].as<string>();
+        field.value = 0;
+        return;
+    }
+
     auto str = node.as<string>();
     if (node.IsNull())
     {

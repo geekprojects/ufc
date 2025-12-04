@@ -122,10 +122,10 @@ class DataSource : public Logger
 
     // Not all values may be updated in real time or you may not be running
     // the update thread. These can be used to retrieve values in these cases.
-    virtual bool getDataInt(const std::string& dataName, int& value) { return false; }
+    virtual bool getDataInt(const std::string& dataName, int& value);
 
-    virtual bool getDataFloat(const std::string& dataName, float& value) { return false; };
-    virtual bool getDataString(const std::string& dataName, std::string& value) { return false; };
+    virtual bool getDataFloat(const std::string& dataName, float& value);
+    virtual bool getDataString(const std::string& dataName, std::string& value);
 
     virtual void sendMessage(const std::string& message) {}
 

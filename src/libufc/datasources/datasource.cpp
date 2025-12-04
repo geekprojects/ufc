@@ -6,6 +6,7 @@
 
 #include "ufc/utils.h"
 #include "../lua.h"
+#include "ufc/flightconnector.h"
 
 using namespace std;
 using namespace UFC;
@@ -58,6 +59,24 @@ void DataSource::command(const std::string& commandName)
 
         executeCommand(commandStr, commandDefinition);
     }
+}
+
+bool DataSource::getDataInt(const std::string &dataName, int &value)
+{
+    value = m_flightConnector->getState()->getInt(dataName);
+    return true;
+}
+
+bool DataSource::getDataFloat(const std::string &dataName, float &value)
+{
+    value = m_flightConnector->getState()->getFloat(dataName);
+    return true;
+}
+
+bool DataSource::getDataString(const std::string &dataName, std::string &value)
+{
+    value = m_flightConnector->getState()->getString(dataName);
+    return true;
 }
 
 int DataSource::transformData(const std::shared_ptr<DataDefinition> &dataRef, int value) const

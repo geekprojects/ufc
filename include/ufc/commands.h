@@ -47,6 +47,13 @@ const std::string COMMS_COM1_SWAP = "comms/com1/swap";
 const std::string APU_MASTER_TOGGLE = "apu/master/toggle";
 const std::string APU_STARTER_TOGGLE = "apu/starter/toggle";
 
+const std::string AIRCRAFT_BARO_PILOT_UP = "aircraft/barometer/pilot/up";
+const std::string AIRCRAFT_BARO_PILOT_DOWN = "aircraft/barometer/pilot/down";
+const std::string AIRCRAFT_BARO_PILOT_STANDARD = "aircraft/barometer/pilot/std";
+const std::string AIRCRAFT_BARO_PILOT_PUSH = "aircraft/barometer/pilot/push";
+const std::string AIRCRAFT_BARO_PILOT_MODE_INHG = "aircraft/barometer/pilot/mode/inHg";
+const std::string AIRCRAFT_BARO_PILOT_MODE_HPA = "aircraft/barometer/pilot/mode/hPa";
+
 }
 
 #endif //COMMANDS_H

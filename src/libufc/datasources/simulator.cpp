@@ -38,6 +38,7 @@ bool SimulatorDataSource::update()
 
     state->set(DATA_AIRCRAFT_PITCH, 10.0f);
 
+    state->set(DATA_FLIGHTDIRECTOR_PILOT_ON, m_flightDirector);
     state->set(DATA_FLIGHTDIRECTOR_MODE, 1);
     state->set(DATA_FLIGHTDIRECTOR_PITCH, 0.0f);
     state->set(DATA_FLIGHTDIRECTOR_ROLL, 0.0f);
@@ -48,6 +49,9 @@ bool SimulatorDataSource::update()
     state->set(DATA_AUTOPILOT_SPEED, 50.0f);
     state->set(DATA_AUTOPILOT_ALTITUDE, 1000.0f);
     state->set(DATA_AUTOPILOT_HEADING, 90.0f);
+
+    m_communication.com1Hz = 118900;
+    m_communication.com1StandbyHz = 136125;
 
     while (isRunning())
     {
@@ -109,7 +113,17 @@ bool SimulatorDataSource::update()
         state->set(DATA_APU_MASTER_ON, m_apu.masterOn);
         state->set(DATA_APU_STARTER_ON, m_apu.starterOn);
 
-        usleep(50000);
+        state->set(DATA_COMMS_COM1HZ, (int)m_communication.com1Hz);
+        state->set(DATA_COMMS_COM1STANDBYHZ, (int)m_communication.com1StandbyHz);
+
+        state->set(DATA_AIRCRAFT_BAROMETER_PILOT_HG, m_baro);
+        state->set(DATA_AIRCRAFT_BAROMETER_PILOT_STD, m_baroStd);
+        state->set(DATA_AIRCRAFT_BAROMETER_PILOT_MODE, m_baroMode);
+
+        state->set(DATA_FLIGHTDIRECTOR_PILOT_ON, m_flightDirector);
+        state->set("efis/display/ls", m_ls);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     return true;
 }
@@ -229,6 +243,41 @@ void SimulatorDataSource::command(const std::string& command)
     else if (command == APU_STARTER_TOGGLE)
     {
         m_apu.starterOn = !m_apu.starterOn;
+    }
+    else if (command == AIRCRAFT_BARO_PILOT_UP)
+    {
+        m_baro += 0.01f;
+        m_baroStd = false;
+    }
+    else if (command == AIRCRAFT_BARO_PILOT_DOWN)
+    {
+        m_baro -= 0.01f;
+        m_baroStd = false;
+    }
+    else if (command == AIRCRAFT_BARO_PILOT_STANDARD)
+    {
+        m_baro = 29.92f;
+        m_baroStd = true;
+    }
+    else if (command == AIRCRAFT_BARO_PILOT_MODE_INHG)
+    {
+        m_baroMode = 0;
+    }
+    else if (command == AIRCRAFT_BARO_PILOT_MODE_HPA)
+    {
+        m_baroMode = 1;
+    }
+    else if (command == AIRCRAFT_BARO_PILOT_PUSH)
+    {
+        m_baroStd = false;
+    }
+    else if (command == "autopilot/flightDirector/toggle")
+    {
+        m_flightDirector = !m_flightDirector;
+    }
+    else if (command == "efis/ls/toggle")
+    {
+        m_ls = !m_ls;
     }
     else
     {

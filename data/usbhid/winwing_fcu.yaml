@@ -5,10 +5,11 @@
 
 name: WinWing FCU
 vendorId: 0x4098
-productId: 0xBB10
+productId: [0xbb10, 0xbc1d]
 
 # Common Definitions
-ledPrefix: &ledPrefix [0x10, 0xbb, 0x00, 0x00, 0x03, 0x49]
+ledPrefix1: &ledPrefix1 [0x10, 0xbb, 0x00, 0x00, 0x03, 0x49]
+ledPrefix2: &ledPrefix2 [0x0d, 0xbf, 0x00, 0x00, 0x03, 0x49]
 ledSuffix: &ledSuffix [0x00, 0x00, 0x00, 0x00, 0x00]
 ledLCD: &ledLCD 0x1
 ledLOC: &ledLOC 0x3
@@ -19,17 +20,31 @@ ledEXPED: &ledEXPED 0xb
 ledAPPR: &ledAPPR 0xd
 ledExpedButton: &ledExpedButton 0x1e
 
-lcdPreix: &lcdPrefix
+lcdPrefix1: &lcdPrefix1
     data: [
       0x00, 0x05, 0x31, 0x10, 0xbb, 0x00, 0x00, 0x02,
       0x01, 0x00, 0x00, 0x1d, 0x12, 0x20, 0x10, 0x00,
       0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 
+lcdPrefix2: &lcdPrefix2
+  data: [
+      0x00, 0x19, 0x1a, 0x0d, 0xbf, 0x00, 0x00, 0x02,
+      0x01, 0x00, 0x00, 0xf4, 0x69, 0x02, 0x00, 0x00,
+      0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+
 init:
   lcd:
     reportId: 2
     fields:
-      - data: *ledPrefix
+      - data: *ledPrefix1
+      - byte: *ledLCD
+      - byte: 0xff
+      - data: *ledSuffix
+
+  lcdEFIS:
+    reportId: 2
+    fields:
+      - data: *ledPrefix2
       - byte: *ledLCD
       - byte: 0xff
       - data: *ledSuffix
@@ -37,7 +52,7 @@ init:
   exped:
     reportId: 2
     fields:
-      - data: *ledPrefix
+      - data: *ledPrefix1
       - byte: *ledExpedButton
       - byte: 0xff
       - data: *ledSuffix
@@ -46,26 +61,26 @@ init:
   resetLCD:
     reportId: 0xf0
     fields:
-      - *lcdPrefix
+      - *lcdPrefix1
       - bit: 0 # Speed Decimal Point
-      - bits:
+      - digit:
           size: 7
-          value: 0x3d
+          char:
       - bit: 0
-      - bits:
+      - digit:
           size: 7
-          value: 0x47
+          char:
       - bit: 0 # Speed Decimal Point
-      - bits:
+      - digit:
           size: 7
-          value: 0x4d
+          char:
       - padding: 66
 
 close:
   resetLCD:
     reportId: 0xf0
     fields:
-      - *lcdPrefix
+      - *lcdPrefix1
       - padding: 66
 
 input:
@@ -102,27 +117,70 @@ input:
       - bit: autopilot/verticalSpeed/guidance
       - bit: autopilot/altitude/step/100
       - bit: autopilot/altitude/step/1000
+      - bit: unused/1
+      - bit: unused/2
+      - bit: unused/3
+      - bit: unused/4
+      - bit: unused/5
+
+      - bit: autopilot/flightDirector/pilot/toggle
+      - bit: efis/ls/toggle
+      - bit: efis/nd/constraints/toggle
+      - bit: efis/nd/waypoint/toggle
+      - bit: efis/nd/vor/toggle
+      - bit: efis/nd/ndb/toggle
+      - bit: efis/nd/airport/toggle
+
+      - bit: aircraft/barometer/pilot/push
+      - bit: aircraft/barometer/pilot/std
+      - bit: aircraft/barometer/pilot/down
+      - bit: aircraft/barometer/pilot/up
+      - bit: aircraft/barometer/pilot/mode/inHg
+      - bit: aircraft/barometer/pilot/mode/hPa
+
+      - bit: efis/nd/mode/ls
+      - bit: efis/nd/mode/vor
+      - bit: efis/nd/mode/nav
+      - bit: efis/nd/mode/arc
+      - bit: efis/nd/mode/plan
+
+      - bit: efis/nd/range/10
+      - bit: efis/nd/range/20
+      - bit: efis/nd/range/40
+      - bit: efis/nd/range/80
+      - bit: efis/nd/range/160
+      - bit: efis/nd/range/320
+
+      - bit: efis/radio/pilot/1/adf
+      - bit: efis/radio/pilot/1/off
+      - bit: efis/radio/pilot/1/vor
+      - bit: efis/radio/pilot/2/adf
+      - bit: efis/radio/pilot/2/off
+      - bit: efis/radio/pilot/2/vor
 
 output:
   lcd1:
     reportId: 0xf0
     fields:
-      - *lcdPrefix
+      - *lcdPrefix1
 
       - bit: 0 # Speed Decimal Point
-      - bits:
+      - digit:
           size: 7
           value: display/speed[2]
+          format: winwing1
 
       - bit: autopilot/speedMach # Speed Decimal Point
-      - bits:
+      - digit:
           size: 7
           value: display/speed[1]
+          format: winwing1
 
       - bit: 0 # Speed Decimal Point
-      - bits:
+      - digit:
           size: 7
           value: display/speed[0]
+          format: winwing1
 
       - bit: 0 # Padding
       - bit: autopilot/speedManaged
@@ -130,17 +188,20 @@ output:
       - bit: "!autopilot/speedMach"
 
       - bit: 0 # Speed Decimal Point
-      - bits:
+      - digit:
           size: 7
           value: display/heading[2]
+          format: winwing1
       - bit: 0 # Speed Decimal Point
-      - bits:
+      - digit:
           size: 7
           value: display/heading[1]
+          format: winwing1
       - bit: 0 # Speed Decimal Point
-      - bits:
+      - digit:
           size: 7
           value: display/heading[0]
+          format: winwing1
 
       - bit: autopilot/headingManaged
 
@@ -153,42 +214,51 @@ output:
       - bit: "!autopilot/headingTrkMode" # Second Heading Sign
       
       - bit: 0 # Altitude decimal point
-      - bits:
+      - digit:
           size: 7
           value: display/altitude[4]
+          format: winwing1
       - bit: 1 # Altitude Sign
-      - bits:
+      - digit:
           size: 7
           value: display/altitude[3]
+          format: winwing1
       - bit: 1 # Lvl Ch sign 1
-      - bits:
+      - digit:
           size: 7
           value: display/altitude[2]
+          format: winwing1
       - bit: 1 # Lvl Ch sign 2
-      - bits:
+      - digit:
           size: 7
           value: display/altitude[1]
+          format: winwing1
       - bit: 1 # Lvl Ch sign 3
-      - bits:
+      - digit:
           size: 7
           value: display/altitude[0]
+          format: winwing1
 
       - bit: 1 # Vertical Speed negative dash
-      - bits:
+      - digit:
           size: 7
           value: display/verticalSpeed[3]
+          format: winwing1
       - bit: autopilot/verticalSpeedFPAMode # Vertical Speed Sign
-      - bits:
+      - digit:
           size: 7
           value: display/verticalSpeed[2]
+          format: winwing1
       - bit: "!display/negativeVerticalSpeed" # Vertical speed positive
-      - bits:
+      - digit:
           size: 7
           value: display/verticalSpeed[1]
+          format: winwing1
       - bit: autopilot/altitudeManaged
-      - bits:
+      - digit:
           size: 7
           value: display/verticalSpeed[0]
+          format: winwing1
 
       - bit: 0 # Padding
       - bit: 0 # Padding
@@ -197,7 +267,46 @@ output:
 
       - padding: 66
 
-  lcd2: # The LCD won't update with receiving these magic bytes
+  lcd2:
+    reportId: 0xf0
+    fields:
+      - *lcdPrefix2
+      - digit:
+          size: 7
+          value: display/qnh[3]
+          format: winwing2
+      - bit: 0 # QNH 1 Dot
+
+      - digit:
+          size: 7
+          value: display/qnh[2]
+          format: winwing2
+      - bit:
+          lua: |
+            if data['aircraft/barometer/pilot/mode'] == 0 and data['aircraft/barometer/pilot/std'] == 0 then
+                value = 1
+            else
+                value = 0
+            end
+
+      - digit:
+          size: 7
+          value: display/qnh[1]
+          format: winwing2
+      - bit: 0 # QNH 3 Dot
+
+      - digit:
+          size: 7
+          value: display/qnh[0]
+          format: winwing2
+      - bit: 0 # QNH 4 Dot
+
+      - bit: 0 # QFE Sign
+      - bit: 1 # QNH Sign
+
+      - padding: 66
+
+  lcdEnd: # The LCD won't update with receiving these magic bytes
     reportId: 0xf0
     fields:
       - data: [
@@ -210,7 +319,7 @@ output:
   locLED:
     reportId: 0x02
     fields:
-      - data: *ledPrefix
+      - data: *ledPrefix1
       - byte: *ledLOC
       - byte: autopilot/locMode
       - data: *ledSuffix
@@ -218,7 +327,7 @@ output:
   ap1LED:
     reportId: 0x02
     fields:
-      - data: *ledPrefix
+      - data: *ledPrefix1
       - byte: *ledAP1
       - byte: autopilot/ap1Mode
       - data: *ledSuffix
@@ -226,7 +335,7 @@ output:
   ap2LED:
     reportId: 2
     fields:
-      - data: *ledPrefix
+      - data: *ledPrefix1
       - byte: *ledAP2
       - byte: autopilot/ap2Mode
       - data: *ledSuffix
@@ -234,7 +343,7 @@ output:
   athrLED:
     reportId: 2
     fields:
-      - data: *ledPrefix
+      - data: *ledPrefix1
       - byte: *ledATHR
       - byte: autopilot/autoThrottleMode
       - data: *ledSuffix
@@ -242,10 +351,64 @@ output:
   apprLED:
     reportId: 2
     fields:
-      - data: *ledPrefix
+      - data: *ledPrefix1
       - byte: *ledAPPR
       - byte: autopilot/approachMode
       - data: *ledSuffix
 
+  fdLED:
+    reportId: 0x02
+    fields:
+      - data: *ledPrefix2
+      - byte: 0x03
+      - byte: autopilot/flightDirector/pilot/on
+      - data: *ledSuffix
 
+  lsLED:
+    reportId: 0x02
+    fields:
+      - data: *ledPrefix2
+      - byte: 0x04
+      - byte: efis/display/ls
+      - data: *ledSuffix
+
+  displayConstraintsLED:
+    reportId: 0x02
+    fields:
+      - data: *ledPrefix2
+      - byte: 0x05
+      - byte: efis/display/constraints
+      - data: *ledSuffix
+
+  displayConstraintsLED:
+    reportId: 0x02
+    fields:
+      - data: *ledPrefix2
+      - byte: 0x06
+      - byte: efis/display/waypoints
+      - data: *ledSuffix
+
+  displayVorLED:
+    reportId: 0x02
+    fields:
+      - data: *ledPrefix2
+      - byte: 0x07
+      - byte: efis/display/vor
+      - data: *ledSuffix
+
+  displayNDBLED:
+    reportId: 0x02
+    fields:
+      - data: *ledPrefix2
+      - byte: 0x08
+      - byte: efis/display/ndb
+      - data: *ledSuffix
+
+  displayAirportLED:
+    reportId: 0x02
+    fields:
+      - data: *ledPrefix2
+      - byte: 0x09
+      - byte: efis/display/airports
+      - data: *ledSuffix
 

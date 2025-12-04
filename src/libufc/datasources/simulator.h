@@ -67,13 +67,19 @@ class SimulatorDataSource : public DataSource
     CommunicationState m_communication;
     APUState m_apu;
 
+    float m_baro = 29.92f;
+    bool m_baroStd = false;
+    int m_baroMode = 0;
+
+    bool m_flightDirector = false;
+    bool m_ls = false;
+
  public:
     explicit SimulatorDataSource(FlightConnector* flightConnector);
     ~SimulatorDataSource() override = default;
 
     bool connect() override;
     void disconnect() override;
-
 
     bool update() override;
 

@@ -1,16 +1,9 @@
 #ifndef LCD_H
 #define LCD_H
 
-/*
- * LCD number segments. This may be specific to WinWing, in which case
- * I'll have to add a way of specifying the type.
- *
- *    --40--
- *  04|    |20
- *    --02--
- *  01|    |10
- *    --08--
- */
+#include <cstdint>
+
+
 enum class LCDDigit
 {
     NUMBER_0 = 0x40 | 0x20 | 0x10 | 0x08 | 0x1 | 0x4,
@@ -32,7 +25,7 @@ enum class LCDDigit
     Y = 0x04 | 0x02 | 0x20 | 0x10 | 0x08,
 };
 
-static uint8_t getLCDDigit(int number, int digit)
+static uint8_t getDigit(int number, int digit)
 {
     int div = 1;
     for (int i = 0; i < digit; i++)
@@ -41,22 +34,7 @@ static uint8_t getLCDDigit(int number, int digit)
     }
     number /= div;
     number %= 10;
-
-    switch (number)
-    {
-        using enum LCDDigit;
-        case 0: return static_cast<uint8_t>(NUMBER_0);
-        case 1: return static_cast<uint8_t>(NUMBER_1);
-        case 2: return static_cast<uint8_t>(NUMBER_2);
-        case 3: return static_cast<uint8_t>(NUMBER_3);
-        case 4: return static_cast<uint8_t>(NUMBER_4);
-        case 5: return static_cast<uint8_t>(NUMBER_5);
-        case 6: return static_cast<uint8_t>(NUMBER_6);
-        case 7: return static_cast<uint8_t>(NUMBER_7);
-        case 8: return static_cast<uint8_t>(NUMBER_8);
-        case 9: return static_cast<uint8_t>(NUMBER_9);
-        default: return 0;
-    }
+    return number;
 }
 
 #endif //LCD_H
