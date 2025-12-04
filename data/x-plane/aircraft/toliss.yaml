@@ -25,6 +25,24 @@ data:
     altitudeManaged: AirbusFBW/ALTmanaged
 
     displayVerticalSpeed: "!AirbusFBW/VSdashed"
+    flightDirector:
+      pilot:
+        on: AirbusFBW/FD1Engage
+
+  aircraft:
+    barometer:
+      pilot:
+        std: AirbusFBW/BaroStdCapt
+        mode: AirbusFBW/BaroUnitCapt
+
+  efis:
+    display:
+      ls: AirbusFBW/ILSonCapt
+      constraints: AirbusFBW/NDShowCSTRCapt
+      waypoints: AirbusFBW/NDShowWPTCapt
+      vor: AirbusFBW/NDShowVORDCapt
+      ndb: AirbusFBW/NDShowNDBCapt
+      airports: AirbusFBW/NDShowARPTCapt
 
   instrument:
     v1: AirbusFBW/V1
@@ -81,6 +99,9 @@ data:
     passengerCount: AirbusFBW/NoPax
     passengerDistribution: AirbusFBW/PaxDistrib
 
+############
+# Commands #
+############
 commands:
   autopilot:
     ap1:
@@ -112,6 +133,51 @@ commands:
     verticalSpeed:
        manage: toliss_airbus/vs_push
        guidance: AirbusFBW/PullVSSel
+    flightDirector:
+      pilot:
+        toggle: toliss_airbus/fd1_push
+  aircraft:
+    barometer:
+      pilot:
+        push: toliss_airbus/capt_baro_push
+        std: toliss_airbus/capt_baro_pull
+        mode:
+          inHg: AirbusFBW/BaroUnitCapt=0
+          hPa: AirbusFBW/BaroUnitCapt=1
+
+  efis:
+    ls:
+      toggle: toliss_airbus/dispcommands/CaptLSButtonPush
+    nd:
+      constraints/toggle: toliss_airbus/dispcommands/CaptCstrPushButton
+      waypoint/toggle: toliss_airbus/dispcommands/CaptWptPushButton
+      vor/toggle: toliss_airbus/dispcommands/CaptVorDPushButton
+      ndb/toggle: toliss_airbus/dispcommands/CaptNdbPushButton
+      airport/toggle: toliss_airbus/dispcommands/CaptArptPushButton
+      mode:
+        ls: AirbusFBW/NDmodeCapt=0
+        vor: AirbusFBW/NDmodeCapt=1
+        nav: AirbusFBW/NDmodeCapt=2
+        arc: AirbusFBW/NDmodeCapt=3
+        plan: AirbusFBW/NDmodeCapt=4
+      range:
+        10: AirbusFBW/NDrangeCapt=0
+        20: AirbusFBW/NDrangeCapt=1
+        40: AirbusFBW/NDrangeCapt=2
+        80: AirbusFBW/NDrangeCapt=3
+        160: AirbusFBW/NDrangeCapt=4
+        320: AirbusFBW/NDrangeCapt=5
+    radio:
+      pilot:
+        1:
+          adf: sim/instruments/EFIS_1_pilot_sel_adf
+          off: sim/instruments/EFIS_1_pilot_sel_off
+          vor: sim/instruments/EFIS_1_pilot_sel_vor
+        2:
+          adf: sim/instruments/EFIS_2_pilot_sel_adf
+          off: sim/instruments/EFIS_2_pilot_sel_off
+          vor: sim/instruments/EFIS_2_pilot_sel_vor
+
   cabin:
     chime: AirbusFBW/purser/all
   weight:
@@ -358,5 +424,3 @@ commands:
         toggle: toliss_airbus/aircondcommands/Pack1Toggle
       2:
         toggle: toliss_airbus/aircondcommands/Pack2Toggle
-
-
