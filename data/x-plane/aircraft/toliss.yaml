@@ -4,6 +4,7 @@ icao:
   - A321
   - A21N
   - A339
+  - A346
 
 data:
   autopilot:
