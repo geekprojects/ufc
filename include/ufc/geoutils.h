@@ -19,8 +19,16 @@ namespace UFC
 {
 struct Coordinate
 {
-    float latitude = 0.0f;
-    float longitude = 0.0f;
+    union
+    {
+        float latitude = 0.0f;
+        float x;
+    };
+    union
+    {
+        float longitude = 0.0f;
+        float y;
+    };
     float altitude = 0.0f;
 
     Coordinate() = default;
@@ -61,6 +69,22 @@ class GeoUtils
     static double distance(Coordinate c1, Coordinate c2);
 
     static double angleFromCoordinate(Coordinate coord1, Coordinate coord2);
+};
+
+struct Polygon
+{
+    std::vector<Coordinate> points;
+    Coordinate centre;
+
+    Polygon() = default;
+    Polygon(const std::vector<Coordinate> &points) : points(points)
+    {
+        updateCentre();
+    }
+
+    void updateCentre();
+
+    bool intersects(Coordinate point) const;
 };
 
 struct Box
