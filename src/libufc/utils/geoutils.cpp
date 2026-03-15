@@ -67,7 +67,7 @@ bool Polygon::intersects(Coordinate point) const
     bool inside = false;
 
     Coordinate p1 = points[0];
-    for (int i = 1; i <= num_vertices; i++)
+    for (size_t i = 1; i <= num_vertices; i++)
     {
         Coordinate p2 = points[i % num_vertices];
 
