@@ -6,7 +6,7 @@
 #define XPPLUGINDATASOURCE_H
 
 #include <ufc/datasource.h>
-#include "../../include/ufc/aircraftmapping.h"
+#include <ufc/aircraftmapping.h>
 
 #define XPLM200 1
 #define XPLM210 1
@@ -21,7 +21,6 @@ struct DataRefInfo
 
 class XPPluginDataSource : public UFC::DataSource
 {
- private:
     XPLMDataRef m_icaoDataRef = nullptr;
     XPLMDataRef m_authorDataRef = nullptr;
     XPLMDataRef m_studioDataRef = nullptr;
@@ -29,10 +28,23 @@ class XPPluginDataSource : public UFC::DataSource
     std::map<std::string, DataRefInfo> m_dataRefInfoMap;
     std::map<std::string, XPLMCommandRef> m_commandDefs;
 
-    static std::string getString(XPLMDataRef ref);
+    std::string getString(XPLMDataRef ref);
 
     std::vector<XPLMCommandRef> m_commandQueue;
     std::mutex m_commandQueueMutex;
+
+    std::map<std::string, float> m_dataQueue;
+    std::mutex m_dataQueueMutex;
+
+    bool m_checkAircraft = true;
+
+    static float updateCallback(float elapsedMe, float elapsedSim, int counter, XPPluginDataSource* refcon);
+    bool updateDataRefs();
+    void executeCommands();
+    void updateValues();
+    void executeSetData(const std::string& dataName, float value);
+
+    void checkReload();
 
  public:
     explicit XPPluginDataSource(UFC::FlightConnector* flightConnector);
@@ -47,16 +59,9 @@ class XPPluginDataSource : public UFC::DataSource
 
     bool reloadAircraft();
     bool update() override;
-    bool updateDataRefs();
 
     void executeCommand(const std::string& command, const CommandDefinition& commandDefinition) override;
     void setData(const std::string& dataName, float value) override;
-
-    bool getDataInt(const std::string& dataName, int& value) override;
-    bool getDataFloat(const std::string& dataName, float& value) override;
-    bool getDataString(const std::string& dataName, std::string& value) override;
 };
-
-
 
 #endif //XPPLUGINDATASOURCE_H

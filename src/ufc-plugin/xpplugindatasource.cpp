@@ -15,16 +15,6 @@
 using namespace std;
 using namespace UFC;
 
-float updateCallback(
-    [[maybe_unused]] float elapsedMe,
-    [[maybe_unused]] float elapsedSim,
-    [[maybe_unused]] int counter,
-    XPPluginDataSource* refcon)
-{
-    refcon->updateDataRefs();
-    return 0.1f;
-}
-
 XPPluginDataSource::XPPluginDataSource(UFC::FlightConnector* flightConnector) :
     DataSource(flightConnector, "XPPlugin", "Resources/plugins/ufc/data/x-plane")
 {
@@ -34,11 +24,6 @@ XPPluginDataSource::~XPPluginDataSource() = default;
 
 bool XPPluginDataSource::connect()
 {
-    bool res = reloadAircraft();
-    if (!res)
-    {
-        return false;
-    }
 
     XPLMCreateFlightLoop_t createFlightLoop;
     createFlightLoop.structSize = sizeof(XPLMCreateFlightLoop_t);
@@ -79,6 +64,7 @@ XPLMCommandRef XPPluginDataSource::findOrRegisterCommand(string const &command)
 
 bool XPPluginDataSource::reloadAircraft()
 {
+    log(DEBUG, "reloadAircraft: Checking aircraft...");
     m_icaoDataRef = XPLMFindDataRef("sim/aircraft/view/acf_ICAO");
     m_authorDataRef = XPLMFindDataRef("sim/aircraft/view/acf_author");
     m_studioDataRef = XPLMFindDataRef("sim/aircraft/view/acf_studio");
@@ -157,6 +143,29 @@ bool XPPluginDataSource::update()
     return true;
 }
 
+float XPPluginDataSource::updateCallback(
+    [[maybe_unused]] float elapsedMe,
+    [[maybe_unused]] float elapsedSim,
+    [[maybe_unused]] int counter,
+    XPPluginDataSource* refcon)
+{
+    refcon->checkReload();
+    refcon->updateDataRefs();
+    refcon->executeCommands();
+    refcon->updateValues();
+
+    return 0.1f;
+}
+
+void XPPluginDataSource::checkReload()
+{
+    if (m_checkAircraft)
+    {
+        reloadAircraft();
+        m_checkAircraft = false;
+    }
+}
+
 bool XPPluginDataSource::updateDataRefs()
 {
     auto state = getFlightConnector()->getState();
@@ -201,14 +210,28 @@ bool XPPluginDataSource::updateDataRefs()
         }
     }
 
-    std::scoped_lock lock(m_commandQueueMutex);
+
+    return true;
+}
+
+void XPPluginDataSource::executeCommands()
+{
+    scoped_lock lock(m_commandQueueMutex);
     for (auto command : m_commandQueue)
     {
         XPLMCommandOnce(command);
     }
     m_commandQueue.clear();
+}
 
-    return true;
+void XPPluginDataSource::updateValues()
+{
+    scoped_lock lock(m_dataQueueMutex);
+    for (auto& data : m_dataQueue)
+    {
+        executeSetData(data.first, data.second);
+    }
+    m_dataQueue.clear();
 }
 
 void XPPluginDataSource::executeCommand(const std::string& command, const CommandDefinition& commandDefinition)
@@ -223,6 +246,12 @@ void XPPluginDataSource::executeCommand(const std::string& command, const Comman
 }
 
 void XPPluginDataSource::setData(const std::string &dataName, float value)
+{
+    scoped_lock lock(m_dataQueueMutex);
+    m_dataQueue.emplace(dataName, value);
+}
+
+void XPPluginDataSource::executeSetData(const std::string &dataName, float value)
 {
     log(DEBUG, "setData: %s -> %f", dataName.c_str(), value);
     string dataRefName = dataName;
@@ -262,51 +291,12 @@ void XPPluginDataSource::setData(const std::string &dataName, float value)
     }
 }
 
-bool XPPluginDataSource::getDataInt(const std::string &dataName, int &value)
-{
-    auto dataRef = getMapping().getDataRef(dataName);
-    if (dataRef == nullptr || dataRef->mapping.dataRef.empty())
-    {
-        log(WARN, "getDataInt: Unhandled data ref: %s", dataName.c_str());
-        return false;
-    }
-
-    value = XPLMGetDatai(dataRef->data);
-    return true;
-}
-
-bool XPPluginDataSource::getDataFloat(const std::string &dataName, float &value)
-{
-    auto dataRef = getMapping().getDataRef(dataName);
-    if (dataRef == nullptr || dataRef->mapping.dataRef.empty())
-    {
-        log(WARN, "getDataInt: Unhandled data ref: %s", dataName.c_str());
-        return false;
-    }
-
-    value = XPLMGetDataf(dataRef->data);
-    return true;
-}
-
-bool XPPluginDataSource::getDataString(const std::string &dataName, std::string &value)
-{
-    auto dataRef = getMapping().getDataRef(dataName);
-    if (dataRef == nullptr || dataRef->mapping.dataRef.empty())
-    {
-        log(WARN, "getDataInt: Unhandled data ref: %s", dataName.c_str());
-        return false;
-    }
-
-    value = getString(dataRef->data);
-    return true;
-}
-
 std::string XPPluginDataSource::getString(const XPLMDataRef ref)
 {
+    log(DEBUG, "getString: ref=%p", ref);
     int bytes = XPLMGetDatab(ref, nullptr, 0, 0);
     char buffer[bytes + 1];
     XPLMGetDatab(ref, buffer, 0, bytes);
     buffer[bytes] = '\0';
     return string(buffer);
 }
-
