@@ -16,10 +16,63 @@ namespace UFC
 
 struct Runway
 {
-    std::string m_number;
+    std::wstring m_number;
     Coordinate m_startLocation;
     float m_length;
     float m_bearing;
+    bool arrivals;
+    bool departures;
+};
+
+struct RunwayInUse
+{
+    std::wstring identifier;
+    int channel;
+    bool arrival;
+    bool departure;
+};
+
+struct RunwayWindRule
+{
+    int directionMinimum;
+    int directionMaximum;
+    int speedMaximum;
+};
+
+struct RunwayRule
+{
+    std::wstring name;
+    std::vector<RunwayInUse> runways;
+    std::vector<RunwayWindRule> windRules;
+    std::wstring metarStation;
+
+
+    int ceilingMinimum = -1;
+    float visibilityMinimum = 0.0;
+
+    int timeMinimum = -1;
+    int timeMaximum = -1;
+};
+
+enum class ControllerType
+{
+    UNKNOWN,
+    UNICOM,
+    DELIVERY,
+    GROUND,
+    TOWER,
+    APPROACH,
+    DEPARTURE,
+    CENTRE,
+    ATIS,
+    RADAR,
+};
+
+struct Controller
+{
+    std::wstring name;
+    ControllerType type;
+    int channel;
 };
 
 class Airport : public Locationable
@@ -30,6 +83,8 @@ class Airport : public Locationable
     std::string m_icaoCode;
 
     std::vector<Runway> m_runways;
+    std::vector<RunwayRule> m_runwayRules;
+    std::vector<Controller> m_controllers;
 
     bool m_hasRunway = false;
 
@@ -100,6 +155,21 @@ class Airport : public Locationable
         m_hasRunway = hasRunway;
     }
 
+    [[nodiscard]] std::vector<Controller>& getControllers()
+    {
+        return m_controllers;
+    }
+
+    void addRule(const RunwayRule & runway_rule)
+    {
+        m_runwayRules.push_back(runway_rule);
+    }
+
+    std::vector<RunwayRule>& getRunwayRules()
+    {
+        return m_runwayRules;
+    }
+
     std::wstring toString() const override
     {
         return m_name + L" " +
@@ -109,6 +179,7 @@ class Airport : public Locationable
             (wchar_t)m_icaoCode[3] +
             L" [" + m_location.toString() + L"]";
     }
+
 };
 
 class Airports : public NavData
@@ -119,7 +190,6 @@ class Airports : public NavData
 
  protected:
     void addAirport(std::shared_ptr<Airport> airport);
-
 
  public:
     Airports(NavDataSource* navDataSource, std::string const& name);
@@ -134,6 +204,8 @@ class Airports : public NavData
     }
 
     virtual std::shared_ptr<Airport> findByCode(const std::string& code);
+
+    [[nodiscard]] std::vector<std::shared_ptr<Airport>> getAirports() const { return m_airportList; }
 };
 
 }

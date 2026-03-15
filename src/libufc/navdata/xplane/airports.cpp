@@ -15,15 +15,23 @@ using namespace UFC;
 bool XPlaneAirports::init()
 {
     string aptData = getFlightConnector()->getConfig().xplanePath + "/Global Scenery/Global Airports/Earth nav data/apt.dat";
+    log(DEBUG, "init: Loading airports from %s", aptData.c_str());
 
     auto data = make_shared<Data>();
-    data->load(aptData);
+    if (!data->load(aptData))
+    {
+        log(ERROR, "init: Failed to load airports from %s", aptData.c_str());
+        return false;
+    }
 
     data->readLine();
     string headerStr = data->readLine();
 
     shared_ptr<Airport> currentAirport = nullptr;
     double currentLat = 0.0;
+    RunwayRule runwayRule;
+    bool hasRule = false;
+
     while (!data->eof())
     {
         string line = data->readLine();
@@ -44,17 +52,24 @@ bool XPlaneAirports::init()
                 // Flush the current airport
                 if (currentAirport != nullptr)
                 {
+                    if (hasRule)
+                    {
+                        currentAirport->addRule(runwayRule);
+                    }
                     addAirport(currentAirport);
                 }
 
                 currentAirport = make_shared<Airport>();
                 currentLat = 0.0;
                 currentAirport->setName(utf82wstring(NavDataUtils::joinToEnd(parts, 5).c_str()));
+                //log(DEBUG, "init: Airport: %ls", currentAirport->getName().c_str());
                 currentAirport->setElevation(stof(parts.at(1)));
                 if (type == 1 || type == 16)
                 {
                     currentAirport->setHasRunway(true);
                 }
+                runwayRule = {};
+                hasRule = false;
                 break;
 
             case 100: // Runway
@@ -66,7 +81,7 @@ bool XPlaneAirports::init()
                     for (int i = 0; i < ends; i++)
                     {
                         Runway runway;
-                        runway.m_number = parts.at(8 + (i * 9) + 0);
+                        runway.m_number = utf82wstring(parts.at(8 + (i * 9) + 0).c_str());
                         float lat = atof(parts.at(8 + (i * 9) + 1).c_str());
                         float lon = atof(parts.at(8 + (i * 9) + 2).c_str());
                         runway.m_startLocation = Coordinate(lat, lon);
@@ -77,8 +92,8 @@ bool XPlaneAirports::init()
                     runways.at(0).m_length = length;
                     runways.at(1).m_length = length;
 
-Coordinate r0 = runways.at(0).m_startLocation;
-Coordinate r1 = runways.at(1).m_startLocation;
+                    Coordinate r0 = runways.at(0).m_startLocation;
+                    Coordinate r1 = runways.at(1).m_startLocation;
                     double angle = GeoUtils::angleFromCoordinate(r0, r1);
                     float variation = 0.0f;
                     angle = angle * (180.0 / M_PI);
@@ -111,13 +126,76 @@ Coordinate r1 = runways.at(1).m_startLocation;
                     currentRunways.insert(currentRunways.end(), runways.begin(), runways.end());
                     currentAirport->setRunways(currentRunways);
 
-                    //log(INFO, "%s %s: %ls bearing=%0.2f", currentAirport->getICAOCode().c_str(), runways.at(1).m_number.c_str(), runways.at(1).m_startLocation.toString().c_str(), angle);
+                    //log(INFO, "%s %s: %ls bearing=%0.2f", currentAirport->getICAOCode().c_str(), runways.at(0).m_number.c_str(), runways.at(0).m_startLocation.toString().c_str(), runways.at(0).m_bearing);
+                    //log(INFO, "%s %s: %ls bearing=%0.2f", currentAirport->getICAOCode().c_str(), runways.at(1).m_number.c_str(), runways.at(1).m_startLocation.toString().c_str(), runways.at(1).m_bearing);
                 }
                 else
                 {
                     log(WARN, "Runway with %d ends!\n", ends);
                 }
 
+                break;
+            }
+
+            case 1000:
+                //log(INFO, "init:  -> Runway Rule: %s", NavDataUtils::joinToEnd(parts, 1).c_str());
+                if (hasRule)
+                {
+                    currentAirport->addRule(runwayRule);
+                }
+                runwayRule = {};
+                hasRule = true;
+                runwayRule.name = utf82wstring(NavDataUtils::joinToEnd(parts, 1).c_str());
+                break;
+
+            case 1001:
+            {
+                runwayRule.metarStation = utf82wstring(parts.at(1).c_str());
+
+                RunwayWindRule windRule;
+                windRule.directionMinimum = atoi(parts.at(2).c_str());
+                windRule.directionMaximum = atoi(parts.at(3).c_str());
+
+                if (windRule.directionMinimum == 1 && windRule.directionMaximum == 360)
+                {
+                    // These values aren't technically valid!
+                    windRule.directionMinimum = 0;
+                    windRule.directionMaximum = 359;
+                }
+
+                windRule.speedMaximum = atoi(parts.at(4).c_str());
+                runwayRule.windRules.push_back(windRule);
+                break;
+            }
+
+            case 1002:
+                runwayRule.metarStation = utf82wstring(parts.at(1).c_str());
+                runwayRule.ceilingMinimum = atoi(parts.at(2).c_str());
+                break;
+
+            case 1003:
+                runwayRule.metarStation = utf82wstring(parts.at(1).c_str());
+                runwayRule.visibilityMinimum = atof(parts.at(2).c_str());
+                break;
+
+            case 1004:
+                runwayRule.timeMinimum = atoi(parts.at(1).c_str());
+                runwayRule.timeMaximum = atoi(parts.at(2).c_str());
+                break;
+
+            case 1100:
+            case 1110:
+            {
+                //log(INFO, "init:  -> Runway In Use Rule: %s", parts.at(1).c_str());
+                RunwayInUse runwayInUse;
+                runwayInUse.identifier = utf82wstring(parts.at(1).c_str());
+                runwayInUse.channel = atoi(parts.at(2).c_str());
+
+                string arrdep = parts.at(3);
+                runwayInUse.arrival = arrdep.find("arrivals") != -1;
+                runwayInUse.departure = arrdep.find("departures") != -1;
+
+                runwayRule.runways.push_back(runwayInUse);
                 break;
             }
 
@@ -139,6 +217,34 @@ Coordinate r1 = runways.at(1).m_startLocation;
                 }
             break;
 
+            case 1050:
+            case 1051:
+            case 1052:
+            case 1053:
+            case 1054:
+            case 1055:
+            case 1056:
+            {
+                Controller controller;
+
+                switch (type)
+                {
+                    case 1050: controller.type = ControllerType::ATIS; break;
+                    case 1051: controller.type = ControllerType::UNICOM; break;
+                    case 1052: controller.type = ControllerType::DELIVERY; break;
+                    case 1053: controller.type = ControllerType::GROUND; break;
+                    case 1054: controller.type = ControllerType::TOWER; break;
+                    case 1055: controller.type = ControllerType::APPROACH; break;
+                    case 1056: controller.type = ControllerType::DEPARTURE; break;
+                }
+
+                controller.channel = stoi(parts.at(1));
+                controller.name = utf82wstring(NavDataUtils::joinToEnd(parts, 2).c_str());
+                currentAirport->getControllers().push_back(controller);
+
+                break;
+            }
+
             default:
                 // Ignore!
                     break;
@@ -146,6 +252,10 @@ Coordinate r1 = runways.at(1).m_startLocation;
     }
     if (currentAirport != nullptr)
     {
+        if (hasRule)
+        {
+            currentAirport->addRule(runwayRule);
+        }
         addAirport(currentAirport);
     }
 
@@ -157,6 +267,5 @@ Coordinate r1 = runways.at(1).m_startLocation;
     //auto point = Coordinate(51.836826507016895, -0.18500002245520308);
     //airportData->findNearest(point);
 
-    //printf("Found %zu airports\n", airportData->m_airports.size());
     return true;
 }

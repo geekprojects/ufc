@@ -60,7 +60,7 @@ void Airports::addAirport(std::shared_ptr<Airport> shared)
         return;
     }
     m_airports->insert(shared);
-    //m_airportList.push_back(shared);
+    m_airportList.push_back(shared);
     if (!shared->getICAOCode().empty())
     {
         m_airportsByCode.try_emplace(shared->getICAOCode(), shared);

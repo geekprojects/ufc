@@ -32,6 +32,7 @@ class XPlaneAirports: public Airports
  public:
     explicit XPlaneAirports(XPlaneNavDataSource* navDataSource) : Airports(navDataSource, "XPlane") {}
 
+
     bool init();
 };
 
