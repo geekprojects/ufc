@@ -192,8 +192,8 @@ bool XPlaneAirports::init()
                 runwayInUse.channel = atoi(parts.at(2).c_str());
 
                 string arrdep = parts.at(3);
-                runwayInUse.arrival = arrdep.find("arrivals") != -1;
-                runwayInUse.departure = arrdep.find("departures") != -1;
+                runwayInUse.arrival = arrdep.find("arrivals") != string::npos;
+                runwayInUse.departure = arrdep.find("departures") != string::npos;
 
                 runwayRule.runways.push_back(runwayInUse);
                 break;
