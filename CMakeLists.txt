@@ -35,68 +35,84 @@ SET(CMAKE_CXX_FLAGS_RELEASE  "${FLAGS_COMMON} -O3")
 include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/3rdparty/luacpp/Source)
 add_definitions(${yamlcpp_CFLAGS} ${hidapi_CFLAGS} ${lua_CFLAGS})
 
+add_library(ufc-utils SHARED
+        src/libufc-utils/data.cpp
+        src/libufc-utils/logger.cpp
+        src/libufc-utils/utils.cpp
+        src/libufc-utils/geoutils.cpp
+        src/libufc-utils/udp.cpp
+        src/libufc-utils/bitbuffer.cpp
+        include/ufc/utils/geoutils.h
+        include/ufc/utils/bitbuffer.h
+        src/libufc-utils/database.cpp
+        include/ufc/utils/logger.h
+        include/ufc/utils/data.h
+        include/ufc/utils/utils.h
+        include/ufc/utils/udp.h
+)
+
+target_compile_definitions(ufc-utils PUBLIC -DDATADIR=${DATADIR})
+target_link_libraries(ufc-utils
+        luacpp_static
+        ${SQLITE3_LIBRARY}
+)
+
+add_library(ufc-data SHARED
+        src/libufc-data/navdata/xplane/xplanenavdata.cpp
+        src/libufc-data/navdata/xplane/xplanenavdata.h
+        src/libufc-data/navdata/xplane/airports.cpp
+        src/libufc-data/navdata/xplane/navaids.cpp
+        src/libufc-data/navdata/littlenavmap/lnmnavdata.cpp
+        src/libufc-data/navdata/littlenavmap/lnmnavdata.h
+        include/ufc/data/airports.h
+        include/ufc/data/navdata.h
+        include/ufc/aircraftmapping.h
+)
+target_compile_definitions(ufc-data PUBLIC -DDATADIR=${DATADIR})
+target_link_libraries(ufc-data
+        ${SQLITE3_LIBRARY}
+)
+
 add_library(ufc SHARED
-        src/libufc/flightconnector.cpp
-        src/libufc/utils/data.cpp
-        src/libufc/utils/logger.cpp
-        src/libufc/datasources/simulator.cpp
-        src/libufc/datasources/simulator.h
-        src/libufc/datasources/xplane/xplane.cpp
-        src/libufc/datasources/xplane/xplane.h
-        src/libufc/datasources/xplane/xplaneclient.cpp
-        src/libufc/datasources/xplane/xplaneclient.h
-        src/libufc/devices/consoleoutput.cpp
-        src/libufc/devices/consoleoutput.h
-        src/libufc/devices/device.cpp
+        src/libufc-connector/flightconnector.cpp
+        src/libufc-connector/datasources/simulator.cpp
+        src/libufc-connector/datasources/simulator.h
+        src/libufc-connector/datasources/xplane/xplane.cpp
+        src/libufc-connector/datasources/xplane/xplane.h
+        src/libufc-connector/datasources/xplane/xplaneclient.cpp
+        src/libufc-connector/datasources/xplane/xplaneclient.h
+        src/libufc-connector/devices/consoleoutput.cpp
+        src/libufc-connector/devices/consoleoutput.h
+        src/libufc-connector/devices/device.cpp
         include/ufc/aircraftstate.h
         include/ufc/datasource.h
-        include/ufc/device.h
+        include/ufc/devices/device.h
         include/ufc/flightconnector.h
-        include/ufc/logger.h
-        include/ufc/data.h
-        include/ufc/usbhiddevice.h
-        src/libufc/devices/usbhiddevice.cpp
-        include/ufc/utils.h
-        src/libufc/utils/utils.cpp
-        include/ufc/airports.h
-        src/libufc/airport.cpp
-        include/ufc/geoutils.h
-        src/libufc/utils/geoutils.cpp
-        src/libufc/navdata/xplane/airports.cpp
-        src/libufc/navdata/xplane/navaids.cpp
-        src/libufc/datasources/datasource.cpp
-        src/libufc/datasources/clock.cpp
-        src/libufc/datasources/clock.h
-        include/ufc/navdata.h
-        src/libufc/datasources/aircraftmapping.cpp
-        include/ufc/aircraftmapping.h
-        include/ufc/udp.h
-        src/libufc/utils/udp.cpp
-        src/libufc/lua.h
-        src/libufc/lua.cpp
-        include/ufc/bitbuffer.h
-        src/libufc/utils/bitbuffer.cpp
-        src/libufc/devices/usbhidconfig/device.cpp
-        src/libufc/devices/usbhidconfig/usbhidconfig.h
-        src/libufc/aircraftstate.cpp
-        src/libufc/devices/usbhidconfig/lcd.h
-        src/libufc/devices/usbhidconfig/manager.cpp
-        src/libufc/navdata/xplane/xplanenavdata.cpp
-        src/libufc/navdata/xplane/xplanenavdata.h
-        src/libufc/navdata/littlenavmap/lnmnavdata.cpp
-        src/libufc/navdata/littlenavmap/lnmnavdata.h
-        src/libufc/devices/serial/serialmanager.cpp
-        src/libufc/devices/serial/serial.h
-        src/libufc/devices/serial/lib/list_ports_linux.cpp
-        src/libufc/devices/serial/lib/list_ports_osx.cpp
-        src/libufc/devices/serial/lib/list_ports_win.cpp
-        src/libufc/devices/serial/lib/serial_unix.cpp
-        src/libufc/devices/serial/lib/serial_win.cpp
-        src/libufc/devices/serial/lib/serial.cpp
-        src/libufc/devices/serial/device.cpp
-        src/libufc/utils/database.cpp
-        src/libufc/devices/serial/serialport.cpp
-        src/libufc/devices/serial/serialport.h
+        include/ufc/devices/usbhiddevice.h
+        src/libufc-connector/devices/usbhiddevice.cpp
+        src/libufc-connector/airport.cpp
+        src/libufc-connector/datasources/datasource.cpp
+        src/libufc-connector/datasources/clock.cpp
+        src/libufc-connector/datasources/clock.h
+        src/libufc-connector/datasources/aircraftmapping.cpp
+        src/libufc-connector/lua.h
+        src/libufc-connector/lua.cpp
+        src/libufc-connector/devices/usbhidconfig/device.cpp
+        src/libufc-connector/devices/usbhidconfig/usbhidconfig.h
+        src/libufc-connector/aircraftstate.cpp
+        src/libufc-connector/devices/usbhidconfig/lcd.h
+        src/libufc-connector/devices/usbhidconfig/manager.cpp
+        src/libufc-connector/devices/serial/serialmanager.cpp
+        src/libufc-connector/devices/serial/serial.h
+        src/libufc-connector/devices/serial/lib/list_ports_linux.cpp
+        src/libufc-connector/devices/serial/lib/list_ports_osx.cpp
+        src/libufc-connector/devices/serial/lib/list_ports_win.cpp
+        src/libufc-connector/devices/serial/lib/serial_unix.cpp
+        src/libufc-connector/devices/serial/lib/serial_win.cpp
+        src/libufc-connector/devices/serial/lib/serial.cpp
+        src/libufc-connector/devices/serial/device.cpp
+        src/libufc-connector/devices/serial/serialport.cpp
+        src/libufc-connector/devices/serial/serialport.h
 )
 
 if(UNIX AND APPLE)
@@ -105,6 +121,7 @@ endif()
 
 target_compile_definitions(ufc PUBLIC -DDATADIR=${DATADIR})
 target_link_libraries(ufc
+        ufc-utils
         luacpp_static
         ${yamlcpp_LDFLAGS}
         ${hidapi_LDFLAGS}
@@ -114,6 +131,12 @@ target_link_libraries(ufc
 )
 
 if (UNIX AND APPLE AND CMAKE_BUILD_TYPE STREQUAL "Release")
+    set_target_properties(ufc-utils PROPERTIES
+            XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME YES
+    )
+    set_target_properties(ufc-data PROPERTIES
+            XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME YES
+    )
     set_target_properties(ufc PROPERTIES
         XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME YES
     )
@@ -171,9 +194,8 @@ install(DIRECTORY data/usbhid DESTINATION ${DATADIR})
 
 set(PKGCONFIG_CFLAGS_LIST -I${CMAKE_INSTALL_PREFIX}/include ${yamlcpp_CFLAGS} ${hidapi_CFLAGS})
 string(REPLACE ";" " " PKGCONFIG_CFLAGS "${PKGCONFIG_CFLAGS_LIST}")
-set(PKGCONFIG_LDFLAGS_LIST -L${CMAKE_INSTALL_PREFIX}/lib -lufc ${yamlcpp_LDFLAGS} ${hidapi_LDFLAGS})
+set(PKGCONFIG_LDFLAGS_LIST -L${CMAKE_INSTALL_PREFIX}/lib -lufc-utils -lufc-connector -lufc-data ${yamlcpp_LDFLAGS} ${hidapi_LDFLAGS})
 string(REPLACE ";" " " PKGCONFIG_LDFLAGS "${PKGCONFIG_LDFLAGS_LIST}")
 
 configure_file(libufc.pc.in libufc.pc @ONLY)
 install(FILES ${CMAKE_BINARY_DIR}/libufc.pc DESTINATION "lib${LIB_SUFFIX}/pkgconfig")
-

@@ -11,8 +11,8 @@
 #include <ufc/aircraftstate.h>
 
 #include "aircraftmapping.h"
-#include "logger.h"
-#include "navdata.h"
+#include "utils/logger.h"
+#include "data/navdata.h"
 
 namespace UFC
 {
