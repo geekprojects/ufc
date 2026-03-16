@@ -1,3 +1,0 @@
-[submodule "luacpp"]
-	path = 3rdparty/luacpp
-	url = https://github.com/jordanvrtanoski/luacpp.git
