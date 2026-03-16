@@ -1,0 +1,4 @@
+[submodule "3rdparty/luacpp"]
+	path = 3rdparty/luacpp
+	url = https://github.com/geekprojects/luacpp.git
+	branch = lua5.5
