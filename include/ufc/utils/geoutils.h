@@ -21,23 +21,23 @@ struct Coordinate
 {
     union
     {
-        float latitude = 0.0f;
-        float x;
+        double latitude = 0.0f;
+        double x;
     };
     union
     {
-        float longitude = 0.0f;
-        float y;
+        double longitude = 0.0f;
+        double y;
     };
-    float altitude = 0.0f;
+    double altitude = 0.0f;
 
     Coordinate() = default;
 
-    Coordinate(float latitude, float longitude) : latitude(latitude), longitude(longitude)
+    Coordinate(double latitude, double longitude) : latitude(latitude), longitude(longitude)
     {
     }
 
-    Coordinate(float latitude, float longitude, float altitude) :
+    Coordinate(double latitude, double longitude, double altitude) :
         latitude(latitude),
         longitude(longitude),
         altitude(altitude)
@@ -90,17 +90,17 @@ struct Polygon
 struct Box
 {
     Coordinate position;
-    float size = 0.0f;
+    double size = 0.0f;
 
     Box() = default;
 
-    Box(const float latitude, const float longitude, const float size) :
+    Box(const double latitude, const double longitude, const double size) :
         position(Coordinate(latitude, longitude)),
         size(size)
     {
     }
 
-    Box(const Coordinate position, const float size) : position(position), size(size)
+    Box(const Coordinate position, const double size) : position(position), size(size)
     {
     }
 
@@ -113,32 +113,32 @@ struct Box
             std::to_wstring(maxLongitude());
     }
 
-    [[nodiscard]] float minLatitude() const
+    [[nodiscard]] double minLatitude() const
     {
         return position.latitude;
     }
 
-    [[nodiscard]] float minLongitude() const
+    [[nodiscard]] double minLongitude() const
     {
         return position.longitude;
     }
 
-    [[nodiscard]] float maxLatitude() const
+    [[nodiscard]] double maxLatitude() const
     {
         return position.latitude + size;
     }
 
-    [[nodiscard]] float maxLongitude() const
+    [[nodiscard]] double maxLongitude() const
     {
         return position.longitude + size;
     }
 
-    [[nodiscard]] float midLatitude() const
+    [[nodiscard]] double midLatitude() const
     {
         return position.latitude + (size / 2);
     }
 
-    [[nodiscard]] float midLongitude() const
+    [[nodiscard]] double midLongitude() const
     {
         return position.longitude + (size / 2);
     }
@@ -173,7 +173,7 @@ class QuadTreeNode : public std::enable_shared_from_this<QuadTreeNode<T> >
 
     void subdivide()
     {
-        float halfSize = m_boundary.size / 2.0f;
+        double halfSize = m_boundary.size / 2.0f;
 
         // North West
         auto northWest = make_shared<QuadTreeNode>(
@@ -221,11 +221,11 @@ class QuadTreeNode : public std::enable_shared_from_this<QuadTreeNode<T> >
     }
 
 public:
-    QuadTreeNode(float latitude, float longitude, float size) : m_boundary(Coordinate(latitude, longitude), size)
+    QuadTreeNode(double latitude, double longitude, double size) : m_boundary(Coordinate(latitude, longitude), size)
     {
     }
 
-    QuadTreeNode(std::shared_ptr<QuadTreeNode> parent, float latitude, float longitude, float size) : m_parent(parent),
+    QuadTreeNode(std::shared_ptr<QuadTreeNode> parent, double latitude, double longitude, double size) : m_parent(parent),
         m_boundary(Coordinate(latitude, longitude), size)
     {
     }
@@ -334,7 +334,7 @@ class QuadTree
     std::shared_ptr<QuadTreeNode<T> > m_root;
 
  public:
-    QuadTree(float latitude, float longitude, float size) :
+    QuadTree(double latitude, double longitude, double size) :
         m_root(std::make_shared<QuadTreeNode<T> >(latitude, longitude, size))
     {
     }
@@ -344,7 +344,7 @@ class QuadTree
         return m_root->insert(object);
     }
 
-    void checkParent(auto parent, std::set<std::shared_ptr<T>> results, auto& r, float latOffset, float longOffset) const
+    void checkParent(auto parent, std::set<std::shared_ptr<T>> results, auto& r, double latOffset, double longOffset) const
     {
         auto northCoord = Coordinate(
             parent->getBoundary().minLatitude() + latOffset,
@@ -385,7 +385,7 @@ class QuadTree
         checkParent(parent, results, r, 0.0f, -0.01);
         checkParent(parent, results, r, 0.0f, +0.01);
 
-        float nearestDistance = std::numeric_limits<float>::max();
+        double nearestDistance = std::numeric_limits<double>::max();
         std::shared_ptr<T> nearestObject = nullptr;
         for (auto object: results)
         {
@@ -393,7 +393,7 @@ class QuadTree
             {
                 continue;
             }
-            float d = GeoUtils::distance(object->getLocation(), point);
+            double d = GeoUtils::distance(object->getLocation(), point);
 #ifdef DEBUG_QUADTREE
             printf("QuadTreeNode::findNearestNode: Possible: %ls (distance=%0.2f)\n", object->toString().c_str(), d);
 #endif

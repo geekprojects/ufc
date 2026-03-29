@@ -5,8 +5,9 @@
 #ifndef UNIVERSALFLIGHTCONNECTOR_XPLANENAVDATA_H
 #define UNIVERSALFLIGHTCONNECTOR_XPLANENAVDATA_H
 
-#include "../../../../include/ufc/data/navdata.h"
-#include "../../../../include/ufc/data/airports.h"
+#include <ufc/data/navdata.h>
+#include <ufc/data/airports.h>
+#include <ufc/data/navaids.h>
 
 namespace UFC
 {

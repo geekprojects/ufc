@@ -41,6 +41,7 @@ vector<wstring> UFC::splitString(wstring line, wchar_t splitChar)
     return parts;
 }
 
+
 wstring UFC::utf82wstring(const char* start)
 {
     if (start == NULL)

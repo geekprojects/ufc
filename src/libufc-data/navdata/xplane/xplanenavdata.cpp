@@ -2,10 +2,10 @@
 // Created by Ian Parker on 19/08/2025.
 //
 
-#include "xplanenavdata.h"
+#include "ufc/data/xplanenavdata.h"
 #include "navdata.h"
 
-#include <ufc/utils.h>
+#include "ufc/utils/utils.h"
 
 #include <regex>
 #include <cstring>

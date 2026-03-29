@@ -5,8 +5,7 @@
 #include <set>
 #include <vector>
 #include <string>
-
-#include <stdint.h>
+#include <cstdint>
 
 #include <sqlite3.h>
 
@@ -39,7 +38,6 @@ class Database;
 
 class PreparedStatement
 {
- private:
     Database* m_db;
     sqlite3_stmt* m_stmt;
     int m_error;

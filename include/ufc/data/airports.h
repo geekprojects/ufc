@@ -9,7 +9,7 @@
 #include <map>
 
 #include <ufc/utils/geoutils.h>
-#include "navdata.h"
+#include <ufc/data/navdata.h>
 
 namespace UFC
 {
@@ -77,7 +77,6 @@ struct Controller
 
 class Airport : public Locationable
 {
- private:
     std::wstring m_name;
     Coordinate m_location;
     std::string m_icaoCode;
@@ -194,6 +193,8 @@ class Airports : public NavData
  public:
     Airports(NavDataSource* navDataSource, std::string const& name);
     virtual ~Airports();
+
+    virtual bool init() { return true; }
 
     virtual std::shared_ptr<Airport> findNearest(Coordinate point) const
     {

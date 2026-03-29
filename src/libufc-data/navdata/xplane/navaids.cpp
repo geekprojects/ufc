@@ -2,15 +2,13 @@
 // Created by Ian Parker on 14/04/2024.
 //
 
-#include "xplanenavdata.h"
+#include "ufc/data/xplanenavdata.h"
+#include "ufc/utils/utils.h"
 
-#include <ufc/utils.h>
-
-#include <cstring>
 #include <regex>
 
 #include "navdata.h"
-#include "ufc/data.h"
+#include "ufc/utils/data.h"
 #include "ufc/flightconnector.h"
 
 using namespace std;

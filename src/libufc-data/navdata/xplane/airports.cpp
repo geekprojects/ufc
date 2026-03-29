@@ -2,12 +2,12 @@
 // Created by Ian Parker on 14/09/2024.
 //
 
-#include "xplanenavdata.h"
-#include "../../../../include/ufc/utils/utils.h"
+#include "ufc/data/xplanenavdata.h"
+#include "ufc/utils/utils.h"
 #include <ufc/flightconnector.h>
 
 #include "navdata.h"
-#include "../../../../include/ufc/utils/data.h"
+#include "ufc/utils/data.h"
 
 using namespace std;
 using namespace UFC;
@@ -123,7 +123,10 @@ bool XPlaneAirports::init()
                     runways.at(1).m_bearing = angle;
 
                     vector<Runway> currentRunways = currentAirport->getRunways();
-                    currentRunways.insert(currentRunways.end(), runways.begin(), runways.end());
+                    for (auto& runway : runways)
+                    {
+                        currentRunways.push_back(runway);
+                    }
                     currentAirport->setRunways(currentRunways);
 
                     //log(INFO, "%s %s: %ls bearing=%0.2f", currentAirport->getICAOCode().c_str(), runways.at(0).m_number.c_str(), runways.at(0).m_startLocation.toString().c_str(), runways.at(0).m_bearing);
