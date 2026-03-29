@@ -3,7 +3,7 @@
 //
 
 #include "serial.h"
-#include "ufc/utils.h"
+#include "ufc/utils/utils.h"
 
 using namespace std;
 using namespace UFC;

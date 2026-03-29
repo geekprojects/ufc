@@ -8,7 +8,7 @@
 #include <string>
 
 #include "serial.h"
-#include "ufc/logger.h"
+#include "ufc/utils/logger.h"
 
 class SerialPort : public UFC::Logger
 {

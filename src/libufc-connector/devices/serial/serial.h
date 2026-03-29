@@ -7,7 +7,7 @@
 
 #include <regex>
 #include <ufc/flightconnector.h>
-#include <ufc/device.h>
+#include <ufc/devices/device.h>
 
 class SerialPort;
 
