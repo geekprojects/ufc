@@ -42,9 +42,9 @@ add_library(ufc-utils SHARED
         src/libufc-utils/geoutils.cpp
         src/libufc-utils/udp.cpp
         src/libufc-utils/bitbuffer.cpp
+        src/libufc-utils/database.cpp
         include/ufc/utils/geoutils.h
         include/ufc/utils/bitbuffer.h
-        src/libufc-utils/database.cpp
         include/ufc/utils/logger.h
         include/ufc/utils/data.h
         include/ufc/utils/utils.h
@@ -58,18 +58,30 @@ target_link_libraries(ufc-utils
 )
 
 add_library(ufc-data SHARED
+        src/libufc-data/navdata/airport.cpp
         src/libufc-data/navdata/xplane/xplanenavdata.cpp
-        src/libufc-data/navdata/xplane/xplanenavdata.h
+        include/ufc/data/xplanenavdata.h
         src/libufc-data/navdata/xplane/airports.cpp
         src/libufc-data/navdata/xplane/navaids.cpp
         src/libufc-data/navdata/littlenavmap/lnmnavdata.cpp
-        src/libufc-data/navdata/littlenavmap/lnmnavdata.h
+        include/ufc/data/lnmnavdata.h
+        src/libufc-data/navdata/littlenavmap/lnmairports.cpp
+        src/libufc-data/navdata/littlenavmap/lnmnavaids.cpp
+        include/ufc/data/greatcircle.h
+        src/libufc-data/greatcircle.cpp
+        src/libufc-data/routeparser.cpp
         include/ufc/data/airports.h
         include/ufc/data/navdata.h
         include/ufc/aircraftmapping.h
+        src/libufc-data/navdata/littlenavmap/lnmprocedures.cpp
+        src/libufc-data/navdata/littlenavmap/lnmairways.cpp
+        include/ufc/data/navaids.h
+        include/ufc/data/airways.h
+        src/libufc-data/navdata/procedures.cpp
 )
 target_compile_definitions(ufc-data PUBLIC -DDATADIR=${DATADIR})
 target_link_libraries(ufc-data
+        ufc-utils
         ${SQLITE3_LIBRARY}
 )
 
@@ -90,7 +102,6 @@ add_library(ufc SHARED
         include/ufc/flightconnector.h
         include/ufc/devices/usbhiddevice.h
         src/libufc-connector/devices/usbhiddevice.cpp
-        src/libufc-connector/airport.cpp
         src/libufc-connector/datasources/datasource.cpp
         src/libufc-connector/datasources/clock.cpp
         src/libufc-connector/datasources/clock.h
@@ -142,7 +153,7 @@ if (UNIX AND APPLE AND CMAKE_BUILD_TYPE STREQUAL "Release")
     )
 endif()
 
-install(TARGETS ufc DESTINATION lib)
+install(TARGETS ufc ufc ufc-utils ufc-data DESTINATION lib)
 
 add_executable(ufctool src/ufctool/main.cpp)
 target_link_libraries(ufctool
@@ -187,6 +198,8 @@ if (UNIX AND APPLE AND CMAKE_BUILD_TYPE STREQUAL "Release")
     )
 endif()
 
+add_subdirectory(tests)
+
 set(DATADIR ${CMAKE_INSTALL_PREFIX}/share/ufc)
 install(DIRECTORY include/ufc DESTINATION include FILES_MATCHING PATTERN "*.h" )
 install(DIRECTORY data/x-plane DESTINATION ${DATADIR})
@@ -194,7 +207,7 @@ install(DIRECTORY data/usbhid DESTINATION ${DATADIR})
 
 set(PKGCONFIG_CFLAGS_LIST -I${CMAKE_INSTALL_PREFIX}/include ${yamlcpp_CFLAGS} ${hidapi_CFLAGS})
 string(REPLACE ";" " " PKGCONFIG_CFLAGS "${PKGCONFIG_CFLAGS_LIST}")
-set(PKGCONFIG_LDFLAGS_LIST -L${CMAKE_INSTALL_PREFIX}/lib -lufc-utils -lufc-connector -lufc-data ${yamlcpp_LDFLAGS} ${hidapi_LDFLAGS})
+set(PKGCONFIG_LDFLAGS_LIST -L${CMAKE_INSTALL_PREFIX}/lib -lufc-utils -lufc ${yamlcpp_LDFLAGS} ${hidapi_LDFLAGS})
 string(REPLACE ";" " " PKGCONFIG_LDFLAGS "${PKGCONFIG_LDFLAGS_LIST}")
 
 configure_file(libufc.pc.in libufc.pc @ONLY)
