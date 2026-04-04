@@ -110,7 +110,7 @@ bool GreatCircle::calculateLongitudeDifferences(const vector<Coordinate> &firstP
     dfMaxSmallDiffLong = 0.0;
 
     // https://github.com/OSGeo/gdal/blob/7bfb9c452a59aac958bff0c8386b891edf8154ca/gdal/ogr/ogrgeometryfactory.cpp#L2342
-    for (int j = 1; j < firstPass.size(); ++j)
+    for (size_t j = 1; j < firstPass.size(); ++j)
     {
         auto dfPrevX = firstPass[j - 1].longitude;
         auto dfX = firstPass[j].longitude;
@@ -134,7 +134,7 @@ bool GreatCircle::calculateLongitudeDifferences(const vector<Coordinate> &firstP
 void GreatCircle::handleBigDifference(const vector<Coordinate> &firstPass, vector<vector<Coordinate>> poMulti)
 {
     vector<Coordinate> poNewLS;
-    for (int k = 0; k < firstPass.size(); ++k)
+    for (size_t k = 0; k < firstPass.size(); ++k)
     {
         auto dfX0 = firstPass[k].longitude;
         if (k > 0 && abs(dfX0 - firstPass[k - 1].longitude) > dfDiffSpace)
