@@ -2,6 +2,8 @@
 // Created by Ian Parker on 18/03/2026.
 //
 
+#include <cinttypes>
+
 #include "ufc/data/lnmnavdata.h"
 
 using namespace std;
@@ -32,19 +34,19 @@ bool LNMAirways::expandAirway(
     uint64_t exitWaypointId,
     vector<shared_ptr<NavAid>> &navAids)
 {
-    printf("expandAirway: %s: %llu -> %llu\n", ident.c_str(), entryWaypointId, exitWaypointId);
+    printf("expandAirway: %s: %" PRId64 " -> %" PRId64 "\n", ident.c_str(), entryWaypointId, exitWaypointId);
 
     auto from = findNextAirwayWaypoint(ident, entryWaypointId, true);
     if (from == nullptr)
     {
-        printf("expandAirway: Unable to find entry waypoint: %llu\n", entryWaypointId);
+        printf("expandAirway: Unable to find entry waypoint: %" PRId64 "\n", entryWaypointId);
         return false;
     }
 
     auto to = findNextAirwayWaypoint(ident, exitWaypointId, false);
     if (to == nullptr)
     {
-        printf("expandAirway: Unable to find exit waypoint: %llu\n", entryWaypointId);
+        printf("expandAirway: Unable to find exit waypoint: %" PRId64 "\n", entryWaypointId);
         return false;
     }
 
@@ -75,7 +77,7 @@ bool LNMAirways::expandAirway(
         auto navAid = findNextAirwayWaypoint(ident, nextId, forwards);
         if (navAid == nullptr)
         {
-            printf("expandAirway: Unable to find waypoint: %llu\n", nextId);
+            printf("expandAirway: Unable to find waypoint: %" PRId64 "\n", nextId);
             return false;
         }
 
