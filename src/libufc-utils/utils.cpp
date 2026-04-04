@@ -6,8 +6,6 @@
 
 #include "utf8.h"
 
-#include <cstring>
-
 using namespace std;
 using namespace UFC;
 
@@ -29,6 +27,37 @@ vector<wstring> UFC::splitString(wstring line, wchar_t splitChar)
         if (pos >= 1)
         {
             wstring part = line.substr(0, pos);
+            parts.push_back(part);
+        }
+        if (pos == line.length())
+        {
+            break;
+        }
+        line = line.substr(pos + 1);
+    }
+
+    return parts;
+}
+
+vector<string> UFC::splitString(string line, char splitChar)
+{
+    vector<string> parts;
+
+    while (!line.empty())
+    {
+        size_t pos = line.find(splitChar);
+        if (pos == string::npos)
+        {
+            pos = line.length();
+            if (pos == 0)
+            {
+                break;
+            }
+        }
+        if (pos >= 1)
+        {
+            string part = line.substr(0, pos);
+            StringUtils::trim(part);
             parts.push_back(part);
         }
         if (pos == line.length())

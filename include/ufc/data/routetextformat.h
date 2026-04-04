@@ -1,36 +1,15 @@
 //
-// Created by Ian Parker on 26/12/2025.
+// Created by Ian Parker on 30/03/2026.
 //
 
-#ifndef BLACKBOX_ROUTEPARSER_H
-#define BLACKBOX_ROUTEPARSER_H
+#ifndef UNIVERSALFLIGHTCONNECTOR_ROUTETEXT_H
+#define UNIVERSALFLIGHTCONNECTOR_ROUTETEXT_H
 
-#include <memory>
-
-#include "ufc/data/navaids.h"
-#include "ufc/data/navdata.h"
-#include "ufc/utils/logger.h"
+#include "airports.h"
+#include "fpformat.h"
 
 namespace UFC
 {
-class Airport;
-
-struct RoutePoint
-{
-    std::string name;
-    std::string airway;
-    Coordinate position;
-
-    NavAidType type;
-
-    int minAltitude = -1;
-    int maxAltitude = -1;
-    int maxSpeed = -1;
-
-    uint64_t sourceId = 0;
-
-    std::vector<RoutePoint> components;
-};
 
 struct RouteToken
 {
@@ -43,12 +22,13 @@ struct RouteToken
     bool isArrival = false;
 };
 
-class RouteParser : public Logger
+class RouteTextFormat : public FlightPlanFormat
 {
-    UFC::NavDataSource* m_navDataSource;
-
-    RouteToken tokenise(const std::string &tokenStr, Coordinate &lastCoord, std::shared_ptr<Airport> &originAirport, std::shared_ptr<Airport> &
-                          destAirport);
+    RouteToken tokenise(
+        const std::string &tokenStr,
+        Coordinate &lastCoord,
+        std::shared_ptr<Airport>& originAirport,
+        std::shared_ptr<Airport>& destAirport);
 
     bool parseRoute(
         const std::string &routeStr,
@@ -79,16 +59,17 @@ class RouteParser : public Logger
         std::vector<std::string>::iterator &it,
         const std::shared_ptr<RoutePoint> &rp);
 
- public:
-    explicit RouteParser(NavDataSource* navDataSource);
-
-    bool createRoute(const std::string& routeStr, const std::string& origin, const std::string& dest, std::vector<RoutePoint> &points);
-
-
-
     static bool parseLatLon(const std::string &ident, UFC::Coordinate &position);
-};
 
+public:
+    RouteTextFormat(UFC::NavDataSource* navSource) : FlightPlanFormat(navSource, "RouteTextFormat") {}
+    ~RouteTextFormat() override = default;
+
+    std::shared_ptr<FlightPlan> loadString(std::string file) override;
+    std::shared_ptr<FlightPlan> loadString(const std::string& routeStr, const std::string& origin, const std::string& dest);
+
+    bool saveFile(std::shared_ptr<FlightPlan> flightPlan, std::string filename) override;
+};
 }
 
-#endif //BLACKBOX_ROUTEPARSER_H
+#endif //UNIVERSALFLIGHTCONNECTOR_ROUTETEXT_H

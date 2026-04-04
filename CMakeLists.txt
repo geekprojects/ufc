@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(yamlcpp REQUIRED yaml-cpp)
 pkg_check_modules(lua REQUIRED lua)
+pkg_check_modules(nlohmann_json REQUIRED nlohmann_json)
 
 find_library(SQLITE3_LIBRARY NAMES sqlite3 )
 
@@ -33,7 +34,7 @@ SET(CMAKE_CXX_FLAGS_DEBUG "${FLAGS_COMMON} -O0 -g -fsanitize=address -fsanitize-
 SET(CMAKE_CXX_FLAGS_RELEASE  "${FLAGS_COMMON} -O3")
 
 include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/3rdparty/luacpp/Source)
-add_definitions(${yamlcpp_CFLAGS} ${hidapi_CFLAGS} ${lua_CFLAGS})
+add_definitions(${yamlcpp_CFLAGS} ${hidapi_CFLAGS} ${lua_CFLAGS} ${nlohmann_json_CFLAGS})
 
 add_library(ufc-utils SHARED
         src/libufc-utils/data.cpp
@@ -69,7 +70,7 @@ add_library(ufc-data SHARED
         src/libufc-data/navdata/littlenavmap/lnmnavaids.cpp
         include/ufc/data/greatcircle.h
         src/libufc-data/greatcircle.cpp
-        src/libufc-data/routeparser.cpp
+        src/libufc-data/flightplans/routetext.cpp
         include/ufc/data/airports.h
         include/ufc/data/navdata.h
         include/ufc/aircraftmapping.h
@@ -78,11 +79,21 @@ add_library(ufc-data SHARED
         include/ufc/data/navaids.h
         include/ufc/data/airways.h
         src/libufc-data/navdata/procedures.cpp
+        include/ufc/data/flightplan.h
+        include/ufc/data/fpformat.h
+        include/ufc/data/routetextformat.h
+        src/libufc-data/flightplans/fpformat.cpp
+        include/ufc/data/msfsiniformat.h
+        include/ufc/data/simbriefjson.h
+        include/ufc/data/xplanefmsformat.h
+        src/libufc-data/flightplans/msfsiniformat.cpp
+        src/libufc-data/flightplans/simbriefjson.cpp
 )
 target_compile_definitions(ufc-data PUBLIC -DDATADIR=${DATADIR})
 target_link_libraries(ufc-data
         ufc-utils
         ${SQLITE3_LIBRARY}
+        -lcurl
 )
 
 add_library(ufc SHARED

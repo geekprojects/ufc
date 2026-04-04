@@ -4,12 +4,12 @@
 
 #include <gtest/gtest.h>
 
-#include "../../include/ufc/data/routeparser.h"
 #include "ufc/datasource.h"
 #include "ufc/data/airports.h"
 #include "ufc/data/airways.h"
 #include "ufc/data/lnmnavdata.h"
 #include "ufc/data/procedures.h"
+#include "ufc/data/routetextformat.h"
 
 using namespace std;
 using namespace UFC;
@@ -134,16 +134,15 @@ TEST(RouteParser, Route)
     //TestNavDataSource testNavDataSource(nullptr);
     LittleNavMapData lnmDataSource(nullptr);
     lnmDataSource.init();
-    RouteParser routeParser(&lnmDataSource);
 
-    vector<RoutePoint> route;
-    routeParser.createRoute(
+    RouteTextFormat routeTextFormat(&lnmDataSource);
+
+    routeTextFormat.loadString(
         //"EGKK/08R SFD4Z SFD M605 XIDIL UM605 BIBAX BIBA9W LFPG/09L",
         //"SFD M605 XIDIL UM605 BIBAX BIBA9W",
         "SFD M605 XIDIL UM605 BIBAX",
         "EGKK",
-        "LFPG",
-        route
+        "LFPG"
         );
 }
 

@@ -2,12 +2,11 @@
 // Created by Ian Parker on 26/12/2025.
 //
 
-#include "ufc/data/routeparser.h"
-
 #include "ufc/data/greatcircle.h"
 #include "ufc/data/airports.h"
 #include "ufc/data/airways.h"
 #include "ufc/data/procedures.h"
+#include "ufc/data/routetextformat.h"
 #include "ufc/utils/utils.h"
 
 using namespace std;
@@ -57,13 +56,14 @@ vector<string> splitRoute(string line)
     return parts;
 }
 
-RouteParser::RouteParser(NavDataSource* navDataSource) :
-    Logger("RouteParser"),
-    m_navDataSource(navDataSource)
+
+
+bool RouteTextFormat::saveFile(std::shared_ptr<FlightPlan> flightPlan, string filename)
 {
+    return false;
 }
 
-RouteToken RouteParser::tokenise(
+RouteToken RouteTextFormat::tokenise(
     const std::string &tokenStr,
     Coordinate& lastCoord,
     shared_ptr<Airport>& originAirport,
@@ -84,18 +84,18 @@ RouteToken RouteParser::tokenise(
     // Figure out what we've got
     if (rt.ident.size() == 4)
     {
-        rt.airport = m_navDataSource->getAirports()->findByCode(rt.ident);
+        rt.airport = getNavDataSource()->getAirports()->findByCode(rt.ident);
     }
     if (rt.airport == nullptr)
     {
-        rt.navAid = m_navDataSource->getNavAids()->findById(rt.ident, lastCoord);
+        rt.navAid = getNavDataSource()->getNavAids()->findById(rt.ident, lastCoord);
         if (rt.navAid == nullptr)
         {
             if (rt.ident == "DCT")
             {
                 rt.isAirway = true;
             }
-            else if (m_navDataSource->getAirways()->isAirway(rt.ident))
+            else if (getNavDataSource()->getAirways()->isAirway(rt.ident))
             {
                 rt.isAirway = true;
             }
@@ -103,11 +103,11 @@ RouteToken RouteParser::tokenise(
             {
                 if (originAirport != nullptr)
                 {
-                    rt.isDeparture = m_navDataSource->getProcedures()->getDeparture(originAirport->getICAOCode(), rt.ident) != nullptr;
+                    rt.isDeparture = getNavDataSource()->getProcedures()->getDeparture(originAirport->getICAOCode(), rt.ident) != nullptr;
                 }
                 if (!rt.isDeparture && destAirport != nullptr)
                 {
-                    rt.isArrival = m_navDataSource->getProcedures()->getArrival(destAirport->getICAOCode(), rt.ident) != nullptr;
+                    rt.isArrival = getNavDataSource()->getProcedures()->getArrival(destAirport->getICAOCode(), rt.ident) != nullptr;
                 }
             }
         }
@@ -123,7 +123,7 @@ RouteToken RouteParser::tokenise(
     return rt;
 }
 
-bool RouteParser::parseRoute(
+bool RouteTextFormat::parseRoute(
     const std::string& routeStr,
     shared_ptr<Airport> originAirport,
     shared_ptr<Airport> destAirport,
@@ -223,7 +223,7 @@ bool RouteParser::parseRoute(
                 {
                     if (token.ident != destAirport->getICAOCode())
                     {
-                        auto dest = m_navDataSource->getAirports()->findByCode(token.ident);
+                        auto dest = getNavDataSource()->getAirports()->findByCode(token.ident);
                         if (dest != nullptr)
                         {
                             log(
@@ -267,7 +267,7 @@ bool RouteParser::parseRoute(
     return true;
 }
 
-void RouteParser::expandAirways(
+void RouteTextFormat::expandAirways(
     std::vector<RoutePoint> &resolvedPoints,
     vector<std::shared_ptr<RoutePoint>> parsedPoints)
 {
@@ -288,7 +288,7 @@ void RouteParser::expandAirways(
                 {
                     log(DEBUG, "parseRoute:  -> Airway: %s", point->airway.c_str());
                     vector<shared_ptr<NavAid>> airwayPoints;
-                    m_navDataSource->getAirways()->expandAirway(
+                    getNavDataSource()->getAirways()->expandAirway(
                         point->airway,
                         point->sourceId,
                         nextPoint->sourceId,
@@ -311,7 +311,7 @@ void RouteParser::expandAirways(
     }
 }
 
-vector<RoutePoint> RouteParser::generateGreatCirclePaths(std::vector<RoutePoint> &points)
+vector<RoutePoint> RouteTextFormat::generateGreatCirclePaths(std::vector<RoutePoint> &points)
 {
     vector<RoutePoint> greatCircleRoute;
     for (auto it = points.begin(); it != points.end(); ++it)
@@ -342,7 +342,7 @@ vector<RoutePoint> RouteParser::generateGreatCirclePaths(std::vector<RoutePoint>
     return greatCircleRoute;
 }
 
-void RouteParser::generateGreatCirclePath(
+void RouteTextFormat::generateGreatCirclePath(
     vector<RoutePoint>& greatCircleRoute,
     RoutePoint const &rp,
     RoutePoint const &prev,
@@ -363,7 +363,7 @@ void RouteParser::generateGreatCirclePath(
     }
 }
 
-void RouteParser::addAirport(const shared_ptr<Airport> &originAirport, std::vector<RoutePoint> &resolvedPoints)
+void RouteTextFormat::addAirport(const shared_ptr<Airport> &originAirport, std::vector<RoutePoint> &resolvedPoints)
 {
     //if (originAirport.hasCoordinates)
     {
@@ -375,7 +375,7 @@ void RouteParser::addAirport(const shared_ptr<Airport> &originAirport, std::vect
     }
 }
 
-std::shared_ptr<RoutePoint> RouteParser::parseWaypoint(UFC::Coordinate& lastCoord, const string& ident, shared_ptr<NavAid> navAid) const
+std::shared_ptr<RoutePoint> RouteTextFormat::parseWaypoint(UFC::Coordinate& lastCoord, const string& ident, shared_ptr<NavAid> navAid) const
 {
     shared_ptr<RoutePoint> rp = nullptr;
 
@@ -410,7 +410,7 @@ std::shared_ptr<RoutePoint> RouteParser::parseWaypoint(UFC::Coordinate& lastCoor
     return rp;
 }
 
-void RouteParser::parseAirway(const std::vector<std::string>& route, std::vector<std::string>::iterator& it, const shared_ptr<RoutePoint> &rp)
+void RouteTextFormat::parseAirway(const std::vector<std::string>& route, std::vector<std::string>::iterator& it, const shared_ptr<RoutePoint> &rp)
 {
     log(DEBUG, "parseAirway: Parsing airway");
     if ((it + 1) != route.end())
@@ -427,7 +427,7 @@ void RouteParser::parseAirway(const std::vector<std::string>& route, std::vector
         }
         if (!isAirway)
         {
-            isAirway = m_navDataSource->getAirways()->isAirway(next);
+            isAirway = getNavDataSource()->getAirways()->isAirway(next);
         }
 
         if (isAirway)
@@ -439,7 +439,12 @@ void RouteParser::parseAirway(const std::vector<std::string>& route, std::vector
     }
 }
 
-bool RouteParser::createRoute(const string& routeStr, const string& origin, const string& dest, vector<RoutePoint> &points)
+std::shared_ptr<FlightPlan> RouteTextFormat::loadString(std::string routeStr)
+{
+    return loadString(routeStr, "", "");
+}
+
+shared_ptr<FlightPlan> RouteTextFormat::loadString(const string& routeStr, const string& origin, const string& dest)
 {
     shared_ptr<Airport> originAirport = nullptr;
     shared_ptr<Airport> destAirport = nullptr;
@@ -447,7 +452,7 @@ bool RouteParser::createRoute(const string& routeStr, const string& origin, cons
 
     if (!origin.empty())
     {
-        originAirport = m_navDataSource->getAirports()->findByCode(origin);
+        originAirport = getNavDataSource()->getAirports()->findByCode(origin);
         if (originAirport != nullptr)
         {
             lastCoord = originAirport->getLocation();
@@ -464,23 +469,24 @@ bool RouteParser::createRoute(const string& routeStr, const string& origin, cons
 
     if (!dest.empty())
     {
-        destAirport = m_navDataSource->getAirports()->findByCode(dest);
+        destAirport = getNavDataSource()->getAirports()->findByCode(dest);
         if (destAirport == nullptr)
         {
             log(WARN, "parseRoute: Invalid destination: %s", dest.c_str());
         }
     }
 
+    auto flightPlan = make_shared<FlightPlan>();
+    vector<RoutePoint> points;
     parseRoute(routeStr, originAirport, destAirport, lastCoord, points);
 
     vector<RoutePoint> greatCircleRoute = generateGreatCirclePaths(points);
-    points = greatCircleRoute;
+    flightPlan->setRoute(greatCircleRoute);
 
-    return true;
+    return flightPlan;
 }
 
-
-bool RouteParser::parseLatLon(const std::string& ident, UFC::Coordinate& position)
+bool RouteTextFormat::parseLatLon(const std::string& ident, UFC::Coordinate& position)
 {
     if (ident.length() == 7)
     {
