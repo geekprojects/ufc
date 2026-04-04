@@ -25,10 +25,10 @@ TEST(LNMProcedures, RunwayDepartures)
     ASSERT_TRUE(data->init());
     auto procedures = data->getProcedures();
     //procedures->getProcedures("EGKK");
-    auto departures = procedures->getProceduresForRunway(ProcedureType::DEPARTURE, "EGKK", "08R");
+    auto departures = procedures->getProceduresForRunway(ProcedureType::DEPARTURE, "LIML", "17");
     for (auto departure : departures)
     {
-        printf("%s\n", departure->ident.c_str());
+        printf("%s: runway=%s\n", departure->ident.c_str(), departure->runway.c_str());
     }
 }
 

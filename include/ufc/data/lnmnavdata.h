@@ -100,6 +100,7 @@ class LNMProcedures : public UFC::Procedures
 {
     UFC::PreparedStatement* m_findStatement = nullptr;
     UFC::PreparedStatement* m_findApproachLegs = nullptr;
+    UFC::PreparedStatement* m_findTransitionLegs = nullptr;
 
     [[nodiscard]] std::shared_ptr<UFC::Database> getDatabase() const
     {

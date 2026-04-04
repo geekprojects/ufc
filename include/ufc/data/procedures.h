@@ -21,6 +21,7 @@ enum class ProcedureType
 struct ProcedureLeg
 {
     std::string ident;
+    bool isTransition;
     Coordinate position;
     int minAltitude;
     int maxAltitude;
@@ -33,6 +34,8 @@ struct Procedure
 {
     ProcedureType type;
     std::string ident;
+    std::string procedureIdent;
+    std::string transitionIdent;
     std::string airportCode;
     std::string runway;
     int direction;
