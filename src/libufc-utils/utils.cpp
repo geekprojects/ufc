@@ -4,6 +4,8 @@
 
 #include "ufc/utils/utils.h"
 
+#include <cstring>
+
 #include "utf8.h"
 
 using namespace std;
