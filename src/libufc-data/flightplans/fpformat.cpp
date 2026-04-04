@@ -3,8 +3,10 @@
 //
 
 #include "ufc/data/fpformat.h"
-
 #include "ufc/utils/utils.h"
+
+#include <cstring>
+
 using namespace std;
 using namespace UFC;
 

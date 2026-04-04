@@ -43,7 +43,7 @@ jobs:
 
     - name: Install dependencies (Linux)
       if: runner.os == 'Linux'
-      run: sudo apt-get update && sudo apt-get install libyaml-cpp-dev libhidapi-dev lua5.4 liblua5.4-dev nlohmann-json3-dev
+      run: sudo apt-get update && sudo apt-get install libyaml-cpp-dev libhidapi-dev lua5.4 liblua5.4-dev nlohmann-json3-dev libsqlite3-dev libcurl4-openssl-dev
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
