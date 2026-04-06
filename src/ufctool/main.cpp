@@ -4,7 +4,6 @@
 
 #include <ufc/flightconnector.h>
 #include <ufc/datasource.h>
-#include <ufc/airports.h>
 
 #include <cstdio>
 #include <getopt.h>

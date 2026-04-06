@@ -5,6 +5,10 @@ init: |
 
 data:
   aircraft:
+    position:
+        latitude: sim/flightmodel/position/latitude
+        longitude: sim/flightmodel/position/longitude
+        elevation: sim/flightmodel/position/elevation
     indicatedAirspeed: sim/flightmodel/position/indicated_airspeed
     pitch: sim/flightmodel/position/theta
     roll: sim/flightmodel/position/phi
@@ -27,6 +31,9 @@ data:
     nav1StandbyHz: sim/cockpit/radios/nav1_stdby_freq_hz
     nav2Hz: sim/cockpit/radios/nav2_freq_hz
     nav2StandbyHz: sim/cockpit/radios/nav2_stdby_freq_hz
+    transponder:
+      code: sim/cockpit/radios/transponder_code
+      mode: sim/cockpit/radios/transponder_mode
 
   autopilot:
     # Speed

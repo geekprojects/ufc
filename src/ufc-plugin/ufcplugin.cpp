@@ -2,7 +2,7 @@
 #include "xpplugindatasource.h"
 #include "ufcplugin.h"
 
-#include <ufc/device.h>
+#include "ufc/devices/device.h"
 
 #include <XPLMProcessing.h>
 #include <XPLMMenus.h>
@@ -19,7 +19,6 @@ using namespace std;
 using namespace UFC;
 
 UFCPlugin g_ufcPlugin;
-
 
 int UFCPlugin::start(char* outName, char* outSig, char* outDesc)
 {
@@ -134,7 +133,10 @@ float UFCPlugin::initCallback(float elapsedMe, float elapsedSim, int counter, vo
 float UFCPlugin::init(float elapsedMe, float elapsedSim, int counter)
 {
     m_dataSource->connect();
+    m_flightConnector->scanDevices();
     m_flightConnector->start();
+
+    buildMenu();
     return 0;
 }
 
@@ -158,6 +160,26 @@ void UFCPlugin::menu(void* itemRef)
         buildMenu();
 
         startFlightConnector();
+    }
+    else if (menuNum == 1001)
+    {
+        if (m_flightConnector->isRunning())
+        {
+            log(DEBUG, "menu: Stopping UFC");
+            m_flightConnector->stop();
+            buildMenu();
+        }
+    }
+    else if (menuNum == 1002)
+    {
+        if (!m_flightConnector->isRunning())
+        {
+            log(DEBUG, "menu: Starting UFC");
+            m_flightConnector->start();
+            buildMenu();
+
+            startFlightConnector();
+        }
     }
 }
 
@@ -309,21 +331,28 @@ void UFCPlugin::buildMenu()
 {
     XPLMClearAllMenuItems(m_menuId);
 
-    XPLMAppendMenuItem(m_menuId, "Settings", (void *)-1, 1);
-    XPLMAppendMenuSeparator(m_menuId);
-    if (m_flightConnector->getDevices().empty())
+    if (m_flightConnector->isRunning())
     {
-        XPLMAppendMenuItem(m_menuId, "No Devices Found", nullptr, 1);
-    }
+        if (m_flightConnector->getDevices().empty())
+        {
+            XPLMAppendMenuItem(m_menuId, "No Devices Found", nullptr, 1);
+        }
 
-    for (const auto& device : m_flightConnector->getDevices())
+        for (const auto& device : m_flightConnector->getDevices())
+        {
+            string name = "Device: " + device->getName();
+            int idx = XPLMAppendMenuItem(m_menuId, name.c_str(), nullptr, 1);
+            XPLMCheckMenuItem(m_menuId, idx, xplm_Menu_Checked);
+        }
+
+        XPLMAppendMenuSeparator(m_menuId);
+        XPLMAppendMenuItem(m_menuId, "Detect new devices...", (void*)1000, 1);
+        XPLMAppendMenuItem(m_menuId, "Stop UFC", (void*)1001, 1);
+    }
+    else
     {
-        string name = "Device: " + device->getName();
-        XPLMAppendMenuItem(m_menuId, name.c_str(), nullptr, 1);
+        XPLMAppendMenuItem(m_menuId, "UFC has been stopped", (void *)-1, 1);
     }
-
-    XPLMAppendMenuSeparator(m_menuId);
-    XPLMAppendMenuItem(m_menuId, "Detect devices...", (void*)1000, 1);
 }
 
 PLUGIN_API int XPluginStart(char* outName, char* outSig, char* outDesc)

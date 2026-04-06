@@ -5,7 +5,7 @@
 #ifndef MAPPING_H
 #define MAPPING_H
 
-#include "ufc/logger.h"
+#include "utils/logger.h"
 
 #include <string>
 #include <vector>

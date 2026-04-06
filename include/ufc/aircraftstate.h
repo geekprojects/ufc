@@ -12,10 +12,15 @@
 #include <mutex>
 #include <memory>
 
-#include "logger.h"
+#include "utils/logger.h"
 
 #define DATA_AIRCRAFT_AUTHOR "aircraft/author"
 #define DATA_AIRCRAFT_ICAO "aircraft/ico"
+
+#define DATA_AIRCRAFT_LATITUDE "aircraft/position/latitude"
+#define DATA_AIRCRAFT_LONGITUDE "aircraft/position/longitude"
+#define DATA_AIRCRAFT_ELEVATION "aircraft/position/elevation"
+
 #define DATA_AIRCRAFT_INDICATEDAIRSPEED "aircraft/indicatedAirspeed"
 #define DATA_AIRCRAFT_PITCH "aircraft/pitch"
 #define DATA_AIRCRAFT_ROLL "aircraft/roll"
@@ -35,6 +40,9 @@
 #define DATA_COMMS_NAV1STANDBYHZ "comms/nav1StandbyHz"
 #define DATA_COMMS_NAV2HZ "comms/nav2Hz"
 #define DATA_COMMS_NAV2STANDBYHZ "comms/nav2StandbyHz"
+
+#define DATA_COMMS_XPDR_CODE "comms/transponder/code"
+#define DATA_COMMS_XPDR_MODE "comms/transponder/mode"
 
 #define DATA_FLIGHTDIRECTOR_PILOT_ON "autopilot/flightDirector/pilot/on"
 #define DATA_FLIGHTDIRECTOR_PITCH "autopilot/flightDirector/pitch"

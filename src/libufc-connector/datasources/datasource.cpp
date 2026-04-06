@@ -1,0 +1,114 @@
+//
+// Created by Ian Parker on 14/10/2024.
+//
+
+#include <ufc/datasource.h>
+
+#include "../../../include/ufc/utils/utils.h"
+#include "../lua.h"
+#include "ufc/flightconnector.h"
+
+using namespace std;
+using namespace UFC;
+
+static DataSourceRegistry* g_dataSourceRegistry = nullptr;
+
+DataSource::DataSource(FlightConnector* flightConnector, const std::string& name, const std::string& dataPath) :
+    Logger("DataSource[" + name + "]"),
+    m_flightConnector(flightConnector),
+    m_name(name),
+    m_mapping(this, dataPath)
+{
+    m_commandLua = make_shared<UFCLua>(flightConnector);
+    m_dataLua = make_shared<UFCLua>(flightConnector);
+}
+
+void DataSource::command(const std::string& commandName)
+{
+    auto commandDefinition = m_mapping.getCommand(commandName);
+    if (commandDefinition.commands.empty())
+    {
+        return;
+    }
+
+    for (auto const& commandStr : commandDefinition.commands)
+    {
+#if 0
+        log(DEBUG, "command: %s -> %s", commandName.c_str(), commandStr.c_str());
+#endif
+
+        if (commandStr.starts_with("lua:"))
+        {
+            string luaScript = commandStr.substr(4);
+            m_commandLua->execute(luaScript);
+            continue;
+        }
+
+        auto idx = commandStr.find('=');
+        if (idx != string::npos)
+        {
+            string dataref = StringUtils::trim(commandStr.substr(0, idx));
+            string valueStr = StringUtils::trim(commandStr.substr(idx + 1));
+            auto value = (float)atof(valueStr.c_str());
+#if 0
+            log(INFO, "command: Setting data ref: %s = %0.2f", dataref.c_str(), value);
+#endif
+            setData(dataref, value);
+            continue;
+        }
+
+        executeCommand(commandStr, commandDefinition);
+    }
+}
+
+bool DataSource::getDataInt(const std::string &dataName, int &value)
+{
+    value = m_flightConnector->getState()->getInt(dataName);
+    return true;
+}
+
+bool DataSource::getDataFloat(const std::string &dataName, float &value)
+{
+    value = m_flightConnector->getState()->getFloat(dataName);
+    return true;
+}
+
+bool DataSource::getDataString(const std::string &dataName, std::string &value)
+{
+    value = m_flightConnector->getState()->getString(dataName);
+    return true;
+}
+
+int DataSource::transformData(const std::shared_ptr<DataDefinition> &dataRef, int value) const
+{
+    if (!dataRef->mapping.luaScript.empty())
+    {
+        //log(DEBUG, "transformData: Calling LUA script:\n%s", dataRef->mapping.luaScript.c_str());
+        value = (int)m_dataLua->execute(dataRef->mapping.luaScript, "value", (float)value);
+    }
+    return value;
+}
+
+float DataSource::transformData(const shared_ptr<DataDefinition>& dataRef, float value) const
+{
+    if (!dataRef->mapping.luaScript.empty())
+    {
+        //log(DEBUG, "transformData: Calling LUA script:\n%s", dataRef->mapping.luaScript.c_str());
+        value = m_dataLua->execute(dataRef->mapping.luaScript, "value", value);
+    }
+    return value;
+}
+
+DataSourceRegistry* DataSourceRegistry::getDataSourceRegistry()
+{
+    if (g_dataSourceRegistry == nullptr)
+    {
+        g_dataSourceRegistry = new DataSourceRegistry();
+    }
+    return g_dataSourceRegistry;
+}
+
+void DataSourceRegistry::registerDataSource(DataSourceInit* dataSource)
+{
+    getDataSourceRegistry()->m_dataSources.insert(make_pair(dataSource->getName(), dataSource));
+}
