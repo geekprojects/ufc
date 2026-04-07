@@ -58,7 +58,7 @@ data:
     displayVerticalSpeed: true
     verticalSpeed: sim/cockpit/autopilot/vertical_velocity
 
-    fmsVnav: sim/cockpit2/autopilot/sim/cockpit2/autopilot/fms_vnav
+    fmsVnav: autopilot/sim/cockpit2/autopilot/fms_vnav
 
     locMode: false
     ap1Mode: sim/cockpit/autopilot/autopilot_mode == 2
