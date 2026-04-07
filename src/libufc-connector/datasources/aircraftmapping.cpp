@@ -248,37 +248,72 @@ void AircraftMapping::loadCommands(YAML::Node commandsNode, const std::string& i
     }
 }
 
+bool is_number(const std::string& s)
+{
+    std::string::const_iterator it = s.begin();
+    while (it != s.end() && std::isdigit(*it)) ++it;
+    return !s.empty() && it == s.end();
+}
+
 DataMapping AircraftMapping::parseMapping(std::string mappingStr)
 {
     DataMapping mapping;
 
-    if (mappingStr == "true" || mappingStr == "false")
+    vector<string> mappingParts = splitString(mappingStr, ' ');
+    if (mappingParts.empty())
     {
+        log(WARN, "parseMapping: Mapping string is empty");
         mapping.type = DataMappingType::STATIC;
-        mapping.value.set(mappingStr == "true");
-        log(DEBUG, "parseMapping: STATIC: %d", mapping.value.getInt());
+        mapping.value.set(false);
+        log(DEBUG, "parseMapping: Invalid value, defaulting to false");
         return mapping;
     }
 
-    auto idx = mappingStr.find("==");
-
-    if (idx != string::npos)
+    if (mappingParts.size() == 1)
     {
-        mapping.type = DataMappingType::EQUALS;
-        mapping.dataRef = StringUtils::trim(mappingStr.substr(0, idx));
-        mapping.operand = atoi(StringUtils::trim(mappingStr.substr(idx + 2)).c_str());
-        log(DEBUG, "parseMapping: EQUALS: '%s' -> %d", mapping.dataRef.c_str(), mapping.operand);
+        if (mappingParts.at(0) == "true" || mappingParts.at(0) == "false")
+        {
+            mapping.type = DataMappingType::STATIC;
+            mapping.value.set(mappingParts.at(0) == "true");
+            log(DEBUG, "parseMapping: STATIC: %d", mapping.value.getInt());
+            return mapping;
+        }
+
+        if (is_number(mappingParts.at(0)))
+        {
+            mapping.type = DataMappingType::STATIC;
+            mapping.value.set(atoi(mappingParts.at(0).c_str()));
+            log(DEBUG, "parseMapping: STATIC: %d", mapping.value.getInt());
+            return mapping;
+        }
     }
-    else if (mappingStr.at(0) == '!')
+
+    mapping.dataRef = mappingParts.at(0);
+    if (mapping.dataRef.at(0) == '!')
     {
         mapping.type = DataMappingType::NEGATE;
         mapping.dataRef = mappingStr.substr(1);
         log(DEBUG, "parseMapping: NEGATE: %s", mapping.dataRef.c_str());
     }
-    else
+
+    if (mappingParts.size() == 3)
     {
-        mapping.dataRef = mappingStr;
+        string comparison = mappingParts.at(1);
+        string operand = mappingParts.at(2);
+        if (comparison == "==")
+        {
+            mapping.type = DataMappingType::EQUALS;
+            mapping.operand = atoi(operand.c_str());
+            log(DEBUG, "parseMapping: EQUALS: '%s' -> %d", mapping.dataRef.c_str(), mapping.operand);
+        }
+        else if (comparison == ">")
+        {
+            mapping.type = DataMappingType::GREATER_THAN;
+            mapping.operand = atoi(operand.c_str());
+            log(DEBUG, "parseMapping: GREATER_THAN: '%s' -> %d", mapping.dataRef.c_str(), mapping.operand);
+        }
     }
+
     return mapping;
 }
 
@@ -325,9 +360,14 @@ void AircraftMapping::writeFloat(const shared_ptr<DataDefinition> &dataDef, floa
             value = value == static_cast<float>(dataDef->mapping.operand);
             break;
 
+        case DataMappingType::GREATER_THAN:
+            value = value > static_cast<float>(dataDef->mapping.operand);
+            break;
+
         case DataMappingType::NEGATE:
             value = !static_cast<bool>(value);
             break;
+
         case DataMappingType::STATIC:
             value = dataDef->mapping.value.getFloat();
             break;
@@ -345,6 +385,10 @@ void AircraftMapping::writeInt(const shared_ptr<DataDefinition> &dataDef, int32_
 
         case DataMappingType::EQUALS:
             value = value == dataDef->mapping.operand;
+            break;
+
+        case DataMappingType::GREATER_THAN:
+            value = value > dataDef->mapping.operand;
             break;
 
         case DataMappingType::NEGATE:
