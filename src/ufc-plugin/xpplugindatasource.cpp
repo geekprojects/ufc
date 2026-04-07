@@ -295,8 +295,12 @@ std::string XPPluginDataSource::getString(const XPLMDataRef ref)
 {
     log(DEBUG, "getString: ref=%p", ref);
     int bytes = XPLMGetDatab(ref, nullptr, 0, 0);
-    char buffer[bytes + 1];
-    XPLMGetDatab(ref, buffer, 0, bytes);
-    buffer[bytes] = '\0';
-    return string(buffer);
+    if (bytes == 0)
+    {
+        return "";
+    }
+
+    string buffer(bytes, '\0');
+    XPLMGetDatab(ref, buffer.data(), 0, bytes);
+    return buffer;
 }
