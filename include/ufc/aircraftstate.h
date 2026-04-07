@@ -291,6 +291,8 @@ class AircraftState : public Logger
         getOrCreateValue(name)->set(value);
     }
 
+    bool hasValue(const std::string& dataName);
+
     float getFloat(const std::string& dataName);
     int getInt(const std::string& dataName);
     std::string getString(const std::string& dataName);
