@@ -9,6 +9,9 @@
 
 #include <unistd.h>
 
+#include "xplaneudpclient.h"
+#include "xplanewsclient.h"
+
 using namespace std;
 using namespace UFC;
 
@@ -20,9 +23,9 @@ XPlaneDataSource::XPlaneDataSource(FlightConnector* flightConnector) :
         "XPlane",
         flightConnector->getConfig().dataDir + "/x-plane")
 {
-    m_client = make_shared<XPlaneClient>(
-        flightConnector->getConfig().xplaneHost,
-        flightConnector->getConfig().xplanePort);
+    m_client = make_shared<XPlaneWebSocketClient>();
+        //flightConnector->getConfig().xplaneHost,
+        //flightConnector->getConfig().xplanePort);
 }
 
 bool XPlaneDataSource::connect()
@@ -93,7 +96,6 @@ bool XPlaneDataSource::update()
     int idx = 1;
     for (const auto& dataRef : getMapping().getDataRefs())
     {
-        log(DEBUG, "update: %s -> %s", dataRef->id.c_str(), dataRef->mapping.dataRef.c_str());
         if (dataRef->mapping.type == DataMappingType::STATIC)
         {
             getFlightConnector()->getState()->set(dataRef->id, dataRef->mapping.value);
@@ -127,6 +129,9 @@ void XPlaneDataSource::update(const map<int, float>& values)
         {
             continue;
         }
+#if 0
+        log(DEBUG, "update: %d -> %f", idx, value);
+#endif
 
         const auto& dataRef = getMapping().getDataRefs()[idx - 1];
 

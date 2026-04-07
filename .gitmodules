@@ -2,3 +2,7 @@
 	path = 3rdparty/luacpp
 	url = https://github.com/geekprojects/luacpp.git
 	branch = lua5.5
+[submodule "3rdparty/curly.hpp"]
+	path = 3rdparty/curly.hpp
+	url = https://github.com/geekprojects/curly.hpp.git
+	branch = websockets

@@ -28,13 +28,22 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # Third Party Modules
 add_subdirectory(3rdparty/luacpp/Source EXCLUDE_FROM_ALL)
 
+set(USE_EMBEDDED_CURL ON)
+set(USE_SYSTEM_CURL OFF)
+set(CURL_DISABLE_WEBSOCKETS OFF CACHE BOOL "" FORCE)
+add_subdirectory(3rdparty/curly.hpp EXCLUDE_FROM_ALL)
+
 set(DATADIR ${CMAKE_INSTALL_PREFIX}/share/ufc)
 SET(FLAGS_COMMON "-Wall -Werror -Wno-vla-cxx-extension -Wno-unused-function -Wno-unknown-warning-option")
 SET(CMAKE_CXX_FLAGS_DEBUG "${FLAGS_COMMON} -O0 -g -fsanitize=address -fsanitize-address-use-after-scope -fno-omit-frame-pointer")
 SET(CMAKE_CXX_FLAGS_RELEASE  "${FLAGS_COMMON} -O3")
 
-include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/3rdparty/luacpp/Source)
-add_definitions(${yamlcpp_CFLAGS} ${hidapi_CFLAGS} ${lua_CFLAGS} ${nlohmann_json_CFLAGS})
+include_directories(
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/3rdparty/luacpp/Source
+        ${CMAKE_SOURCE_DIR}/3rdparty/curly.hpp/headers
+)
+add_definitions(${yamlcpp_CFLAGS} ${hidapi_CFLAGS} ${lua_CFLAGS} ${nlohmann_json_CFLAGS} ${curl_CFLAGS})
 
 add_library(ufc-utils SHARED
         src/libufc-utils/data.cpp
@@ -50,6 +59,8 @@ add_library(ufc-utils SHARED
         include/ufc/utils/data.h
         include/ufc/utils/utils.h
         include/ufc/utils/udp.h
+        src/libufc-utils/base64.cpp
+        src/libufc-utils/base64.h
 )
 
 target_compile_definitions(ufc-utils PUBLIC -DDATADIR=${DATADIR})
@@ -93,7 +104,7 @@ target_compile_definitions(ufc-data PUBLIC -DDATADIR=${DATADIR})
 target_link_libraries(ufc-data
         ufc-utils
         ${SQLITE3_LIBRARY}
-        -lcurl
+        curl
 )
 
 add_library(ufc SHARED
@@ -102,7 +113,7 @@ add_library(ufc SHARED
         src/libufc-connector/datasources/simulator.h
         src/libufc-connector/datasources/xplane/xplane.cpp
         src/libufc-connector/datasources/xplane/xplane.h
-        src/libufc-connector/datasources/xplane/xplaneclient.cpp
+        src/libufc-connector/datasources/xplane/xplaneudpclient.cpp
         src/libufc-connector/datasources/xplane/xplaneclient.h
         src/libufc-connector/devices/consoleoutput.cpp
         src/libufc-connector/devices/consoleoutput.h
@@ -135,6 +146,10 @@ add_library(ufc SHARED
         src/libufc-connector/devices/serial/device.cpp
         src/libufc-connector/devices/serial/serialport.cpp
         src/libufc-connector/devices/serial/serialport.h
+        src/libufc-connector/datasources/xplane/xplaneudpclient.h
+        src/libufc-connector/datasources/xplane/xplanewsclient.cpp
+        src/libufc-connector/datasources/xplane/xplanewsclient.h
+        src/libufc-connector/datasources/xplane/xplaneclient.cpp
 )
 
 if(UNIX AND APPLE)
@@ -150,6 +165,7 @@ target_link_libraries(ufc
         ${lua_LDFLAGS}
         ${OS_LIBS}
         ${SQLITE3_LIBRARY}
+        curly.hpp::curly.hpp
 )
 
 if (UNIX AND APPLE AND CMAKE_BUILD_TYPE STREQUAL "Release")
