@@ -156,6 +156,8 @@ if(UNIX AND APPLE)
 target_link_options(ufc PUBLIC -all_load)
 endif()
 
+message("CURL_SOURCE_DIR: ${CURL_SOURCE_DIR}")
+target_include_directories(ufc PUBLIC ${CURL_SOURCE_DIR}/include})
 target_compile_definitions(ufc PUBLIC -DDATADIR=${DATADIR})
 target_link_libraries(ufc
         ufc-utils
