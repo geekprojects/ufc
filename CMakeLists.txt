@@ -225,7 +225,7 @@ if (UNIX AND APPLE AND CMAKE_BUILD_TYPE STREQUAL "Release")
     )
 endif()
 
-add_subdirectory(tests)
+add_subdirectory(tests EXCLUDE_FROM_ALL)
 
 set(DATADIR ${CMAKE_INSTALL_PREFIX}/share/ufc)
 install(DIRECTORY include/ufc DESTINATION include FILES_MATCHING PATTERN "*.h" )
