@@ -105,7 +105,7 @@ target_compile_definitions(ufc-data PUBLIC -DDATADIR=${DATADIR})
 target_link_libraries(ufc-data
         ufc-utils
         ${SQLITE3_LIBRARY}
-        curl
+        curly.hpp::curly.hpp
 )
 
 add_library(ufc SHARED
