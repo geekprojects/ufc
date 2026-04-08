@@ -23,9 +23,34 @@ XPlaneDataSource::XPlaneDataSource(FlightConnector* flightConnector) :
         "XPlane",
         flightConnector->getConfig().dataDir + "/x-plane")
 {
-    m_client = make_shared<XPlaneWebSocketClient>();
-        //flightConnector->getConfig().xplaneHost,
-        //flightConnector->getConfig().xplanePort);
+    string type = getFlightConnector()->getConfig().xplaneType;
+    string host = getFlightConnector()->getConfig().xplaneHost;
+    if (type.empty())
+    {
+        if (host.empty() || host == "localhost" || host == "127.0.0.1")
+        {
+            type = "ws";
+        }
+        else
+        {
+            type = "udp";
+        }
+    }
+
+    if (type == "ws")
+    {
+        m_client = make_shared<XPlaneWebSocketClient>();
+    }
+    else if (type == "udp")
+    {
+        m_client = make_shared<XPlaneUDPClient>(
+            flightConnector->getConfig().xplaneHost,
+            flightConnector->getConfig().xplanePort);
+    }
+    else
+    {
+        log(ERROR, "Unknown X-Plane Connection type: %s", type.c_str());
+    }
 }
 
 bool XPlaneDataSource::connect()
