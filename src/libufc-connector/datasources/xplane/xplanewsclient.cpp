@@ -3,13 +3,14 @@
 //
 
 #include "xplanewsclient.h"
+#include "../../../libufc-utils/base64.h"
 
-#include <_inttypes.h>
 #include <curly.hpp/curly.hpp>
 #include <nlohmann/json.hpp>
 
-#include "../../../libufc-utils/base64.h"
 #include "curl/curl.h"
+
+#include <cinttypes>
 
 using namespace std;
 using namespace UFC;
