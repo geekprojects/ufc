@@ -42,6 +42,7 @@ include_directories(
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/3rdparty/luacpp/Source
         ${CMAKE_SOURCE_DIR}/3rdparty/curly.hpp/headers
+	${CURL_SOURCE_DIR}/include
 )
 add_definitions(${yamlcpp_CFLAGS} ${hidapi_CFLAGS} ${lua_CFLAGS} ${nlohmann_json_CFLAGS} ${curl_CFLAGS})
 
@@ -156,8 +157,6 @@ if(UNIX AND APPLE)
 target_link_options(ufc PUBLIC -all_load)
 endif()
 
-message("CURL_SOURCE_DIR: ${CURL_SOURCE_DIR}")
-target_include_directories(ufc PUBLIC ${CURL_SOURCE_DIR}/include})
 target_compile_definitions(ufc PUBLIC -DDATADIR=${DATADIR})
 target_link_libraries(ufc
         ufc-utils
