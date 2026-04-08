@@ -42,6 +42,7 @@ include_directories(
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/3rdparty/luacpp/Source
         ${CMAKE_SOURCE_DIR}/3rdparty/curly.hpp/headers
+	${CURL_SOURCE_DIR}/include
 )
 add_definitions(${yamlcpp_CFLAGS} ${hidapi_CFLAGS} ${lua_CFLAGS} ${nlohmann_json_CFLAGS} ${curl_CFLAGS})
 
@@ -104,7 +105,7 @@ target_compile_definitions(ufc-data PUBLIC -DDATADIR=${DATADIR})
 target_link_libraries(ufc-data
         ufc-utils
         ${SQLITE3_LIBRARY}
-        curl
+        curly.hpp::curly.hpp
 )
 
 add_library(ufc SHARED
