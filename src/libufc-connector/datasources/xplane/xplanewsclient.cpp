@@ -30,11 +30,11 @@ Result XPlaneWebSocketClient::connect()
 
 void XPlaneWebSocketClient::disconnect()
 {
-    set<CURL*> webSockets = m_webSockets;
-    for (const auto webSocket : webSockets)
+    set<DataRefWebSocketInfo*> sockets = m_webSockets;
+    for (const auto webSocket : sockets)
     {
         log(DEBUG, "disconnect: Closing web socket: %p", webSocket);
-        curl_ws_start_frame(webSocket, CURLWS_CLOSE, 0);
+        curl_ws_start_frame(webSocket->ws, CURLWS_CLOSE, 0);
     }
 }
 
@@ -113,7 +113,17 @@ Result XPlaneWebSocketClient::setDataRef(const string &dataRef, float value)
         .header("Accept", "application/json, text/plain, */*")
         .send();
 
-    auto response = request.take();
+    curly_hpp::response response;
+    try
+    {
+        response = request.take();
+    }
+    catch (curly_hpp::exception& e)
+    {
+        log(ERROR, "setDataRef: Failed to set %s to %f: %s", dataRef.c_str(), value, e.what());
+        return Result::FAIL;
+    }
+
     int code = response.http_code();
     if (code != 200)
     {
@@ -149,7 +159,17 @@ Result XPlaneWebSocketClient::sendCommand(const string &command)
         .header("Accept", "application/json, text/plain, */*")
         .send();
 
-    auto response = request.take();
+    curly_hpp::response response;
+    try
+    {
+        response = request.take();
+    }
+    catch (curly_hpp::exception& e)
+    {
+        log(ERROR, "sendCommand: Failed to activate command %s: %s", command.c_str(), e.what());
+        return Result::FAIL;
+    }
+
     int code = response.http_code();
     if (code != 200)
     {
@@ -192,13 +212,24 @@ int64_t XPlaneWebSocketClient::getDataRefId(const std::string& dataref)
 #if 0
     log(DEBUG, "getDataRefIds: Sending request to: %s", url.c_str());
 #endif
+
     auto request= curly_hpp::request_builder()
         .method(curly_hpp::http_method::GET)
         .url(url)
         .header("Accept", "application/json, text/plain, */*")
         .send();
 
-    auto response = request.take();
+    curly_hpp::response response;
+    try
+    {
+        response = request.take();
+    }
+    catch (const curly_hpp::exception& e)
+    {
+        log(ERROR, "getDataRefId: Failed to get dataref: %s", e.what());
+        return -1;
+    }
+
     int code = response.http_code();
     string content = response.content.as_string_copy();
 
@@ -239,13 +270,24 @@ bool XPlaneWebSocketClient::getDataRef(const std::string &dataref, nlohmann::jso
 #if 0
     log(DEBUG, "getDataRef: Sending request to: %s", url.c_str());
 #endif
-    auto request= curly_hpp::request_builder()
+
+    auto request = curly_hpp::request_builder()
         .method(curly_hpp::http_method::GET)
         .url(url)
         .header("Accept", "application/json, text/plain, */*")
         .send();
 
-    auto response = request.take();
+    curly_hpp::response response;
+    try
+    {
+        response = request.take();
+    }
+    catch (const curly_hpp::exception& e)
+    {
+        log(ERROR, "getDataRef: Failed to get dataref: %s", e.what());
+        return false;
+    }
+
     int code = response.http_code();
     string content = response.content.as_string_copy();
 
@@ -293,7 +335,17 @@ int64_t XPlaneWebSocketClient::getCommandId(const std::string &command)
         .header("Accept", "application/json, text/plain, */*")
         .send();
 
-    auto response = request.take();
+    curly_hpp::response response;
+    try
+    {
+        response = request.take();
+    }
+    catch (const curly_hpp::exception& e)
+    {
+        log(ERROR, "getCommandId: Failed to get command: %s", e.what());
+        return -1;
+    }
+
     int code = response.http_code();
     log(DEBUG, "getCommandId: Got response: code=%d", code);
     string content = response.content.as_string_copy();
@@ -370,7 +422,7 @@ size_t XPlaneWebSocketClient::dataRefCallback(char *b, size_t size, size_t nitem
     string payload = string(b, blen);
     data->buffer += payload;
 
-    if (!(meta->flags & CURLWS_CONT))
+    if (meta == nullptr || !(meta->flags & CURLWS_CONT))
     {
         data->client->dataRefValues(data->buffer, data);
         data->buffer.clear();
@@ -397,12 +449,12 @@ size_t XPlaneWebSocketClient::dataRefValues(std::string body, DataRefWebSocketIn
     map<int, float> values;
     for (auto value : data.items())
     {
-        int64_t id = atol(value.key().c_str());
+        int64_t id = atoll(value.key().c_str());
         float v = value.value().get<float>();
         int idx = dataRefWebSocketData->dataRefIdx.at(id);
 
 #if 0
-        log(DEBUG, "dataRefValues: %d = %d = %f", id, idx, v);
+        log(DEBUG, "dataRefValues: %llu = %d = %f", id, idx, v);
 #endif
         values.insert(make_pair(idx, v));
     }
@@ -418,9 +470,9 @@ Result XPlaneWebSocketClient::streamDataRefs(
     map<int, int64_t> dataRefIds;
     json dataRefsJson;
     bool hasDataRef = false;
-    DataRefWebSocketInfo dataRefWebSocketData;
-    dataRefWebSocketData.client = this;
-    dataRefWebSocketData.func = &func;
+    DataRefWebSocketInfo* dataRefWebSocketData = new DataRefWebSocketInfo();
+    dataRefWebSocketData->client = this;
+    dataRefWebSocketData->func = &func;
     for (const auto& [idx, dataref] : dataRefs)
     {
         int64_t id = getDataRefId(dataref);
@@ -430,7 +482,7 @@ Result XPlaneWebSocketClient::streamDataRefs(
             json dataRefJson;
             dataRefJson["id"] = id;
             dataRefsJson.push_back(dataRefJson);
-            dataRefWebSocketData.dataRefIdx[id] = idx;
+            dataRefWebSocketData->dataRefIdx[id] = idx;
             hasDataRef = true;
        }
     }
@@ -463,8 +515,8 @@ Result XPlaneWebSocketClient::streamDataRefs(
         return Result::FAIL;
     }
 
-    m_webSockets.insert(webSocket);
-    dataRefWebSocketData.ws = webSocket;
+    m_webSockets.insert(dataRefWebSocketData);
+    dataRefWebSocketData->ws = webSocket;
 
     read_ctx rctx;
     rctx.webSocket = webSocket;
@@ -473,22 +525,25 @@ Result XPlaneWebSocketClient::streamDataRefs(
 
     curl_easy_setopt(webSocket, CURLOPT_URL, url.c_str());
     curl_easy_setopt(webSocket, CURLOPT_WRITEFUNCTION, dataRefCallback);
-    curl_easy_setopt(webSocket, CURLOPT_WRITEDATA, &dataRefWebSocketData);
+    curl_easy_setopt(webSocket, CURLOPT_WRITEDATA, dataRefWebSocketData);
     curl_easy_setopt(webSocket, CURLOPT_READFUNCTION, read_cb);
     curl_easy_setopt(webSocket, CURLOPT_READDATA, &rctx);
     curl_easy_setopt(webSocket, CURLOPT_UPLOAD, 1L);
 
     CURLcode result = curl_easy_perform(webSocket);
+    log(INFO, "streamDataRefs: perform result=%d", result);
     if (result != CURLE_OK)
     {
         log(ERROR, "streamDataRefs: Failed to perform CURL request: %s", curl_easy_strerror(result));
         curl_easy_cleanup(webSocket);
-        m_webSockets.erase(webSocket);
+        m_webSockets.erase(dataRefWebSocketData);
+        delete dataRefWebSocketData;
         return Result::FAIL;
     }
     curl_easy_cleanup(webSocket);
-    m_webSockets.erase(webSocket);
-    log(ERROR, "streamDataRefs: Finished!");
+    m_webSockets.erase(dataRefWebSocketData);
+    delete dataRefWebSocketData;
+    log(INFO, "streamDataRefs: Finished!");
 
     return Result::SUCCESS;
 }

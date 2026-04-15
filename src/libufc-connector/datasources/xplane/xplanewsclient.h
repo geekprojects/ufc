@@ -33,7 +33,7 @@ class XPlaneWebSocketClient : public XPlaneClient
     std::string m_baseWebSocketUrl;
     std::map<std::string, int64_t> m_dataRefIds;
     std::map<std::string, int64_t> m_commandIds;
-    std::set<CURL*> m_webSockets;
+    std::set<DataRefWebSocketInfo*> m_webSockets;
 
     int64_t getDataRefId(const std::string& dataref);
     int64_t getCommandId(const std::string& command);
