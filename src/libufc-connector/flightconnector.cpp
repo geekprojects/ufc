@@ -36,7 +36,6 @@ FlightConnector::FlightConnector() :
 
 FlightConnector::~FlightConnector()
 {
-    m_state->dump();
     for (auto it = g_flightConnectors.begin(); it != g_flightConnectors.end(); it++)
     {
         if (*it == this)
