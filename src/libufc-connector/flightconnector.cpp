@@ -328,7 +328,7 @@ void FlightConnector::setConfig(const Config &config)
     {
         m_config.xplaneType = config.xplaneType;
     }
-    if (config.arduinoDevice.empty())
+    if (!config.arduinoDevice.empty())
     {
         m_config.arduinoDevice = config.arduinoDevice;
     }
