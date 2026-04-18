@@ -17,6 +17,7 @@ const static option g_options[] =
     {"data", required_argument, nullptr,  'd' },
     {"source", required_argument, nullptr,  's' },
     {"help", no_argument, nullptr,  'h' },
+    {"connection-type", required_argument, nullptr,  't' },
     {nullptr, 0, nullptr,  0 }
 };
 
@@ -25,10 +26,11 @@ const static option g_options[] =
     printf("UFC - Universal Flight Connector\n");
     printf("\n");
     printf("Usage: ufctool [OPTIONS]\n");
-    printf("  -c, --config  Specify configuration file. (Default: %s/.config/ufc.yaml)\n", getenv("HOME"));
-    printf("  -d, --data    Specify data directory (Defaults to configured directory)\n");
-    printf("  -s, --source  Data Source type (Defaults to configured source)\n");
-    printf("  -h, --help    This help text\n");
+    printf("  -c, --config           Specify configuration file. (Default: %s/.config/ufc.yaml)\n", getenv("HOME"));
+    printf("  -d, --data             Specify data directory (Defaults to configured directory)\n");
+    printf("  -s, --source           Data Source type (Defaults to configured source)\n");
+    printf("  -t, --connection-type  Type of connection for the Data Source\n");
+    printf("  -h, --help             This help text\n");
     exit(0);
 }
 
@@ -39,7 +41,7 @@ int main(int argc, char** argv)
     while (true)
     {
         int option_index = 0;
-        int c = getopt_long (argc, argv, "c:d:s:h", g_options, &option_index);
+        int c = getopt_long (argc, argv, "c:d:s:ht:", g_options, &option_index);
         if (c == -1)
         {
             break;
@@ -54,6 +56,9 @@ int main(int argc, char** argv)
                 break;
             case 's':
                 config.dataSource = optarg;
+                break;
+            case 't':
+                config.xplaneType = optarg;
                 break;
             default:
                 usage();

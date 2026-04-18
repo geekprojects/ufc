@@ -27,6 +27,7 @@ enum class DataMappingType
     VALUE,
     EQUALS,
     NEGATE,
+    GREATER_THAN,
     STATIC,
 };
 

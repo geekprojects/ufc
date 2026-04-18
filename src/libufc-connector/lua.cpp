@@ -17,8 +17,7 @@ using namespace LuaCpp::Engine;
 
 bool UFCDataMetaObject::Exists(const std::string &name)
 {
-    float value;
-    return m_flightConnector->getDataSource()->getDataFloat(name, value);
+    return m_flightConnector->getState()->hasValue(name);
 }
 
 std::shared_ptr<LuaType> UFCDataMetaObject::getValue(std::string &name)
@@ -28,13 +27,7 @@ std::shared_ptr<LuaType> UFCDataMetaObject::getValue(std::string &name)
         return std::make_shared<LuaTNil>();
     }
 
-    float value;
-    bool res = m_flightConnector->getDataSource()->getDataFloat(name, value);
-    if (!res)
-    {
-        printf("XXX: UFCDataMetaObject::getValue: NOT FOUND: %s\n", name.c_str());
-        return std::make_shared<LuaTNil>();
-    }
+    float value = m_flightConnector->getState()->getFloat(name);
     return std::make_shared<LuaTNumber>(value);
 }
 

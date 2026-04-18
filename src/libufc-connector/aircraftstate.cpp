@@ -123,6 +123,11 @@ int AircraftState::getInt(const std::string& dataName)
     return value->getInt();
 }
 
+bool AircraftState::hasValue(const std::string &dataName)
+{
+    return getValue(dataName) != nullptr;
+}
+
 float AircraftState::getFloat(const std::string &dataName)
 {
     auto value = getValue(dataName);

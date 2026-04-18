@@ -36,7 +36,6 @@ FlightConnector::FlightConnector() :
 
 FlightConnector::~FlightConnector()
 {
-    m_state->dump();
     for (auto it = g_flightConnectors.begin(); it != g_flightConnectors.end(); it++)
     {
         if (*it == this)
@@ -248,6 +247,7 @@ void FlightConnector::loadConfig(const Config& config)
     m_config.dataSource = "Simulator";
     m_config.xplaneHost = "127.0.0.1";
     m_config.xplanePort = 49000;
+    m_config.xplaneType = "ws";
     m_config.arduinoDevice = "";
 
     // Set values from config file
@@ -279,6 +279,10 @@ void FlightConnector::loadConfig(const Config& config)
             if (xplaneNode["port"])
             {
                 m_config.xplanePort = xplaneNode["port"].as<int>();
+            }
+            if (xplaneNode["type"])
+            {
+                m_config.xplaneType = xplaneNode["type"].as<string>();
             }
         }
 
@@ -320,6 +324,10 @@ void FlightConnector::setConfig(const Config &config)
     {
         m_config.xplanePort = config.xplanePort;
     }
+    if (!config.xplaneType.empty())
+    {
+        m_config.xplaneType = config.xplaneType;
+    }
     if (config.arduinoDevice.empty())
     {
         m_config.arduinoDevice = config.arduinoDevice;
@@ -336,6 +344,7 @@ void FlightConnector::writeConfig() const
     xplaneNode["path"] = m_config.xplanePath;
     xplaneNode["host"] = m_config.xplaneHost;
     xplaneNode["port"] = m_config.xplanePort;
+    xplaneNode["type"] = m_config.xplaneType;
     configNode["xplane"] = xplaneNode;
 
     YAML::Node arduinoNode;
