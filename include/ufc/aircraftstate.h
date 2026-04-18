@@ -15,7 +15,7 @@
 #include "utils/logger.h"
 
 #define DATA_AIRCRAFT_AUTHOR "aircraft/author"
-#define DATA_AIRCRAFT_ICAO "aircraft/ico"
+#define DATA_AIRCRAFT_ICAO "aircraft/icao"
 
 #define DATA_AIRCRAFT_LATITUDE "aircraft/position/latitude"
 #define DATA_AIRCRAFT_LONGITUDE "aircraft/position/longitude"
