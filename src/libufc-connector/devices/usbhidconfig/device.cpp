@@ -1,5 +1,5 @@
 
-#include <../../../include/ufc/utils/bitbuffer.h>
+#include <ufc/utils/bitbuffer.h>
 #include <ufc/flightconnector.h>
 #include "../../lua.h"
 
