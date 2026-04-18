@@ -179,7 +179,7 @@ map<string, uint8_t> USBHIDConfigDevice::createDisplayValues(const shared_ptr<Ai
         {
             qnh *= 100.0f;
         }
-        auto qnhInt = static_cast<int>(qnh);
+        auto qnhInt = static_cast<int>(roundf(qnh));
         displayValues.try_emplace("display/qnh[3]", getDigit(qnhInt, 3));
         displayValues.try_emplace("display/qnh[2]", getDigit(qnhInt, 2));
         displayValues.try_emplace("display/qnh[1]", getDigit(qnhInt, 1));
