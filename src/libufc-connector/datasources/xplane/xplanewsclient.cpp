@@ -308,7 +308,7 @@ int64_t XPlaneWebSocketClient::getCommandId(const std::string &command)
 {
     if (command.empty())
     {
-        return {};
+        return -1;
     }
 
     map<string, int64_t> dataRefIds;
