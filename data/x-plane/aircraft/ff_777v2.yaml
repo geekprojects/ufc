@@ -1,6 +1,8 @@
 name: FlightFactor 777-200ER v2
 author: FlightFactor and StepToSky
-icao: B772
+icao:
+  - B772
+  - B77W
 
 data:
   autopilot:
@@ -18,6 +20,9 @@ data:
     verticalSpeedFPAMode: "!1-sim/output/mcp/isVsTrg"
     displaySpeed: 1-sim/output/mcp/isSpdOpen
     displayVerticalSpeed: 1-sim/output/mcp/isVsOpen
+    flightDirector:
+      pilot:
+        on: 1-sim/ckpt/mcpFdLSwitch/anim
   aircraft:
     barometer:
       pilot:
@@ -58,6 +63,9 @@ commands:
       toggle: 1-sim/command/mcpHdgTrkButton_button
     vsFpa:
       toggle: 1-sim/command/mcpVsFpaButton_button
+    flightDirector:
+      pilot:
+        toggle: 1-sim/command/mcpFdLSwitch_trigger
   aircraft:
     barometer:
       pilot:
