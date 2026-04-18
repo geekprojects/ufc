@@ -384,7 +384,7 @@ void USBHIDConfigDevice::updateInput(shared_ptr<AircraftState> state)
     while (true)
     {
         buffer[0] = 0x01;
-        int res = hid_read(getDevice(), buffer, 1024);
+        int res = hid_read(getDevice(), buffer, sizeof(buffer));
         if (res <= 0)
         {
             break;
