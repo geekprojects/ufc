@@ -1,5 +1,5 @@
 
-#include <../../../include/ufc/utils/bitbuffer.h>
+#include <ufc/utils/bitbuffer.h>
 #include <ufc/flightconnector.h>
 #include "../../lua.h"
 
@@ -17,18 +17,18 @@ using namespace UFC;
 #ifdef DEBUG_USBHIDCONFIG
 static void hexdump(const uint8_t* pos, int len)
 {
-    int i;
-    for (i = 0; i < len; i += 16)
+    int offset;
+    for (offset = 0; offset < len; offset += 16)
     {
-        int j;
-        printf("%08llx: ", (uint64_t)(i));
-        for (j = 0; j < 16 && (i + j) < len; j++)
+        int byteIndex;
+        printf("%08llx: ", (uint64_t)(offset));
+        for (byteIndex = 0; byteIndex < 16 && (offset + byteIndex) < len; byteIndex++)
         {
-            printf("%02x ", (uint8_t)pos[i + j]);
+            printf("%02x ", (uint8_t)pos[offset + byteIndex]);
         }
-        for (j = 0; j < 16 && (i + j) < len; j++)
+        for (byteIndex = 0; byteIndex < 16 && (offset + byteIndex) < len; byteIndex++)
         {
-            char c = pos[i + j];
+            char c = pos[offset + byteIndex];
             if (!isprint(c))
             {
                 c = '.';
@@ -384,7 +384,7 @@ void USBHIDConfigDevice::updateInput(shared_ptr<AircraftState> state)
     while (true)
     {
         buffer[0] = 0x01;
-        int res = hid_read(getDevice(), buffer, 1024);
+        int res = hid_read(getDevice(), buffer, sizeof(buffer));
         if (res <= 0)
         {
             break;
