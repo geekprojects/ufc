@@ -248,22 +248,38 @@ class AircraftState : public Logger
 
     void set(int idx, bool b)
     {
-        valuesByIndex[idx]->set(b);
+        auto it = valuesByIndex.find(idx);
+        if (it != valuesByIndex.end() && it->second)
+        {
+            it->second->set(b);
+        }
     }
 
     void set(int idx, int i)
     {
-        valuesByIndex[idx]->set(i);
+        auto it = valuesByIndex.find(idx);
+        if (it != valuesByIndex.end() && it->second)
+        {
+            it->second->set(i);
+        }
     }
 
     void set(int idx, float f)
     {
-        valuesByIndex[idx]->set(f);
+        auto it = valuesByIndex.find(idx);
+        if (it != valuesByIndex.end() && it->second)
+        {
+            it->second->set(f);
+        }
     }
 
     void set(int idx, const std::string& str)
     {
-        valuesByIndex[idx]->set(str);
+        auto it = valuesByIndex.find(idx);
+        if (it != valuesByIndex.end() && it->second)
+        {
+            it->second->set(str);
+        }
     }
 
     void set(std::string const& name, bool b)
@@ -302,4 +318,4 @@ class AircraftState : public Logger
 
 }
 
-#endif //XPFD_STATE_H
+#endif //UFC_STATE_H
