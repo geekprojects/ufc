@@ -90,6 +90,7 @@ class AircraftMapping : UFC::Logger
  public:
     AircraftMapping(UFC::DataSource* dataSource, const std::string &baseDir);
 
+    void loadDefaults();
     void loadDefinitionsForAircraft(const std::string &author, const std::string &icaoType);
 
     const CommandDefinition& getCommand(const std::string &command);

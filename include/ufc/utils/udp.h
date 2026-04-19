@@ -10,10 +10,17 @@
 
 #include <ufc/utils/data.h>
 #include <ufc/utils/logger.h>
-#include <ufc/flightconnector.h>
 
 namespace UFC
 {
+
+enum class Result
+{
+    SUCCESS,
+    TIMEOUT,
+    FAIL
+};
+
 class UDPSocket : public UFC::Logger
 {
     std::string m_host;

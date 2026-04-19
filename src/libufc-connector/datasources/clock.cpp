@@ -98,7 +98,7 @@ bool ClockDataSource::update()
 
         state->set(DATA_AIRCRAFT_BAROMETER_PILOT_MODE, 0);
         float timef = (float)hour + ((float)minutes / 100.0f);
-        state->set(DATA_AIRCRAFT_BAROMETER_PILOT_HG, timef);
+        state->set(DATA_AIRCRAFT_BAROMETER_PILOT_IN_HG, timef);
 
         this_thread::sleep_for(chrono::milliseconds(100));
     }

@@ -38,10 +38,10 @@ bool SimulatorDataSource::update()
 
     state->set(DATA_AIRCRAFT_PITCH, 10.0f);
 
-    state->set(DATA_FLIGHTDIRECTOR_PILOT_ON, m_flightDirector);
-    state->set(DATA_FLIGHTDIRECTOR_MODE, 1);
-    state->set(DATA_FLIGHTDIRECTOR_PITCH, 0.0f);
-    state->set(DATA_FLIGHTDIRECTOR_ROLL, 0.0f);
+    state->set(DATA_AUTOPILOT_FLIGHTDIRECTOR_PILOT_ON, m_flightDirector);
+    state->set(DATA_AUTOPILOT_FLIGHTDIRECTOR_MODE, 1);
+    state->set(DATA_AUTOPILOT_FLIGHTDIRECTOR_PITCH, 0.0f);
+    state->set(DATA_AUTOPILOT_FLIGHTDIRECTOR_ROLL, 0.0f);
 
     state->set(DATA_COMMS_COM1HZ, 118900);
     state->set(DATA_COMMS_COM1STANDBYHZ, 136125);
@@ -57,7 +57,7 @@ bool SimulatorDataSource::update()
     {
         state = getFlightConnector()->getState();
 
-        float roll = state->getFloat(DATA_FLIGHTDIRECTOR_ROLL);
+        float roll = state->getFloat(DATA_AUTOPILOT_FLIGHTDIRECTOR_ROLL);
         if (rollDir == 1)
         {
             roll += 1;
@@ -74,9 +74,9 @@ bool SimulatorDataSource::update()
                 rollDir = 1;
             }
         }
-        state->set(DATA_FLIGHTDIRECTOR_ROLL, roll);
+        state->set(DATA_AUTOPILOT_FLIGHTDIRECTOR_ROLL, roll);
 
-        float pitch = state->getFloat(DATA_FLIGHTDIRECTOR_PITCH);
+        float pitch = state->getFloat(DATA_AUTOPILOT_FLIGHTDIRECTOR_PITCH);
         if (pitchDir == 1)
         {
             pitch += 0.1f;
@@ -93,7 +93,7 @@ bool SimulatorDataSource::update()
                 pitchDir = 1;
             }
         }
-        state->set(DATA_FLIGHTDIRECTOR_PITCH, pitch);
+        state->set(DATA_AUTOPILOT_FLIGHTDIRECTOR_PITCH, pitch);
 
         state->set(DATA_AIRCRAFT_INDICATEDAIRSPEED, state->getFloat(DATA_AIRCRAFT_INDICATEDAIRSPEED) + 0.1f);
         state->set(DATA_AIRCRAFT_ALTITUDE, state->getFloat(DATA_AIRCRAFT_ALTITUDE) + 0.5f);
@@ -103,7 +103,7 @@ bool SimulatorDataSource::update()
         state->set(DATA_AUTOPILOT_HEADING, m_autopilot.heading);
         state->set(DATA_AUTOPILOT_SPEED, m_autopilot.speed);
         state->set(DATA_AUTOPILOT_ALTITUDE, m_autopilot.altitude);
-        state->set(DATA_AUTOPILOT_ALTITUDESTEP1000, m_autopilot.altitudeStep1000);
+        state->set(DATA_AUTOPILOT_ALTITUDE_STEP_1000, m_autopilot.altitudeStep1000);
         state->set(DATA_AUTOPILOT_AP1MODE, m_autopilot.ap1Mode);
         state->set(DATA_AUTOPILOT_AP2MODE, m_autopilot.ap2Mode);
 
@@ -116,11 +116,11 @@ bool SimulatorDataSource::update()
         state->set(DATA_COMMS_COM1HZ, (int)m_communication.com1Hz);
         state->set(DATA_COMMS_COM1STANDBYHZ, (int)m_communication.com1StandbyHz);
 
-        state->set(DATA_AIRCRAFT_BAROMETER_PILOT_HG, m_baro);
+        state->set(DATA_AIRCRAFT_BAROMETER_PILOT_IN_HG, m_baro);
         state->set(DATA_AIRCRAFT_BAROMETER_PILOT_STD, m_baroStd);
         state->set(DATA_AIRCRAFT_BAROMETER_PILOT_MODE, m_baroMode);
 
-        state->set(DATA_FLIGHTDIRECTOR_PILOT_ON, m_flightDirector);
+        state->set(DATA_AUTOPILOT_FLIGHTDIRECTOR_PILOT_ON, m_flightDirector);
         state->set("efis/display/ls", m_ls);
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));

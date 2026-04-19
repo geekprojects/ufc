@@ -16,6 +16,9 @@ data:
     verticalSpeed: sim/cockpit2/gauges/indicators/vvi_fpm_pilot
     indicatedMach: sim/cockpit2/gauges/indicators/mach_pilot
     magHeading: sim/flightmodel/position/mag_psi
+    track: sim/flightmodel/position/hpath
+    fpa: sim/flightmodel/position/vpath
+    parkingBrake: sim/flightmodel/controls/parkbrake
     barometer:
       pilot:
         in_hg: sim/cockpit2/gauges/actuators/barometer_setting_in_hg_pilot
@@ -39,6 +42,7 @@ data:
     # Speed
     speedMach: sim/cockpit/autopilot/airspeed_is_mach
     speed: sim/cockpit2/autopilot/airspeed_dial_kts_mach
+    speedManaged: sim/cockpit2/autopilot/speed_status
     speedWindowOpen: sim/cockpit2/autopilot/vnav_speed_window_open
     displaySpeed: true
 
@@ -47,6 +51,7 @@ data:
     headingManaged: false
     heading: sim/cockpit/autopilot/heading_mag
     headingWindowOpen: # No default
+    headingTrkMode: sim/cockpit2/autopilot/trk_fpa
     gpssStatus: sim/cockpit2/autopilot/gpss_status
 
     # Altitude
@@ -57,6 +62,7 @@ data:
     # Vertical Speed
     displayVerticalSpeed: true
     verticalSpeed: sim/cockpit/autopilot/vertical_velocity
+    verticalSpeedFPAMode: sim/cockpit2/autopilot/trk_fpa
 
     fmsVnav: autopilot/sim/cockpit2/autopilot/fms_vnav
 
@@ -74,19 +80,47 @@ data:
       mode: sim/cockpit2/autopilot/flight_director_mode
 
   instrument:
-    v1: # No default
-    vr: # No default
-    v2: # No default
-    vfeNext: # No default
+    speeds:
+      v1: # No default
+      vr: # No default
+      v2: # No default
+      vfeNext: sim/aircraft/view/acf_Vfe
     radioAltitude: sim/cockpit2/gauges/indicators/radio_altimeter_height_ft_pilot
+    nav:
+      1:
+        pilot:
+          glideslope: sim/cockpit2/radios/indicators/nav1_flag_glideslope
+          horizontalDeflection: sim/cockpit2/radios/indicators/nav1_vdef_dots_pilot
+          verticalDeflection: sim/cockpit2/radios/indicators/nav1_vdef_dots_pilot
+  apu:
+    master:
+      on: sim/cockpit/engine/APU_running
+    starter:
+      on: sim/cockpit2/electrical/APU_starter_switch == 2
+
+  lights:
+    landing:
+      left:
+        on:
+          dataRef: sim/cockpit2/switches/landing_lights_switch[0]
+        extended:
+          dataRef: sim/cockpit2/switches/landing_lights_switch[0]
+      right:
+        on:
+          dataRef: sim/cockpit2/switches/landing_lights_switch[1]
+        extended:
+          dataRef: sim/cockpit2/switches/landing_lights_switch[1]
+    taxi:
+      on: sim/cockpit2/switches/taxi_light_on
 
   cabin:
     call: # No default
     seatBeltSign: sim/cockpit2/annunciators/fasten_seatbelt
     noSmokingSign: sim/cockpit2/annunciators/no_smoking
+
   weight:
-    passengerCount: 
-    passengerDistribution: 
+    passengerCount: # No default
+    passengerDistribution: # No default
 
 commands:
   autopilot:

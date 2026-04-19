@@ -10,6 +10,8 @@
 
 #include <memory>
 
+#include "ufc/utils/udp.h"
+
 namespace UFC
 {
 class XPlaneClient : protected Logger

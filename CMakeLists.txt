@@ -70,7 +70,6 @@ target_link_libraries(ufc-utils
 )
 
 add_library(ufc-data SHARED
-        include/ufc/aircraftmapping.h
         include/ufc/data/airports.h
         include/ufc/data/airways.h
         include/ufc/data/flightplan.h
@@ -107,7 +106,23 @@ target_link_libraries(ufc-data
         curly.hpp::curly.hpp
 )
 
+add_executable(ufc-generate-data src/ufc-generate-data/main.cpp)
+target_link_libraries(ufc-generate-data
+        ufc-utils
+        ${yamlcpp_LDFLAGS}
+)
+
+
+add_custom_command(
+        PRE_BUILD
+        OUTPUT include/ufc/aircraftdata.h
+        COMMAND ufc-generate-data ${CMAKE_SOURCE_DIR}/data/x-plane/defaults.yaml ${CMAKE_SOURCE_DIR}/include/ufc/aircraftdata.h
+        DEPENDS ufc-generate-data data/x-plane/defaults.yaml
+)
+
 add_library(ufc SHARED
+        include/ufc/aircraftdata.h
+        include/ufc/aircraftmapping.h
         include/ufc/aircraftstate.h
         include/ufc/datasource.h
         include/ufc/devices/device.h

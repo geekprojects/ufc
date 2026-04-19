@@ -187,7 +187,7 @@ void XPlaneWebSocketClient::sendMessage(const string &string)
     fprintf(stderr, "XPlaneWebSocketClient::sendMessage: NOT IMPLEMENTED: %s\n", string.c_str());
 }
 
-int64_t XPlaneWebSocketClient::getDataRefId(const std::string& dataref)
+int64_t XPlaneWebSocketClient::getDataRefId(std::string dataref)
 {
     if (dataref.empty())
     {
@@ -201,6 +201,12 @@ int64_t XPlaneWebSocketClient::getDataRefId(const std::string& dataref)
     {
         log(DEBUG, "getDataRefIds: Got: %s -> %d", dataref.c_str(), it->second);
         return it->second;
+    }
+
+    auto idx = dataref.find('[');
+    if (idx != string::npos)
+    {
+        dataref = dataref.substr(0, idx);
     }
 
     string query = "filter[name]=" + dataref;
@@ -258,7 +264,7 @@ int64_t XPlaneWebSocketClient::getDataRefId(const std::string& dataref)
     return -1;
 }
 
-bool XPlaneWebSocketClient::getDataRef(const std::string &dataref, nlohmann::json& valueJson)
+bool XPlaneWebSocketClient::getDataRef(const std::string &dataref, json& valueJson)
 {
     auto id = getDataRefId(dataref);
     if (id == -1)
@@ -295,6 +301,18 @@ bool XPlaneWebSocketClient::getDataRef(const std::string &dataref, nlohmann::jso
     {
         auto json = json::parse(content);
         valueJson = json["data"];
+
+        auto idx = dataref.find('[');
+        if (idx != string::npos)
+        {
+            string indexStr = dataref.substr(idx + 1);
+            int index = atoi(indexStr.c_str());
+
+            if (valueJson.is_array())
+            {
+                valueJson = valueJson[index];
+            }
+        }
         return true;
     }
     else

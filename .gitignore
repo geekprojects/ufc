@@ -1,3 +1,7 @@
+
+# Generated files
+include/ufc/aircraftdata.h
+
 # Objects and archives
 *.o
 *.lo
