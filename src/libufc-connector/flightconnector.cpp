@@ -234,7 +234,15 @@ void FlightConnector::loadConfig(const Config& config)
     bool writeConfig = false;
     if (config.configPath.empty())
     {
-        m_config.configPath = string(getenv("HOME")) + "/.config/ufc.yml";
+        const char* home = getenv("HOME");
+        if (home != nullptr)
+        {
+            m_config.configPath = string(home) + "/.config/ufc.yml";
+        }
+        else
+        {
+            m_config.configPath = "./ufc.yml";
+        }
         writeConfig = true;
     }
     else
