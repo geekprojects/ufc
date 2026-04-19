@@ -331,7 +331,7 @@ void USBHIDConfigDevice::updateOutput(
 
             case FieldType::UINT32:
             {
-                int value = getValue(state, field, displayValues);
+                uint32_t value = static_cast<uint32_t>(getValue(state, field, displayValues));
                 bitBuffer.appendByte((value >> 0) & 0xff);
                 bitBuffer.appendByte((value >> 8) & 0xff);
                 bitBuffer.appendByte((value >> 16) & 0xff);
