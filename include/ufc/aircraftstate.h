@@ -302,4 +302,4 @@ class AircraftState : public Logger
 
 }
 
-#endif //XPFD_STATE_H
+#endif //UFC_STATE_H
