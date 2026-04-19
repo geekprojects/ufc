@@ -194,8 +194,6 @@ int64_t XPlaneWebSocketClient::getDataRefId(const std::string& dataref)
         return -1;
     }
 
-    map<string, int64_t> dataRefIds;
-
     auto it = m_dataRefIds.find(dataref);
     if (it != m_dataRefIds.end())
     {
@@ -310,8 +308,6 @@ int64_t XPlaneWebSocketClient::getCommandId(const std::string &command)
     {
         return -1;
     }
-
-    map<string, int64_t> dataRefIds;
 
     auto it = m_commandIds.find(command);
     if (it != m_commandIds.end())
@@ -428,7 +424,7 @@ size_t XPlaneWebSocketClient::dataRefCallback(char *b, size_t size, size_t nitem
         data->buffer.clear();
     }
 
-    return nitems;
+    return blen;
 }
 
 size_t XPlaneWebSocketClient::dataRefValues(std::string body, DataRefWebSocketInfo* dataRefWebSocketData)
@@ -472,7 +468,7 @@ Result XPlaneWebSocketClient::streamDataRefs(
     bool hasDataRef = false;
     DataRefWebSocketInfo* dataRefWebSocketData = new DataRefWebSocketInfo();
     dataRefWebSocketData->client = this;
-    dataRefWebSocketData->func = &func;
+    dataRefWebSocketData->func = new function<void(map<int, float>)>(func);
     for (const auto& [idx, dataref] : dataRefs)
     {
         int64_t id = getDataRefId(dataref);
