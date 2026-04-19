@@ -433,7 +433,7 @@ void USBHIDConfigDevice::updateInput(shared_ptr<AircraftState> state, Descriptor
             }
 
             default:
-                log(ERROR, "updateInput: Unknown field type!");
+                log(ERROR, "updateInput: Unknown field type: %d", static_cast<int>(field.type));
                 return;
         }
     }
