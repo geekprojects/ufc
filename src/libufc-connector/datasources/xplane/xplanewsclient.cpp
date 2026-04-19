@@ -472,7 +472,7 @@ Result XPlaneWebSocketClient::streamDataRefs(
     bool hasDataRef = false;
     DataRefWebSocketInfo* dataRefWebSocketData = new DataRefWebSocketInfo();
     dataRefWebSocketData->client = this;
-    dataRefWebSocketData->func = &func;
+    dataRefWebSocketData->func = new function<void(map<int, float>)>(func);
     for (const auto& [idx, dataref] : dataRefs)
     {
         int64_t id = getDataRefId(dataref);
