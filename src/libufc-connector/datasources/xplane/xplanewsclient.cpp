@@ -428,7 +428,7 @@ size_t XPlaneWebSocketClient::dataRefCallback(char *b, size_t size, size_t nitem
         data->buffer.clear();
     }
 
-    return nitems;
+    return blen;
 }
 
 size_t XPlaneWebSocketClient::dataRefValues(std::string body, DataRefWebSocketInfo* dataRefWebSocketData)
