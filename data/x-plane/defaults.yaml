@@ -136,6 +136,7 @@ commands:
     airspeed:
       up: sim/autopilot/airspeed_up
       down: sim/autopilot/airspeed_down
+      manage: # No default
     heading:
       manage: sim/autopilot/NAV
       guidance: sim/autopilot/heading
@@ -170,6 +171,16 @@ commands:
         up: sim/instruments/barometer_up
         down: sim/instruments/barometer_down
         std: sim/instruments/barometer_std
+        mode:
+          inHg: # Not defined
+          hPa: # Not defined
+  apu:
+    master:
+      toggle: sim/electrical/APU_on
+    starter:
+      toggle: sim/electrical/APU_start
+    bleed:
+      toggle: sim/bleed_air/apu_toggle
 
 
 

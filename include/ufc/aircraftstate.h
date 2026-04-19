@@ -14,8 +14,6 @@
 
 #include "utils/logger.h"
 
-#include "aircraftdata.h"
-
 namespace UFC
 {
 

@@ -24,7 +24,9 @@ class UFCLua;
 const std::string SOURCE_SIMULATOR = "Simulator";
 const std::string SOURCE_XPLANE = "XPlane";
 
-
+// Data Sources should provide these
+#define DATA_AIRCRAFT_ICAO "aircraft/icao"
+#define DATA_AIRCRAFT_AUTHOR "aircraft/author"
 
 class DataSourceInit
 {

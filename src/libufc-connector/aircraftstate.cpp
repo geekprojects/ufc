@@ -3,6 +3,7 @@
 //
 
 #include <ufc/aircraftstate.h>
+#include <ufc/aircraftdata.h>
 
 using namespace std;
 using namespace UFC;
@@ -46,7 +47,6 @@ void AircraftState::init()
 
     set(DATA_AUTOPILOT_DISPLAYALTITUDE, true);
     set(DATA_AUTOPILOT_ALTITUDEMANAGED, false);
-    set(DATA_AUTOPILOT_ALTITUDE_STEP_100, false);
     set(DATA_AUTOPILOT_ALTITUDE, 0.0f);
     set(DATA_AUTOPILOT_FMSVNAV, false);
 

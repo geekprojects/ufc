@@ -115,13 +115,17 @@ target_link_libraries(ufc-generate-data
 
 add_custom_command(
         PRE_BUILD
-        OUTPUT include/ufc/aircraftdata.h
-        COMMAND ufc-generate-data ${CMAKE_SOURCE_DIR}/data/x-plane/defaults.yaml ${CMAKE_SOURCE_DIR}/include/ufc/aircraftdata.h
+        OUTPUT include/ufc/aircraftdata.h include/ufc/aircraftcommands.h
+        COMMAND
+            ufc-generate-data ${CMAKE_SOURCE_DIR}/data/x-plane/defaults.yaml
+            ${CMAKE_SOURCE_DIR}/include/ufc/aircraftdata.h
+            ${CMAKE_SOURCE_DIR}/include/ufc/aircraftcommands.h
         DEPENDS ufc-generate-data data/x-plane/defaults.yaml
 )
 
 add_library(ufc SHARED
         include/ufc/aircraftdata.h
+        include/ufc/aircraftcommands.h
         include/ufc/aircraftmapping.h
         include/ufc/aircraftstate.h
         include/ufc/datasource.h

@@ -5,7 +5,8 @@
 #include "simulator.h"
 
 #include <ufc/flightconnector.h>
-#include <ufc/commands.h>
+#include <ufc/aircraftcommands.h>
+#include <ufc/aircraftdata.h>
 
 #include <unistd.h>
 
@@ -103,7 +104,6 @@ bool SimulatorDataSource::update()
         state->set(DATA_AUTOPILOT_HEADING, m_autopilot.heading);
         state->set(DATA_AUTOPILOT_SPEED, m_autopilot.speed);
         state->set(DATA_AUTOPILOT_ALTITUDE, m_autopilot.altitude);
-        state->set(DATA_AUTOPILOT_ALTITUDE_STEP_1000, m_autopilot.altitudeStep1000);
         state->set(DATA_AUTOPILOT_AP1MODE, m_autopilot.ap1Mode);
         state->set(DATA_AUTOPILOT_AP2MODE, m_autopilot.ap2Mode);
 
@@ -131,7 +131,7 @@ bool SimulatorDataSource::update()
 void SimulatorDataSource::command(const std::string& command)
 {
     AutopilotState autopilot = m_autopilot;
-    if (command == AUTOPILOT_HEADING_UP)
+    if (command == COMMAND_AUTOPILOT_HEADING_UP)
     {
         autopilot.heading += 1.0f;
         if (autopilot.heading >= 360.0f)
@@ -139,7 +139,7 @@ void SimulatorDataSource::command(const std::string& command)
             autopilot.heading = 1.0f;
         }
     }
-    else if (command == AUTOPILOT_HEADING_DOWN)
+    else if (command == COMMAND_AUTOPILOT_HEADING_DOWN)
     {
         autopilot.heading -= 1.0f;
         if (autopilot.heading <= 1.0f)
@@ -147,21 +147,21 @@ void SimulatorDataSource::command(const std::string& command)
             autopilot.heading = 365.0f;
         }
     }
-    else if (command == AUTOPILOT_AIRSPEED_UP)
+    else if (command == COMMAND_AUTOPILOT_AIRSPEED_UP)
     {
         if (autopilot.speed <= 400)
         {
             autopilot.speed += 1.0f;
         }
     }
-    else if (command == AUTOPILOT_AIRSPEED_DOWN)
+    else if (command == COMMAND_AUTOPILOT_AIRSPEED_DOWN)
     {
         if (autopilot.speed > 100.0)
         {
             autopilot.speed -= 1.0f;
         }
     }
-    else if (command == AUTOPILOT_ALTITUDE_UP)
+    else if (command == COMMAND_AUTOPILOT_ALTITUDE_UP)
     {
         if (m_autopilot.altitudeStep1000)
         {
@@ -173,7 +173,7 @@ void SimulatorDataSource::command(const std::string& command)
 
         }
     }
-    else if (command == AUTOPILOT_ALTITUDE_DOWN)
+    else if (command == COMMAND_AUTOPILOT_ALTITUDE_DOWN)
     {
         if (m_autopilot.altitudeStep1000)
         {
@@ -184,31 +184,31 @@ void SimulatorDataSource::command(const std::string& command)
             autopilot.altitude -= 100.0f;
         }
     }
-    else if (command == AUTOPILOT_ALTITUDE_STEP_100)
+    else if (command == COMMAND_AUTOPILOT_ALTITUDE_STEP_100)
     {
         autopilot.altitudeStep1000 = false;
     }
-    else if (command == AUTOPILOT_ALTITUDE_STEP_1000)
+    else if (command == COMMAND_AUTOPILOT_ALTITUDE_STEP_1000)
     {
         autopilot.altitudeStep1000 = true;
     }
-    else if (command == AUTOPILOT_AP1_TOGGLE)
+    else if (command == COMMAND_AUTOPILOT_AP1_TOGGLE)
     {
         autopilot.ap1Mode = !autopilot.ap1Mode;
     }
-    else if (command == AUTOPILOT_AP2_TOGGLE)
+    else if (command == COMMAND_AUTOPILOT_AP2_TOGGLE)
     {
         autopilot.ap2Mode = !autopilot.ap2Mode;
     }
-    else if (command == COMMS_COM1_STANDBY_UP_COARSE)
+    else if (command == COMMAND_COMMS_COM1_STANDBY_COARSE_UP)
     {
         m_communication.com1StandbyHz += 1000;
     }
-    else if (command == COMMS_COM1_STANDBY_DOWN_COARSE)
+    else if (command == COMMAND_COMMS_COM1_STANDBY_COARSE_DOWN)
     {
         m_communication.com1StandbyHz -= 1000;
     }
-    else if (command == COMMS_COM1_STANDBY_UP_FINE)
+    else if (command == COMMAND_COMMS_COM1_STANDBY_FINE_UP)
     {
         auto hz = (int)(m_communication.com1StandbyHz % 1000);
         m_communication.com1StandbyHz -= hz;
@@ -219,7 +219,7 @@ void SimulatorDataSource::command(const std::string& command)
         }
         m_communication.com1StandbyHz = m_communication.com1StandbyHz + hz;
     }
-    else if (command == COMMS_COM1_STANDBY_DOWN_FINE)
+    else if (command == COMMAND_COMMS_COM1_STANDBY_FINE_DOWN)
     {
         auto hz = (int)(m_communication.com1StandbyHz % 1000);
         m_communication.com1StandbyHz -= hz;
@@ -230,44 +230,51 @@ void SimulatorDataSource::command(const std::string& command)
         }
         m_communication.com1StandbyHz = m_communication.com1StandbyHz + hz;
     }
-    else if (command == COMMS_COM1_SWAP)
+    else if (command == COMMAND_COMMS_COM1_SWAP)
     {
         uint32_t tmp = m_communication.com1Hz;
         m_communication.com1Hz = m_communication.com1StandbyHz;
         m_communication.com1StandbyHz = tmp;
     }
-    else if (command == APU_MASTER_TOGGLE)
+    else if (command == COMMAND_APU_MASTER_TOGGLE)
     {
         m_apu.masterOn = !m_apu.masterOn;
     }
-    else if (command == APU_STARTER_TOGGLE)
+    else if (command == COMMAND_APU_STARTER_TOGGLE)
     {
         m_apu.starterOn = !m_apu.starterOn;
     }
-    else if (command == AIRCRAFT_BARO_PILOT_UP)
+    else if (command == COMMAND_AIRCRAFT_BAROMETER_PILOT_UP)
     {
         m_baro += 0.01f;
         m_baroStd = false;
     }
-    else if (command == AIRCRAFT_BARO_PILOT_DOWN)
+    else if (command == COMMAND_AIRCRAFT_BAROMETER_PILOT_DOWN)
     {
         m_baro -= 0.01f;
         m_baroStd = false;
     }
-    else if (command == AIRCRAFT_BARO_PILOT_STANDARD)
+    else if (command == COMMAND_AIRCRAFT_BAROMETER_PILOT_STD)
     {
-        m_baro = 29.92f;
-        m_baroStd = true;
+        if (m_baroStd)
+        {
+            m_baroStd = false;
+        }
+        else
+        {
+            m_baro = 29.92f;
+            m_baroStd = true;
+        }
     }
-    else if (command == AIRCRAFT_BARO_PILOT_MODE_INHG)
+    else if (command == COMMAND_AIRCRAFT_BAROMETER_PILOT_MODE_INHG)
     {
         m_baroMode = 0;
     }
-    else if (command == AIRCRAFT_BARO_PILOT_MODE_HPA)
+    else if (command == COMMAND_AIRCRAFT_BAROMETER_PILOT_MODE_HPA)
     {
         m_baroMode = 1;
     }
-    else if (command == AIRCRAFT_BARO_PILOT_PUSH)
+    else if (command == "aircraf/barometer/pilot/push")
     {
         m_baroStd = false;
     }
