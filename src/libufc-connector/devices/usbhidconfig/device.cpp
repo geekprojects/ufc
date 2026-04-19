@@ -610,7 +610,6 @@ void USBHIDConfigDevice::parseFieldValue(Field& field, const YAML::Node& node)
         return;
     }
 
-    auto str = node.as<string>();
     if (node.IsNull())
     {
         field.valueType = FieldValueType::VALUE;
