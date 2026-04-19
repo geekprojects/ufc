@@ -173,7 +173,7 @@ void FlightConnector::wait() const
             // Ignore
         }
     }
-    if (m_updateDataSourceThread)
+    if (m_updateDataSourceThread && m_updateDataSourceThread->joinable())
     {
         try
         {
