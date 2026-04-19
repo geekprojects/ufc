@@ -381,9 +381,10 @@ void USBHIDConfigDevice::updateOutput(
 void USBHIDConfigDevice::updateInput(shared_ptr<AircraftState> state)
 {
     uint8_t buffer[1024];
+    constexpr uint8_t kDefaultInputReportId = 0x01;
     while (true)
     {
-        buffer[0] = 0x01;
+        buffer[0] = kDefaultInputReportId;
         int res = hid_read(getDevice(), buffer, sizeof(buffer));
         if (res <= 0)
         {
