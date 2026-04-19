@@ -6,6 +6,7 @@
 #define UFC_UDP_H
 
 #include <string>
+#include <memory>
 #include <netinet/in.h>
 
 #include <ufc/utils/data.h>
