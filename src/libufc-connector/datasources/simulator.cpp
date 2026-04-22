@@ -58,7 +58,7 @@ bool SimulatorDataSource::update()
     {
         state = getFlightConnector()->getState();
 
-        float roll = state->getFloat(DATA_AUTOPILOT_FLIGHTDIRECTOR_ROLL);
+        float roll = state->getFloat(DATA_AIRCRAFT_ROLL);
         if (rollDir == 1)
         {
             roll += 1;
@@ -75,9 +75,9 @@ bool SimulatorDataSource::update()
                 rollDir = 1;
             }
         }
-        state->set(DATA_AUTOPILOT_FLIGHTDIRECTOR_ROLL, roll);
+        state->set(DATA_AIRCRAFT_ROLL, roll);
 
-        float pitch = state->getFloat(DATA_AUTOPILOT_FLIGHTDIRECTOR_PITCH);
+        float pitch = state->getFloat(DATA_AIRCRAFT_PITCH);
         if (pitchDir == 1)
         {
             pitch += 0.1f;
@@ -94,7 +94,7 @@ bool SimulatorDataSource::update()
                 pitchDir = 1;
             }
         }
-        state->set(DATA_AUTOPILOT_FLIGHTDIRECTOR_PITCH, pitch);
+        state->set(DATA_AIRCRAFT_PITCH, pitch);
 
         state->set(DATA_AIRCRAFT_INDICATEDAIRSPEED, state->getFloat(DATA_AIRCRAFT_INDICATEDAIRSPEED) + 0.1f);
         state->set(DATA_AIRCRAFT_ALTITUDE, state->getFloat(DATA_AIRCRAFT_ALTITUDE) + 0.5f);
