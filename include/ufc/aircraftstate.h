@@ -1,6 +1,7 @@
 //
 // Created by Ian Parker on 20/01/2024.
 //
+#include <variant>
 
 #ifndef UFC_STATE_H
 #define UFC_STATE_H
@@ -30,12 +31,7 @@ class AircraftValue
 {
     int m_index = -1;
     DataRefType m_type = DataRefType::UNKNOWN;
-    union
-    {
-        int i;
-        float f;
-    } m_value;
-    std::string m_string;
+    std::variant<std::monostate, int, float, std::string> m_value;
 
  public:
     AircraftValue()
@@ -44,7 +40,7 @@ class AircraftValue
 
     explicit AircraftValue(int idx)
     {
-        m_value.i = 0;
+        m_value = 0;
         m_index = idx;
     }
 
@@ -56,38 +52,31 @@ class AircraftValue
     void set(bool b)
     {
         m_type = DataRefType::BOOLEAN;
-        m_value.i = b;
+        m_value = static_cast<int>(b);
     }
 
     void set(int i)
     {
         m_type = DataRefType::INTEGER;
-        m_value.i = i;
+        m_value = i;
     }
 
     void set(float f)
     {
         m_type = DataRefType::FLOAT;
-        m_value.f = f;
+        m_value = f;
     }
 
     void set(std::string const& str)
     {
         m_type = DataRefType::STRING;
-        m_string = str;
+        m_value = str;
     }
 
     void set(AircraftValue const & b)
     {
         m_type = b.m_type;
-        if (m_type == DataRefType::STRING)
-        {
-            m_string = b.m_string;
-        }
-        else
-        {
-            m_value = b.m_value;
-        }
+        m_value = b.m_value;
     }
 
     [[nodiscard]] DataRefType getType() const
@@ -101,9 +90,9 @@ class AircraftValue
         {
             case DataRefType::BOOLEAN:
             case DataRefType::INTEGER:
-                return m_value.i;
+                return std::get<int>(m_value);
             case DataRefType::FLOAT:
-                return (int)m_value.f;
+                return (int)std::get<float>(m_value);
             default:
                 return 0;
         }
@@ -115,9 +104,9 @@ class AircraftValue
         {
             case DataRefType::BOOLEAN:
             case DataRefType::INTEGER:
-                return (float)m_value.i;
+                return (float)std::get<int>(m_value);
             case DataRefType::FLOAT:
-                return m_value.f;
+                return std::get<float>(m_value);
             default:
                 return 0.0;
         }
@@ -129,11 +118,11 @@ class AircraftValue
         {
             case DataRefType::BOOLEAN:
             case DataRefType::INTEGER:
-                return std::to_string(m_value.i);
+                return std::to_string(std::get<int>(m_value));
             case DataRefType::FLOAT:
-                return std::to_string(m_value.f);
+                return std::to_string(std::get<float>(m_value));
             case DataRefType::STRING:
-                return m_string;
+                return std::get<std::string>(m_value);
             default:
                 return "";
         }
@@ -164,22 +153,42 @@ class AircraftState : public Logger
 
     void set(int idx, bool b)
     {
-        valuesByIndex[idx]->set(b);
+        std::lock_guard<std::mutex> lock(m_mutex);
+        auto it = valuesByIndex.find(idx);
+        if (it != valuesByIndex.end() && it->second)
+        {
+            it->second->set(b);
+        }
     }
 
     void set(int idx, int i)
     {
-        valuesByIndex[idx]->set(i);
+        std::lock_guard<std::mutex> lock(m_mutex);
+        auto it = valuesByIndex.find(idx);
+        if (it != valuesByIndex.end() && it->second)
+        {
+            it->second->set(i);
+        }
     }
 
     void set(int idx, float f)
     {
-        valuesByIndex[idx]->set(f);
+        std::lock_guard<std::mutex> lock(m_mutex);
+        auto it = valuesByIndex.find(idx);
+        if (it != valuesByIndex.end() && it->second)
+        {
+            it->second->set(f);
+        }
     }
 
     void set(int idx, const std::string& str)
     {
-        valuesByIndex[idx]->set(str);
+        std::lock_guard<std::mutex> lock(m_mutex);
+        auto it = valuesByIndex.find(idx);
+        if (it != valuesByIndex.end() && it->second)
+        {
+            it->second->set(str);
+        }
     }
 
     void set(std::string const& name, bool b)
@@ -218,4 +227,4 @@ class AircraftState : public Logger
 
 }
 
-#endif //XPFD_STATE_H
+#endif //UFC_STATE_H

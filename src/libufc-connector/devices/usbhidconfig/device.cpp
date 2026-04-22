@@ -331,7 +331,7 @@ void USBHIDConfigDevice::updateOutput(
 
             case FieldType::UINT32:
             {
-                int value = getValue(state, field, displayValues);
+                uint32_t value = static_cast<uint32_t>(getValue(state, field, displayValues));
                 bitBuffer.appendByte((value >> 0) & 0xff);
                 bitBuffer.appendByte((value >> 8) & 0xff);
                 bitBuffer.appendByte((value >> 16) & 0xff);
@@ -381,9 +381,10 @@ void USBHIDConfigDevice::updateOutput(
 void USBHIDConfigDevice::updateInput(shared_ptr<AircraftState> state)
 {
     uint8_t buffer[1024];
+    constexpr uint8_t kDefaultInputReportId = 0x01;
     while (true)
     {
-        buffer[0] = 0x01;
+        buffer[0] = kDefaultInputReportId;
         int res = hid_read(getDevice(), buffer, sizeof(buffer));
         if (res <= 0)
         {
