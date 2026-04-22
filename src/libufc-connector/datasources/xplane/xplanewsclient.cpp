@@ -181,7 +181,6 @@ Result XPlaneWebSocketClient::sendCommand(const string &command)
     return Result::SUCCESS;
 }
 
-
 void XPlaneWebSocketClient::sendMessage(const string &string)
 {
     fprintf(stderr, "XPlaneWebSocketClient::sendMessage: NOT IMPLEMENTED: %s\n", string.c_str());
@@ -201,12 +200,6 @@ int64_t XPlaneWebSocketClient::getDataRefId(std::string dataref)
     {
         log(DEBUG, "getDataRefIds: Got: %s -> %d", dataref.c_str(), it->second);
         return it->second;
-    }
-
-    auto idx = dataref.find('[');
-    if (idx != string::npos)
-    {
-        dataref = dataref.substr(0, idx);
     }
 
     string query = "filter[name]=" + dataref;
@@ -302,17 +295,6 @@ bool XPlaneWebSocketClient::getDataRef(const std::string &dataref, json& valueJs
         auto json = json::parse(content);
         valueJson = json["data"];
 
-        auto idx = dataref.find('[');
-        if (idx != string::npos)
-        {
-            string indexStr = dataref.substr(idx + 1);
-            int index = atoi(indexStr.c_str());
-
-            if (valueJson.is_array())
-            {
-                valueJson = valueJson[index];
-            }
-        }
         return true;
     }
     else
