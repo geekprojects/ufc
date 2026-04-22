@@ -1,7 +1,6 @@
 //
 // Created by Ian Parker on 20/01/2024.
 //
-#include <variant>
 
 #ifndef UFC_STATE_H
 #define UFC_STATE_H
@@ -12,6 +11,7 @@
 #include <vector>
 #include <mutex>
 #include <memory>
+#include <variant>
 
 #include "utils/logger.h"
 
@@ -126,6 +126,11 @@ class AircraftValue
             default:
                 return "";
         }
+    }
+
+    bool hasValue() const
+    {
+        return m_type != DataRefType::UNKNOWN;
     }
 };
 
