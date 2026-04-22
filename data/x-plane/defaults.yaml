@@ -101,15 +101,11 @@ data:
   lights:
     landing:
       left:
-        on:
-          dataRef: sim/cockpit2/switches/landing_lights_switch[0]
-        extended:
-          dataRef: sim/cockpit2/switches/landing_lights_switch[0]
+        on: sim/cockpit2/switches/landing_lights_switch[0]
+        extended: sim/cockpit2/switches/landing_lights_switch[0]
       right:
-        on:
-          dataRef: sim/cockpit2/switches/landing_lights_switch[1]
-        extended:
-          dataRef: sim/cockpit2/switches/landing_lights_switch[1]
+        on: sim/cockpit2/switches/landing_lights_switch[1]
+        extended: sim/cockpit2/switches/landing_lights_switch[1]
     taxi:
       on: sim/cockpit2/switches/taxi_light_on
 
