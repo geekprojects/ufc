@@ -361,9 +361,18 @@ void USBHIDConfigDevice::updateOutput(
 
             case FieldType::PADDING:
                 bitBuffer.flushBits();
-                while ((bitBuffer.size() * 8) < static_cast<size_t>(field.length))
+                if (field.length <= 0)
                 {
-                    bitBuffer.appendByte(0);
+                    break;
+                }
+                {
+                    const size_t targetBits = static_cast<size_t>(field.length);
+                    size_t currentBits = bitBuffer.size() * 8;
+                    while (currentBits < targetBits)
+                    {
+                        bitBuffer.appendByte(0);
+                        currentBits += 8;
+                    }
                 }
                 break;
         }
@@ -433,7 +442,7 @@ void USBHIDConfigDevice::updateInput(shared_ptr<AircraftState> state, Descriptor
             }
 
             default:
-                log(ERROR, "updateInput: Unknown field type!");
+                log(ERROR, "updateInput: Unknown field type: %d", static_cast<int>(field.type));
                 return;
         }
     }
@@ -610,7 +619,6 @@ void USBHIDConfigDevice::parseFieldValue(Field& field, const YAML::Node& node)
         return;
     }
 
-    auto str = node.as<string>();
     if (node.IsNull())
     {
         field.valueType = FieldValueType::VALUE;
