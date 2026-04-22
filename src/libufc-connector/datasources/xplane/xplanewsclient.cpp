@@ -375,34 +375,36 @@ struct read_ctx
 {
     CURL* webSocket;
     string payload;
-    size_t blen;
-    size_t nsent;
+    size_t payloadLength;
+    size_t bytesSent = 0;
 };
 
 static size_t read_cb(char *buf, size_t nitems, size_t buflen, void *p)
 {
     read_ctx* ctx = static_cast<read_ctx*>(p);
     size_t len = nitems * buflen;
-    size_t left = ctx->blen - ctx->nsent;
+    size_t left = ctx->payloadLength - ctx->bytesSent;
 
-    if (!ctx->nsent)
+    if (!ctx->bytesSent)
     {
         CURLcode result;
         /* On first call, set the FRAME information to be used (it defaults to
          * CURLWS_BINARY otherwise). */
-        result = curl_ws_start_frame(ctx->webSocket, CURLWS_TEXT, static_cast<curl_off_t>(ctx->blen));
+        result = curl_ws_start_frame(ctx->webSocket, CURLWS_TEXT, static_cast<curl_off_t>(ctx->payloadLength));
         if(result != CURLE_OK)
         {
             fprintf(stderr, "error starting frame: %d\n", result);
             return CURL_READFUNC_ABORT;
         }
     }
-    if(left)
+    if (left)
     {
         if(left < len)
+        {
             len = left;
-        memcpy(buf, ctx->payload.c_str() + ctx->nsent, len);
-        ctx->nsent += len;
+        }
+        memcpy(buf, ctx->payload.c_str() + ctx->bytesSent, len);
+        ctx->bytesSent += len;
         return len;
     }
     return 0;
@@ -517,7 +519,8 @@ Result XPlaneWebSocketClient::streamDataRefs(
     read_ctx rctx;
     rctx.webSocket = webSocket;
     rctx.payload = requestJson.dump();
-    rctx.blen = rctx.payload.size();
+    rctx.payloadLength = rctx.payload.size();
+    rctx.bytesSent = 0;
 
     curl_easy_setopt(webSocket, CURLOPT_URL, url.c_str());
     curl_easy_setopt(webSocket, CURLOPT_WRITEFUNCTION, dataRefCallback);
