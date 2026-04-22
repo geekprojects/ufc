@@ -248,6 +248,7 @@ class AircraftState : public Logger
 
     void set(int idx, bool b)
     {
+        std::lock_guard<std::mutex> lock(m_mutex);
         auto it = valuesByIndex.find(idx);
         if (it != valuesByIndex.end() && it->second)
         {
@@ -257,6 +258,7 @@ class AircraftState : public Logger
 
     void set(int idx, int i)
     {
+        std::lock_guard<std::mutex> lock(m_mutex);
         auto it = valuesByIndex.find(idx);
         if (it != valuesByIndex.end() && it->second)
         {
@@ -266,6 +268,7 @@ class AircraftState : public Logger
 
     void set(int idx, float f)
     {
+        std::lock_guard<std::mutex> lock(m_mutex);
         auto it = valuesByIndex.find(idx);
         if (it != valuesByIndex.end() && it->second)
         {
@@ -275,6 +278,7 @@ class AircraftState : public Logger
 
     void set(int idx, const std::string& str)
     {
+        std::lock_guard<std::mutex> lock(m_mutex);
         auto it = valuesByIndex.find(idx);
         if (it != valuesByIndex.end() && it->second)
         {
