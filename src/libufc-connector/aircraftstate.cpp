@@ -49,7 +49,7 @@ int AircraftState::getInt(const std::string& dataName)
     return value->getInt();
 }
 
-bool AircraftState::hasValue(const std::string &dataName)
+bool AircraftState::isSet(const std::string &dataName)
 {
     auto value = getValue(dataName);
     if (value == nullptr)

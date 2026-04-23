@@ -17,7 +17,7 @@ using namespace LuaCpp::Engine;
 
 bool UFCDataMetaObject::Exists(const std::string &name)
 {
-    return m_flightConnector->getState()->hasValue(name);
+    return m_flightConnector->getState()->isSet(name);
 }
 
 std::shared_ptr<LuaType> UFCDataMetaObject::getValue(std::string &name)

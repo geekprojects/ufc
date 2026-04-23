@@ -135,10 +135,7 @@ class AircraftState : public Logger
 
     void init();
 
-    bool isSet(const std::string &dataName)
-    {
-        return getValue(dataName) != nullptr;
-    }
+    bool isSet(const std::string &dataName);
 
     void set(std::string const& name, bool b)
     {
@@ -164,8 +161,6 @@ class AircraftState : public Logger
     {
         getOrCreateValue(name)->set(value);
     }
-
-    bool hasValue(const std::string& dataName);
 
     float getFloat(const std::string& dataName);
     int getInt(const std::string& dataName);
