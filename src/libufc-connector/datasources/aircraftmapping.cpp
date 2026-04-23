@@ -4,12 +4,12 @@
 
 #include <ufc/aircraftmapping.h>
 #include <ufc/datasource.h>
+#include <ufc/utils/utils.h>
 
 #include <filesystem>
 #include <fnmatch.h>
 
 #include "../lua.h"
-#include "../../../include/ufc/utils/utils.h"
 
 using namespace std;
 using namespace UFC;
@@ -28,12 +28,9 @@ void AircraftMapping::initDefinitions()
     m_commands.clear();
 }
 
-void AircraftMapping::loadDefinitionsForAircraft(
-    const string& author,
-    const string& icaoType)
+void AircraftMapping::loadDefaults()
 {
-    // Load defaults
-    log(DEBUG, "loadDefinitionsForAircraft: initialising definitions...");
+    log(DEBUG, "loadDefaults: initialising definitions...");
     initDefinitions();
 
     string defaultsFile = m_baseDir + "/defaults.yaml";
@@ -48,6 +45,13 @@ void AircraftMapping::loadDefinitionsForAircraft(
         return;
     }
     loadDefinitions(defaults);
+}
+
+void AircraftMapping::loadDefinitionsForAircraft(
+    const string& author,
+    const string& icaoType)
+{
+    loadDefaults();
 
     // Try to find aircraft-specific definitions
     for (const auto & entry : filesystem::directory_iterator(m_baseDir + "/aircraft"))
@@ -129,7 +133,7 @@ void AircraftMapping::loadDefinitions(YAML::Node config)
             initScript = initScript.substr(4);
         }
         initScript = StringUtils::trim(initScript);
-        if (!initScript.empty())
+        if (!initScript.empty() && m_dataSource != nullptr)
         {
             m_dataSource->getDataLua()->execute(initScript);
             m_dataSource->getCommandLua()->execute(initScript);

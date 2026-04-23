@@ -8,7 +8,8 @@
 #include <unistd.h>
 
 #include <ufc/flightconnector.h>
-#include <ufc/commands.h>
+#include <ufc/aircraftcommands.h>
+#include <ufc/aircraftdata.h>
 
 using namespace std;
 using namespace UFC;
@@ -98,7 +99,7 @@ bool ClockDataSource::update()
 
         state->set(DATA_AIRCRAFT_BAROMETER_PILOT_MODE, 0);
         float timef = (float)hour + ((float)minutes / 100.0f);
-        state->set(DATA_AIRCRAFT_BAROMETER_PILOT_HG, timef);
+        state->set(DATA_AIRCRAFT_BAROMETER_PILOT_IN_HG, timef);
 
         this_thread::sleep_for(chrono::milliseconds(100));
     }
@@ -109,16 +110,16 @@ bool ClockDataSource::update()
 void ClockDataSource::command(const std::string& command)
 {
     log(DEBUG, "command: %s", command.c_str());
-    if (command == AUTOPILOT_ALTITUDE_MANAGE)
+    if (command == COMMAND_AUTOPILOT_ALTITUDE_MANAGE)
     {
         m_showYear = true;
         m_showYearTime = time(nullptr);
     }
-    else if (command == AUTOPILOT_HEADING_MANAGE)
+    else if (command == COMMAND_AUTOPILOT_HEADING_MANAGE)
     {
         m_showSeconds = !m_showSeconds;
     }
-    else if (command == AUTOPILOT_AIRSPEED_MANAGE)
+    else if (command == COMMAND_AUTOPILOT_AIRSPEED_MANAGE)
     {
         m_24Hour = !m_24Hour;
     }

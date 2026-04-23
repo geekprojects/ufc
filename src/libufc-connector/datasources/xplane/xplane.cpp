@@ -129,7 +129,7 @@ bool XPlaneDataSource::update()
             dataRef->mapping.dataRef != "null")
         {
             dataRef->value = state->getOrCreateValue(dataRef->id);
-            log(DEBUG, "update: %s idx=%d, value idx=%d", dataRef->id.c_str(), idx, dataRef->value->getIndex());
+            log(DEBUG, "update: %s idx=%d", dataRef->id.c_str(), idx);
             datarefs.emplace_back(idx, dataRef->mapping.dataRef);
         }
         idx++;

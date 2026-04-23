@@ -1,7 +1,6 @@
 //
 // Created by Ian Parker on 20/01/2024.
 //
-#include <variant>
 
 #ifndef UFC_STATE_H
 #define UFC_STATE_H
@@ -12,92 +11,9 @@
 #include <vector>
 #include <mutex>
 #include <memory>
+#include <variant>
 
 #include "utils/logger.h"
-
-#define DATA_AIRCRAFT_AUTHOR "aircraft/author"
-#define DATA_AIRCRAFT_ICAO "aircraft/icao"
-
-#define DATA_AIRCRAFT_LATITUDE "aircraft/position/latitude"
-#define DATA_AIRCRAFT_LONGITUDE "aircraft/position/longitude"
-#define DATA_AIRCRAFT_ELEVATION "aircraft/position/elevation"
-
-#define DATA_AIRCRAFT_INDICATEDAIRSPEED "aircraft/indicatedAirspeed"
-#define DATA_AIRCRAFT_PITCH "aircraft/pitch"
-#define DATA_AIRCRAFT_ROLL "aircraft/roll"
-#define DATA_AIRCRAFT_ALTITUDE "aircraft/altitude"
-#define DATA_AIRCRAFT_VERTICALSPEED "aircraft/verticalSpeed"
-#define DATA_AIRCRAFT_INDICATEDMACH "aircraft/indicatedMach"
-#define DATA_AIRCRAFT_MAGHEADING "aircraft/magHeading"
-#define DATA_AIRCRAFT_BAROMETER_PILOT_HG "aircraft/barometer/pilot/in_hg"
-#define DATA_AIRCRAFT_BAROMETER_PILOT_STD "aircraft/barometer/pilot/std"
-#define DATA_AIRCRAFT_BAROMETER_PILOT_MODE "aircraft/barometer/pilot/mode"
-#define DATA_AIRCRAFT_PARKINGBRAKE "aircraft/parkingBrake"
-#define DATA_COMMS_COM1HZ "comms/com1Hz"
-#define DATA_COMMS_COM1STANDBYHZ "comms/com1StandbyHz"
-#define DATA_COMMS_COM2HZ "comms/com2Hz"
-#define DATA_COMMS_COM2STANDBYHZ "comms/com2StandbyHz"
-#define DATA_COMMS_NAV1HZ "comms/nav1Hz"
-#define DATA_COMMS_NAV1STANDBYHZ "comms/nav1StandbyHz"
-#define DATA_COMMS_NAV2HZ "comms/nav2Hz"
-#define DATA_COMMS_NAV2STANDBYHZ "comms/nav2StandbyHz"
-
-#define DATA_COMMS_XPDR_CODE "comms/transponder/code"
-#define DATA_COMMS_XPDR_MODE "comms/transponder/mode"
-
-#define DATA_FLIGHTDIRECTOR_PILOT_ON "autopilot/flightDirector/pilot/on"
-#define DATA_FLIGHTDIRECTOR_PITCH "autopilot/flightDirector/pitch"
-#define DATA_FLIGHTDIRECTOR_ROLL "autopilot/flightDirector/roll"
-#define DATA_FLIGHTDIRECTOR_MODE "autopilot/flightDirector/mode"
-
-#define DATA_AUTOPILOT_DISPLAYSPEED "autopilot/displaySpeed"
-#define DATA_AUTOPILOT_SPEEDMANAGED "autopilot/speedManaged"
-#define DATA_AUTOPILOT_SPEEDMACH "autopilot/speedMach"
-#define DATA_AUTOPILOT_SPEED "autopilot/speed"
-#define DATA_AUTOPILOT_SPEEDWINDOWOPEN "autopilot/speedWindowOpen"
-
-#define DATA_AUTOPILOT_DISPLAYHEADING "autopilot/displayHeading"
-#define DATA_AUTOPILOT_HEADINGMANAGED "autopilot/headingManaged"
-#define DATA_AUTOPILOT_HEADINGWINDOWOPEN "autopilot/headingWindowOpen"
-#define DATA_AUTOPILOT_HEADING "autopilot/heading"
-#define DATA_AUTOPILOT_HEADINGTRKMODE "autopilot/headingTrkMode"
-#define DATA_AUTOPILOT_GPSSSTATUS "autopilot/gpssStatus"
-
-#define DATA_AUTOPILOT_DISPLAYALTITUDE "autopilot/displayAltitude"
-#define DATA_AUTOPILOT_ALTITUDEMANAGED "autopilot/altitudeManaged"
-#define DATA_AUTOPILOT_ALTITUDESTEP1000 "autopilot/altitudeStep1000"
-#define DATA_AUTOPILOT_ALTITUDE "autopilot/altitude"
-#define DATA_AUTOPILOT_FMSVNAV "autopilot/fmsVnav"
-
-#define DATA_AUTOPILOT_DISPLAYVERTICALSPEED "autopilot/displayVerticalSpeed"
-#define DATA_AUTOPILOT_VERTICALSPEED "autopilot/verticalSpeed"
-#define DATA_AUTOPILOT_VERTICALSPEEDFPAMODE "autopilot/verticalSpeedFPAMode"
-
-#define DATA_AUTOPILOT_LOCMODE "autopilot/locMode"
-#define DATA_AUTOPILOT_AP1MODE "autopilot/ap1Mode"
-#define DATA_AUTOPILOT_AP2MODE "autopilot/ap2Mode"
-#define DATA_AUTOPILOT_AUTOTHROTTLEMODE "autopilot/autoThrottleMode"
-#define DATA_AUTOPILOT_APPROACHMODE "autopilot/approachMode"
-
-#define DATA_APU_MASTER_ON "apu/master/on"
-#define DATA_APU_STARTER_ON "apu/starter/on"
-
-#define DATA_LIGHTS_LANDING_LEFT_ON "lights/landing/left/on"
-#define DATA_LIGHTS_LANDING_RIGHT_ON "lights/landing/right/on"
-#define DATA_LIGHTS_LANDING_LEFT_EXTENDED "lights/landing/left/extended"
-#define DATA_LIGHTS_LANDING_RIGHT_EXTENDED "lights/landing/right/extended"
-
-#define DATA_CABIN_CALL "cabin/call"
-#define DATA_CABIN_SEATBELTSIGN "cabin/seatBeltSign"
-#define DATA_CABIN_NOSMOKINGSIGN "cabin/noSmokingSign"
-#define DATA_WEIGHT_PASSENGERCOUNT "weight/passengerCount"
-#define DATA_WEIGHT_PASSENGERDISTRIBUTION "weight/passengerDistribution"
-
-#define DATA_FLIGHTPLAN_FLIGHTNUMBER "flightplan/flightNumber"
-#define DATA_FLIGHTPLAN_CRUISEALTITUDE "flightplan/cruiseAltitude"
-#define DATA_FLIGHTPLAN_DEPARTUREAIRPORT "flightplan/departureAirport"
-#define DATA_FLIGHTPLAN_DESTINATIONAIRPORT "flightplan/destinationAirport"
-#define DATA_FLIGHTPLAN_DISTANCETODEST "flightplan/distanceToDestination"
 
 namespace UFC
 {
@@ -113,24 +29,12 @@ enum class DataRefType
 
 class AircraftValue
 {
-    int m_index = -1;
     DataRefType m_type = DataRefType::UNKNOWN;
     std::variant<std::monostate, int, float, std::string> m_value;
 
  public:
     AircraftValue()
     {
-    }
-
-    explicit AircraftValue(int idx)
-    {
-        m_value = 0;
-        m_index = idx;
-    }
-
-    [[nodiscard]] int getIndex() const
-    {
-        return m_index;
     }
 
     void set(bool b)
@@ -176,7 +80,7 @@ class AircraftValue
             case DataRefType::INTEGER:
                 return std::get<int>(m_value);
             case DataRefType::FLOAT:
-                return (int)std::get<float>(m_value);
+                return static_cast<int>(std::get<float>(m_value));
             default:
                 return 0;
         }
@@ -188,7 +92,7 @@ class AircraftValue
         {
             case DataRefType::BOOLEAN:
             case DataRefType::INTEGER:
-                return (float)std::get<int>(m_value);
+                return static_cast<float>(std::get<int>(m_value));
             case DataRefType::FLOAT:
                 return std::get<float>(m_value);
             default:
@@ -211,20 +115,21 @@ class AircraftValue
                 return "";
         }
     }
+
+    bool hasValue() const
+    {
+        return m_type != DataRefType::UNKNOWN;
+    }
 };
 
 class AircraftState : public Logger
 {
-    int m_nextIndex = 1;
     std::mutex m_mutex;
-
-    std::map<std::string, std::shared_ptr<AircraftValue>, std::less<>> valuesByName;
-    std::map<int, std::shared_ptr<AircraftValue>> valuesByIndex;
+    std::map<std::string, std::shared_ptr<AircraftValue>, std::less<>> m_valuesByName;
 
  public:
     AircraftState() : Logger("AircraftState") {}
 
-    int getIndex(const std::string& name);
     std::shared_ptr<AircraftValue> getOrCreateValue(const std::string &dataName);
     std::shared_ptr<AircraftValue> getValue(const std::string &dataName);
 
@@ -233,46 +138,6 @@ class AircraftState : public Logger
     bool isSet(const std::string &dataName)
     {
         return getValue(dataName) != nullptr;
-    }
-
-    void set(int idx, bool b)
-    {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        auto it = valuesByIndex.find(idx);
-        if (it != valuesByIndex.end() && it->second)
-        {
-            it->second->set(b);
-        }
-    }
-
-    void set(int idx, int i)
-    {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        auto it = valuesByIndex.find(idx);
-        if (it != valuesByIndex.end() && it->second)
-        {
-            it->second->set(i);
-        }
-    }
-
-    void set(int idx, float f)
-    {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        auto it = valuesByIndex.find(idx);
-        if (it != valuesByIndex.end() && it->second)
-        {
-            it->second->set(f);
-        }
-    }
-
-    void set(int idx, const std::string& str)
-    {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        auto it = valuesByIndex.find(idx);
-        if (it != valuesByIndex.end() && it->second)
-        {
-            it->second->set(str);
-        }
     }
 
     void set(std::string const& name, bool b)

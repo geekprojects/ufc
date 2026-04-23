@@ -14,18 +14,11 @@
 
 #include "utils/logger.h"
 
-
 namespace UFC
 {
 
 class UFCLua;
 
-enum class Result
-{
-    SUCCESS,
-    TIMEOUT,
-    FAIL
-};
 
 class DataSource;
 class Device;

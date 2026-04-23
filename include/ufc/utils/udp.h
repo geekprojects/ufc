@@ -6,14 +6,22 @@
 #define UFC_UDP_H
 
 #include <string>
+#include <memory>
 #include <netinet/in.h>
 
 #include <ufc/utils/data.h>
 #include <ufc/utils/logger.h>
-#include <ufc/flightconnector.h>
 
 namespace UFC
 {
+
+enum class Result
+{
+    SUCCESS,
+    TIMEOUT,
+    FAIL
+};
+
 class UDPSocket : public UFC::Logger
 {
     std::string m_host;
