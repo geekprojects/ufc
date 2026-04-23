@@ -29,24 +29,12 @@ enum class DataRefType
 
 class AircraftValue
 {
-    int m_index = -1;
     DataRefType m_type = DataRefType::UNKNOWN;
     std::variant<std::monostate, int, float, std::string> m_value;
 
  public:
     AircraftValue()
     {
-    }
-
-    explicit AircraftValue(int idx)
-    {
-        m_value = 0;
-        m_index = idx;
-    }
-
-    [[nodiscard]] int getIndex() const
-    {
-        return m_index;
     }
 
     void set(bool b)
@@ -92,7 +80,7 @@ class AircraftValue
             case DataRefType::INTEGER:
                 return std::get<int>(m_value);
             case DataRefType::FLOAT:
-                return (int)std::get<float>(m_value);
+                return static_cast<int>(std::get<float>(m_value));
             default:
                 return 0;
         }
@@ -104,7 +92,7 @@ class AircraftValue
         {
             case DataRefType::BOOLEAN:
             case DataRefType::INTEGER:
-                return (float)std::get<int>(m_value);
+                return static_cast<float>(std::get<int>(m_value));
             case DataRefType::FLOAT:
                 return std::get<float>(m_value);
             default:
@@ -136,16 +124,12 @@ class AircraftValue
 
 class AircraftState : public Logger
 {
-    int m_nextIndex = 1;
     std::mutex m_mutex;
-
-    std::map<std::string, std::shared_ptr<AircraftValue>, std::less<>> valuesByName;
-    std::map<int, std::shared_ptr<AircraftValue>> valuesByIndex;
+    std::map<std::string, std::shared_ptr<AircraftValue>, std::less<>> m_valuesByName;
 
  public:
     AircraftState() : Logger("AircraftState") {}
 
-    int getIndex(const std::string& name);
     std::shared_ptr<AircraftValue> getOrCreateValue(const std::string &dataName);
     std::shared_ptr<AircraftValue> getValue(const std::string &dataName);
 
@@ -154,46 +138,6 @@ class AircraftState : public Logger
     bool isSet(const std::string &dataName)
     {
         return getValue(dataName) != nullptr;
-    }
-
-    void set(int idx, bool b)
-    {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        auto it = valuesByIndex.find(idx);
-        if (it != valuesByIndex.end() && it->second)
-        {
-            it->second->set(b);
-        }
-    }
-
-    void set(int idx, int i)
-    {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        auto it = valuesByIndex.find(idx);
-        if (it != valuesByIndex.end() && it->second)
-        {
-            it->second->set(i);
-        }
-    }
-
-    void set(int idx, float f)
-    {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        auto it = valuesByIndex.find(idx);
-        if (it != valuesByIndex.end() && it->second)
-        {
-            it->second->set(f);
-        }
-    }
-
-    void set(int idx, const std::string& str)
-    {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        auto it = valuesByIndex.find(idx);
-        if (it != valuesByIndex.end() && it->second)
-        {
-            it->second->set(str);
-        }
     }
 
     void set(std::string const& name, bool b)

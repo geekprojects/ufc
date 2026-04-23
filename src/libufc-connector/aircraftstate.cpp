@@ -13,21 +13,11 @@ void AircraftState::init()
     set(DATA_AIRCRAFT_BAROMETER_PILOT_IN_HG, 29.92f);
 }
 
-int AircraftState::getIndex(const std::string &name)
-{
-    auto value = getValue(name);
-    if (value == nullptr)
-    {
-        return -1;
-    }
-    return value->getIndex();
-}
-
 std::shared_ptr<AircraftValue> AircraftState::getValue(const std::string& dataName)
 {
     scoped_lock lock(m_mutex);
-    auto it = valuesByName.find(dataName);
-    if (it != valuesByName.end())
+    auto it = m_valuesByName.find(dataName);
+    if (it != m_valuesByName.end())
     {
         return it->second;
     }
@@ -37,17 +27,14 @@ std::shared_ptr<AircraftValue> AircraftState::getValue(const std::string& dataNa
 std::shared_ptr<AircraftValue> AircraftState::getOrCreateValue(const std::string& dataName)
 {
     scoped_lock lock(m_mutex);
-    auto it = valuesByName.find(dataName);
-    if (it != valuesByName.end())
+    auto it = m_valuesByName.find(dataName);
+    if (it != m_valuesByName.end())
     {
         return it->second;
     }
 
-    int index = m_nextIndex;
-    m_nextIndex++;
-    auto value = std::make_shared<AircraftValue>(index);
-    valuesByName.try_emplace(dataName, value);
-    valuesByIndex.try_emplace(index, value);
+    auto value = std::make_shared<AircraftValue>();
+    m_valuesByName.try_emplace(dataName, value);
 
     return value;
 }
@@ -94,8 +81,8 @@ std::string AircraftState::getString(const std::string &dataName)
 
 void AircraftState::dump()
 {
-    for (const auto&[name, value] : valuesByName)
+    for (const auto&[name, value] : m_valuesByName)
     {
-        log(DEBUG, "dump: %d: %s -> %s", value->getIndex(), name.c_str(), value->getString().c_str());
+        log(DEBUG, "dump: %s -> %s", name.c_str(), value->getString().c_str());
     }
 }
