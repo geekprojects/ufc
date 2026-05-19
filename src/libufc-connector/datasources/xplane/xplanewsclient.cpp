@@ -467,7 +467,7 @@ void XPlaneWebSocketClient::dataRefValues(const string &body, DataRefWebSocketIn
             float v = 0;
             if (value.value().is_array())
             {
-                int index = 0;
+                size_t index = 0;
                 if (dataRef->mapping.dataRefIndex != -1)
                 {
                     index = dataRef->mapping.dataRefIndex;
