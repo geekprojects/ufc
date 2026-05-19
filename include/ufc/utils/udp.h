@@ -42,7 +42,7 @@ public:
         return m_connected;
     }
 
-    Result send(void* buffer, int len);
+    Result send(void* buffer, size_t len);
     Result receive(std::shared_ptr<Data>& data);
 
     void close();

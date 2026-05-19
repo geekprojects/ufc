@@ -20,7 +20,7 @@ struct DataRefWebSocketInfo
     CURL* ws;
     std::string buffer;
     XPlaneWebSocketClient* client;
-    std::map<int64_t, int64_t> dataRefIdx;
+    std::map<int64_t, std::vector<std::shared_ptr<DataDefinition>>> dataRefIdx;
     const std::function<void(std::map<int, float>)>* func;
 };
 
@@ -41,7 +41,8 @@ class XPlaneWebSocketClient : public XPlaneClient
     bool getDataRef(const std::string &dataref, nlohmann::json &valueJson);
 
     static size_t dataRefCallback(char *b, size_t size, size_t nitems, void *p);
-    size_t dataRefValues(std::string body, DataRefWebSocketInfo* info);
+
+    void dataRefValues(const std::string &body, DataRefWebSocketInfo* info);
 
  public:
     explicit XPlaneWebSocketClient();
@@ -60,7 +61,7 @@ class XPlaneWebSocketClient : public XPlaneClient
     Result readInt(const std::string &dataref, int &value) override;
 
     Result streamDataRefs(
-        const std::vector<std::pair<int, std::string>> &datarefs,
+        const std::vector<std::shared_ptr<DataDefinition>> &datarefs,
         const std::function<void(std::map<int, float>)> &,
         int count) override;
 

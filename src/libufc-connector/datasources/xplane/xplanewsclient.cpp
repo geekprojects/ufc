@@ -186,11 +186,18 @@ void XPlaneWebSocketClient::sendMessage(const string &string)
     fprintf(stderr, "XPlaneWebSocketClient::sendMessage: NOT IMPLEMENTED: %s\n", string.c_str());
 }
 
-int64_t XPlaneWebSocketClient::getDataRefId(std::string dataref)
+int64_t XPlaneWebSocketClient::getDataRefId(string dataref)
 {
     if (dataref.empty())
     {
         return -1;
+    }
+
+    auto indexIdx = dataref.find_first_of('[');
+    if (indexIdx != string::npos)
+    {
+        log(DEBUG, "getDataRefId: Stripping index off of %s...", dataref.c_str());
+        dataref = dataref.substr(0, indexIdx);
     }
 
     auto it = m_dataRefIds.find(dataref);
@@ -201,7 +208,7 @@ int64_t XPlaneWebSocketClient::getDataRefId(std::string dataref)
     }
 
     string query = "filter[name]=" + dataref;
-#if 0
+#if 1
     log(DEBUG, "getDataRefId: Querying for %s...", dataref.c_str());
 #endif
 
@@ -230,17 +237,18 @@ int64_t XPlaneWebSocketClient::getDataRefId(std::string dataref)
     int code = response.http_code();
     string content = response.content.as_string_copy();
 
+    int64_t id = -1;
     if (code == 200)
     {
         auto json = json::parse(content);
         auto data= json["data"];
-        for (const auto& datarefJson : data)
+        if (data.is_array() && !data.empty())
         {
+            auto datarefJson = data[0];
             const string& name = datarefJson["name"].get<string>();
-            int64_t id = datarefJson["id"].get<int64_t>();
+            id = datarefJson["id"].get<int64_t>();
             m_dataRefIds[name] = id;
             log(DEBUG, "getDataRefId: %s -> %" PRId64, name.c_str(), id);
-            return id;
         }
     }
     else if (code == 404)
@@ -252,10 +260,10 @@ int64_t XPlaneWebSocketClient::getDataRefId(std::string dataref)
     {
         log(WARN, "getDataRefId: code=%d, content: %s\n", code, content.c_str());
     }
-    return -1;
+    return id;
 }
 
-bool XPlaneWebSocketClient::getDataRef(const std::string &dataref, json& valueJson)
+bool XPlaneWebSocketClient::getDataRef(const string &dataref, json& valueJson)
 {
     auto id = getDataRefId(dataref);
     if (id == -1)
@@ -302,7 +310,7 @@ bool XPlaneWebSocketClient::getDataRef(const std::string &dataref, json& valueJs
     return false;
 }
 
-int64_t XPlaneWebSocketClient::getCommandId(const std::string &command)
+int64_t XPlaneWebSocketClient::getCommandId(const string &command)
 {
     if (command.empty())
     {
@@ -321,12 +329,13 @@ int64_t XPlaneWebSocketClient::getCommandId(const std::string &command)
     log(DEBUG, "getCommandId: Querying for %s...", command.c_str());
 #endif
 
-    string url = m_baseRestUrl + "/commands?" + query;
+    string url = m_baseRestUrl + "/commands";//?" + query;
 #if 0
     log(DEBUG, "getCommandId: Sending request to: %s", url.c_str());
 #endif
     auto request= curly_hpp::request_builder()
         .method(curly_hpp::http_method::GET)
+        .qparam("filter[name]", command)
         .url(url)
         .header("Accept", "application/json, text/plain, */*")
         .send();
@@ -347,17 +356,18 @@ int64_t XPlaneWebSocketClient::getCommandId(const std::string &command)
     string content = response.content.as_string_copy();
     log(DEBUG, "getCommandId: content: %s\n", content.c_str());
 
+    int64_t id = -1;
     if (code == 200)
     {
         auto json = json::parse(content);
         auto data= json["data"];
-        for (const auto& commandJson : data)
+        if (data.is_array() && !data.empty())
         {
+            auto commandJson = data[0];
             const string& name = commandJson["name"].get<string>();
-            int64_t id = commandJson["id"].get<int64_t>();
+            id = commandJson["id"].get<int64_t>();
             m_commandIds[name] = id;
             log(DEBUG, "getCommandId: Got: %s -> %" PRId64 , name.c_str(), id);
-            return id;
         }
     }
     else if (code == 404)
@@ -368,20 +378,20 @@ int64_t XPlaneWebSocketClient::getCommandId(const std::string &command)
     {
         log(WARN, "getCommandId: Failed to get command %s: code=%d, content: %s\n", command.c_str(), code, content.c_str());
     }
-    return -1;
+    return id;
 }
 
 struct read_ctx
 {
-    CURL* webSocket;
+    CURL* webSocket = nullptr;
     string payload;
-    size_t payloadLength;
+    size_t payloadLength = 0;
     size_t bytesSent = 0;
 };
 
 static size_t read_cb(char *buf, size_t nitems, size_t buflen, void *p)
 {
-    read_ctx* ctx = static_cast<read_ctx*>(p);
+    auto ctx = static_cast<read_ctx*>(p);
     size_t len = nitems * buflen;
     size_t left = ctx->payloadLength - ctx->bytesSent;
 
@@ -410,14 +420,13 @@ static size_t read_cb(char *buf, size_t nitems, size_t buflen, void *p)
     return 0;
 }
 
-size_t XPlaneWebSocketClient::dataRefCallback(char *b, size_t size, size_t nitems, void *p)
+size_t XPlaneWebSocketClient::dataRefCallback(char* b, size_t size, size_t nitems, void *p)
 {
     auto blen = nitems * size;
-
-    DataRefWebSocketInfo* data = static_cast<DataRefWebSocketInfo*>(p);
+    auto data = static_cast<DataRefWebSocketInfo*>(p);
     auto meta = curl_ws_meta(data->ws);
 
-    string payload = string(b, blen);
+    auto payload = string(b, blen);
     data->buffer += payload;
 
     if (meta == nullptr || !(meta->flags & CURLWS_CONT))
@@ -429,7 +438,7 @@ size_t XPlaneWebSocketClient::dataRefCallback(char *b, size_t size, size_t nitem
     return blen;
 }
 
-size_t XPlaneWebSocketClient::dataRefValues(std::string body, DataRefWebSocketInfo* dataRefWebSocketData)
+void XPlaneWebSocketClient::dataRefValues(const string &body, DataRefWebSocketInfo* dataRefWebSocketData)
 {
     json dataRefValuesJson;
     try
@@ -440,50 +449,78 @@ size_t XPlaneWebSocketClient::dataRefValues(std::string body, DataRefWebSocketIn
     {
         log(ERROR, "dataRefValues: Failed to parse JSON: %s", e.what());
         log(ERROR, "dataRefValues: Received: %s", body.c_str());
-        return 0;
+        return;
     }
+#if 0
+    log(INFO, "dataRefValues: Received: %s", body.c_str());
+#endif
 
     json data = dataRefValuesJson["data"];
     map<int, float> values;
-    for (auto value : data.items())
+    for (auto const& value : data.items())
     {
         int64_t id = atoll(value.key().c_str());
-        float v = value.value().get<float>();
-        int idx = dataRefWebSocketData->dataRefIdx.at(id);
+        auto dataRefs = dataRefWebSocketData->dataRefIdx.at(id);
+
+        for (const auto& dataRef : dataRefs)
+        {
+            float v = 0;
+            if (value.value().is_array())
+            {
+                int index = 0;
+                if (dataRef->mapping.dataRefIndex != -1)
+                {
+                    index = dataRef->mapping.dataRefIndex;
+                }
+                if (index < value.value().size())
+                {
+                    v = value.value().at(index).get<float>();
+                }
+            }
+            else
+            {
+                v = value.value().get<float>();
+            }
 
 #if 0
-        log(DEBUG, "dataRefValues: %llu = %d = %f", id, idx, v);
+            log(DEBUG, "dataRefValues: %llu = %s = %s = %f", id, dataRef->id.c_str(), dataRef->mapping.dataRef.c_str(), v);
 #endif
-        values.insert(make_pair(idx, v));
+            values.insert(make_pair(dataRef->idx, v));
+        }
     }
     dataRefWebSocketData->func->operator()(values);
-    return 0;
 }
 
 Result XPlaneWebSocketClient::streamDataRefs(
-    const vector<pair<int, string>>& dataRefs,
+    const vector<shared_ptr<DataDefinition>>& dataRefs,
     const function<void(map<int, float>)>& func,
     int count)
 {
-    map<int, int64_t> dataRefIds;
     json dataRefsJson;
     bool hasDataRef = false;
-    DataRefWebSocketInfo* dataRefWebSocketData = new DataRefWebSocketInfo();
+    auto dataRefWebSocketData = new DataRefWebSocketInfo();
     dataRefWebSocketData->client = this;
-    dataRefWebSocketData->func = new function<void(map<int, float>)>(func);
-    for (const auto& [idx, dataref] : dataRefs)
+    dataRefWebSocketData->func = new function(func);
+    for (const auto& dataref : dataRefs)
     {
-        int64_t id = getDataRefId(dataref);
+        int64_t id = getDataRefId(dataref->mapping.dataRef);
         if (id != -1)
         {
-            dataRefIds.emplace(idx, id);
             json dataRefJson;
             dataRefJson["id"] = id;
             dataRefsJson.push_back(dataRefJson);
-            dataRefWebSocketData->dataRefIdx[id] = idx;
+
+            dataRefWebSocketData->dataRefIdx[id].push_back(dataref);
             hasDataRef = true;
        }
     }
+
+#if 0
+    for (auto const& i : dataRefWebSocketData->dataRefIdx)
+    {
+        log(DEBUG, "streamDataRefs: dataRef: %llu: %d", i.first, i.second.size());
+    }
+#endif
 
     if (!hasDataRef)
     {
@@ -491,7 +528,7 @@ Result XPlaneWebSocketClient::streamDataRefs(
         return Result::FAIL;
     }
 
-    log(DEBUG, "streamDataRefs: Getting ids for %d datarefs", dataRefIds.size());
+    log(DEBUG, "streamDataRefs: Getting ids for %d datarefs", dataRefWebSocketData->dataRefIdx.size());
 
     json paramsJson;
     paramsJson["datarefs"] = dataRefsJson;

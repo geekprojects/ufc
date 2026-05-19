@@ -31,7 +31,7 @@ UDPSocket::~UDPSocket()
     close();
 }
 
-Result UDPSocket::send(void* buffer, int len)
+Result UDPSocket::send(void* buffer, size_t len)
 {
     ssize_t result = sendto(m_socket, buffer, len, 0, (const struct sockaddr*)&m_serverAddr, sizeof(m_serverAddr));
     if (result < 0)

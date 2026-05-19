@@ -444,7 +444,7 @@ int USBHIDConfigDevice::getValue(shared_ptr<AircraftState> state, const Field &f
 {
     if (field.valueType == FieldValueType::LUA)
     {
-        return m_lua->execute(field.lua, "value", 0.0f);
+        return m_lua->execute("usbhid-" + field.dataRef, field.lua, "value", 0.0f);
     }
     if (field.valueType == FieldValueType::VALUE)
     {

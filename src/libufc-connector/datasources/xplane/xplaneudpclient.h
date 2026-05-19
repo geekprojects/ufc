@@ -15,23 +15,6 @@
 
 namespace UFC
 {
-struct Position
-{
-    double dat_lon = 0.0;		// longitude of the aircraft in X-Plane of course, in degrees
-    double dat_lat = 0.0;		// latitude
-    double dat_ele = 0.0;		// elevation above sea level in meters
-    float y_agl_mtr = 0.0;	// elevation above the terrain in meters
-    float veh_the_loc = 0.0;	// pitch, degrees
-    float veh_psi_loc = 0.0;	// true heading, in degrees
-    float veh_phi_loc = 0.0;	// roll, in degrees
-    float vx_wrl = 0.0;		// speed in the x, EAST, direction, in meters per second
-    float vy_wrl = 0.0;		// speed in the y, UP, direction, in meters per second
-    float vz_wrl = 0.0;		// speed in the z, SOUTH, direction, in meters per second
-    float Prad = 0.0;			// roll rate in radians per second
-    float Qrad = 0.0;			// pitch rate in radians per second
-    float Rrad = 0.0;			// yah rate in radians per second
-};
-
 struct XPlaneAlertMessage
 {
     char header[5];
@@ -47,11 +30,15 @@ class XPlaneUDPClient : public XPlaneClient
     int m_port;
     std::shared_ptr<UDPSocket> m_dataSocket;
 
-    std::shared_ptr<UDPSocket> createConnection() const;
+    [[nodiscard]] std::shared_ptr<UDPSocket> createConnection() const;
 
-    Result sendRREF(const std::shared_ptr<UDPSocket> &socket, std::vector<std::pair<int, std::string>> datarefs, int freq);
+    static Result sendRREF(const std::shared_ptr<UDPSocket> &socket, std::vector<std::shared_ptr<DataDefinition>> datarefs, int freq);
 
-    Result streamDataRefs(std::shared_ptr<UDPSocket> socket, const std::vector<std::pair<int, std::string>> &datarefs, const std::function<void(std::map<int, float>)> &, int count = 0);
+    Result streamDataRefsInternal(
+        const std::shared_ptr<UDPSocket> &socket,
+        const std::vector<std::shared_ptr<DataDefinition>> &datarefs,
+        const std::function<void(std::map<int, float>)>& func,
+        int count);
 
  public:
     XPlaneUDPClient();
@@ -61,9 +48,7 @@ class XPlaneUDPClient : public XPlaneClient
 
     Result connect() override;
     void disconnect() override;
-    bool isConnected() const override { return m_dataSocket->isConnected(); }
-
-    Result getPosition(Position& position);
+    [[nodiscard]] bool isConnected() const override { return m_dataSocket->isConnected(); }
 
     Result readString(const std::string &dataref, int len, std::string& value) override;
     Result read(const std::string& dataref, float& returnValue) override;
@@ -79,7 +64,10 @@ class XPlaneUDPClient : public XPlaneClient
         return Result::SUCCESS;
     }
 
-    Result streamDataRefs(const std::vector<std::pair<int, std::string>> &datarefs, const std::function<void(std::map<int, float>)> &, int count = 0) override;
+    Result streamDataRefs(
+        const std::vector<std::shared_ptr<DataDefinition>> &datarefs,
+        const std::function<void(std::map<int, float>)> &,
+        int count) override;
 
     Result sendCommand(const std::string &command) override;
 

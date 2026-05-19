@@ -178,6 +178,22 @@ void AircraftMapping::parseDataDefinition(const string& parent, YAML::Node node)
 
 }
 
+static void addDataRefIndex(const string& id, DataMapping& dataMapping)
+{
+    auto idx = id.find_last_of('[');
+    if (idx != string::npos)
+    {
+        dataMapping.dataRef = id.substr(0, idx);
+        auto arrayIdx = id.substr(idx + 1);
+        dataMapping.dataRefIndex = atoi(arrayIdx.c_str());
+    }
+    else
+    {
+        dataMapping.dataRef = id;
+        dataMapping.dataRefIndex = -1;
+    }
+}
+
 void AircraftMapping::addDataDefinition(const string& id, YAML::Node definitionNode)
 {
     shared_ptr<DataDefinition> dataRef;
@@ -191,6 +207,7 @@ void AircraftMapping::addDataDefinition(const string& id, YAML::Node definitionN
     {
         dataRef = make_shared<DataDefinition>();
         dataRef->id = id;
+        dataRef->idx = static_cast<int>(m_dataRefs.size()) + 1;
         m_dataRefsById.try_emplace(id, dataRef);
         m_dataRefs.push_back(dataRef);
     }
@@ -199,7 +216,7 @@ void AircraftMapping::addDataDefinition(const string& id, YAML::Node definitionN
     {
         auto dataRefNode = definitionNode["dataRef"].as<string>();
         auto lua = definitionNode["lua"].as<string>();
-        dataRef->mapping.dataRef = dataRefNode;
+        addDataRefIndex(dataRefNode, dataRef->mapping);
         dataRef->mapping.luaScript = lua;
         log(DEBUG, "addDataDefinition: %s -> %s (With lua script)", id.c_str(), dataRefNode.c_str());
     }
@@ -292,11 +309,11 @@ DataMapping AircraftMapping::parseMapping(std::string mappingStr)
         }
     }
 
-    mapping.dataRef = mappingParts.at(0);
+    addDataRefIndex(mappingParts.at(0), mapping);
     if (mapping.dataRef.at(0) == '!')
     {
         mapping.type = DataMappingType::NEGATE;
-        mapping.dataRef = mappingStr.substr(1);
+        addDataRefIndex(mapping.dataRef.substr(1), mapping);
         log(DEBUG, "parseMapping: NEGATE: %s", mapping.dataRef.c_str());
     }
 

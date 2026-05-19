@@ -115,10 +115,9 @@ bool XPlaneDataSource::isConnected()
 
 bool XPlaneDataSource::update()
 {
-    vector<pair<int, string>> datarefs;
+    vector<shared_ptr<DataDefinition>> datarefs;
 
     auto state = getFlightConnector()->getState();
-    int idx = 1;
     for (const auto& dataRef : getMapping().getDataRefs())
     {
         if (dataRef->mapping.type == DataMappingType::STATIC)
@@ -129,16 +128,15 @@ bool XPlaneDataSource::update()
             dataRef->mapping.dataRef != "null")
         {
             dataRef->value = state->getOrCreateValue(dataRef->id);
-            log(DEBUG, "update: %s idx=%d", dataRef->id.c_str(), idx);
-            datarefs.emplace_back(idx, dataRef->mapping.dataRef);
+            log(DEBUG, "update: %s idx=%d", dataRef->id.c_str(), dataRef->idx);
+            datarefs.push_back(dataRef);
         }
-        idx++;
     }
 
     auto res = m_client->streamDataRefs(datarefs, [this](map<int, float> const& values)
     {
         update(values);
-    });
+    }, 0);
 
     return res == Result::SUCCESS;
 }
@@ -154,13 +152,13 @@ void XPlaneDataSource::update(const map<int, float>& values)
         {
             continue;
         }
-#if 0
-        log(DEBUG, "update: %d -> %f", idx, value);
-#endif
 
         const auto& dataRef = getMapping().getDataRefs()[idx - 1];
 
         auto v = transformData(dataRef, value);
+#if 0
+        log(DEBUG, "update: %s -> %f -> %f", dataRef->id.c_str(), value, v);
+#endif
         switch (dataRef->type)
         {
             case DataRefType::FLOAT:

@@ -36,6 +36,7 @@ struct DataMapping
     DataMappingType type = DataMappingType::VALUE;
     int32_t operand = 0;
     std::string dataRef;
+    int dataRefIndex = -1;
     std::string luaScript;
     UFC::AircraftValue value;
 };

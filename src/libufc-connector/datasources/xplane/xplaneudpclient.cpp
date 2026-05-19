@@ -35,7 +35,7 @@ Result XPlaneUDPClient::connect()
     return Result::SUCCESS;
 }
 
-std::shared_ptr<UDPSocket> XPlaneUDPClient::createConnection() const
+shared_ptr<UDPSocket> XPlaneUDPClient::createConnection() const
 {
     return UDPSocket::connect(m_host, m_port);
 }
@@ -48,69 +48,18 @@ void XPlaneUDPClient::disconnect()
     }
 }
 
-Result XPlaneUDPClient::getPosition(Position& position)
-{
-    char buffer[8] = "RPOS\001\0";
-
-    auto res = m_dataSocket->send(buffer, 8);
-    if (res != Result::SUCCESS)
-    {
-        return res;
-    }
-
-    shared_ptr<Data> data;
-    res = m_dataSocket->receive(data);
-    if (res != Result::SUCCESS)
-    {
-        return res;
-    }
-    if (data->getLength() < sizeof(Position))
-    {
-        log(ERROR, "getPosition: not received enough data!");
-        return Result::FAIL;
-    }
-
-    // Turn off updates
-    buffer[6] = '0';
-    res = m_dataSocket->send(buffer, 8);
-    if (res != Result::SUCCESS)
-    {
-        return res;
-    }
-
-    data->readString(4);
-    data->skip(1);
-
-    //Lat, Lon, Alt, Pitch, Roll, Yaw, Gear
-    position.dat_lon = data->readDouble();
-    position.dat_lat = data->readDouble();
-    position.dat_ele = data->readDouble();
-    position.y_agl_mtr = data->readFloat();
-    position.veh_the_loc = data->readFloat();
-    position.veh_psi_loc = data->readFloat();
-    position.veh_phi_loc = data->readFloat();
-    position.vx_wrl = data->readFloat();
-    position.vy_wrl = data->readFloat();
-    position.vz_wrl = data->readFloat();
-    position.Prad = data->readFloat();
-    position.Qrad = data->readFloat();
-    position.Rrad = data->readFloat();
-
-    return Result::SUCCESS;
-}
-
 struct dref_struct_in
 {
     char header[4] = {};
-    uint8_t pad = 0;
+    [[maybe_unused]] uint8_t pad = 0;
     uint32_t dref_freq = 0;
     uint32_t dref_sender_index = 0;	// the index the customer is using to define this dataref
     char dref_string[400] = {};
 } __attribute__((packed));
 
 Result XPlaneUDPClient::streamDataRefs(
-    const std::vector<std::pair<int, std::string>>& datarefs,
-    const std::function<void(std::map<int, float>)>& callback,
+    const vector<shared_ptr<DataDefinition>>& datarefs,
+    const function<void(map<int, float>)>& callback,
     int count)
 {
     auto streamSocket = createConnection();
@@ -119,12 +68,12 @@ Result XPlaneUDPClient::streamDataRefs(
         return Result::FAIL;
     }
 
-    return streamDataRefs(streamSocket, datarefs, callback, count);
+    return streamDataRefsInternal(streamSocket, datarefs, callback, count);
 }
 
-Result XPlaneUDPClient::streamDataRefs(
-    std::shared_ptr<UDPSocket> socket,
-    const vector<pair<int, string>>& datarefs,
+Result XPlaneUDPClient::streamDataRefsInternal(
+    const shared_ptr<UDPSocket>& socket,
+    const vector<shared_ptr<DataDefinition>>& datarefs,
     const function<void(map<int, float>)>& callback,
     const int count)
 {
@@ -160,7 +109,7 @@ Result XPlaneUDPClient::streamDataRefs(
         map<int, float> values;
         while (!packet->eof())
         {
-            int idx = (int)packet->read32();
+            auto idx = static_cast<int>(packet->read32());
             float value = packet->readFloat();
             values.insert(make_pair(idx, value));
         }
@@ -173,7 +122,10 @@ Result XPlaneUDPClient::streamDataRefs(
     return result;
 }
 
-Result XPlaneUDPClient::sendRREF(const std::shared_ptr<UDPSocket> &socket, std::vector<std::pair<int, std::string>> datarefs, int freq)
+Result XPlaneUDPClient::sendRREF(
+    const shared_ptr<UDPSocket> &socket,
+    vector<shared_ptr<DataDefinition>> datarefs,
+    int freq)
 {
     for (unsigned int i = 0; i < datarefs.size(); i += 100)
     {
@@ -184,11 +136,15 @@ Result XPlaneUDPClient::sendRREF(const std::shared_ptr<UDPSocket> &socket, std::
             const auto rref = "RREF";
             memcpy(drefRequest.header, rref, 4);
 
-            const int idx = datarefs[i + j].first;
-            string dataref = datarefs[i + j].second;
+            const auto& dataref = datarefs[i + j];
             drefRequest.dref_freq = freq;
-            drefRequest.dref_sender_index = idx;
-            strncpy(drefRequest.dref_string, dataref.c_str(), 399);
+            drefRequest.dref_sender_index = dataref->idx;
+            string dataRefName = dataref->mapping.dataRef;
+            if (dataref->mapping.dataRefIndex != -1)
+            {
+                dataRefName += "[" + to_string(dataref->mapping.dataRefIndex) + "]";
+            }
+            strncpy(drefRequest.dref_string, dataRefName.c_str(), 399);
             drefRequest.dref_string[399] = 0;
             auto res = socket->send(&drefRequest, sizeof(drefRequest));
             if (res != Result::SUCCESS)
@@ -200,9 +156,9 @@ Result XPlaneUDPClient::sendRREF(const std::shared_ptr<UDPSocket> &socket, std::
     return Result::SUCCESS;
 }
 
-Result XPlaneUDPClient::sendCommand(const std::string& command)
+Result XPlaneUDPClient::sendCommand(const string& command)
 {
-    const int len = 5 + command.length();
+    const auto len = command.length() + 5;
     char buffer[len];
     const auto cmnd = "CMND\00";
     memcpy(buffer, cmnd, 5);
@@ -210,7 +166,7 @@ Result XPlaneUDPClient::sendCommand(const std::string& command)
     return m_dataSocket->send(buffer, len);
 }
 
-Result XPlaneUDPClient::setDataRef(const std::string& dataRef, float value)
+Result XPlaneUDPClient::setDataRef(const string& dataRef, float value)
 {
     int len = 5 + 4 + 500;
     char buffer[len];
@@ -224,17 +180,20 @@ Result XPlaneUDPClient::setDataRef(const std::string& dataRef, float value)
 
 #define READ_OFFSET 10000
 
-Result XPlaneUDPClient::readString(const std::string& dataref, int len, string& value)
+Result XPlaneUDPClient::readString(const string& dataref, int len, string& value)
 {
-    vector<pair<int, string>> datarefs;
+    vector<shared_ptr<DataDefinition>> datarefs;
     for (int i = 0; i < len; i++)
     {
-        datarefs.emplace_back(i + READ_OFFSET, dataref + "[" + to_string(i) + "]");
+        auto datadef = make_shared<DataDefinition>();
+        datadef->idx = i + READ_OFFSET;
+        datadef->mapping.dataRef = dataref + "[" + to_string(i) + "]";
+        datarefs.push_back(datadef);
     }
 
     char buffer[len + 1];
     memset(buffer, 0, len + 1);
-    auto res = streamDataRefs(m_dataSocket, datarefs, [&buffer, &len](map<int, float> const& values)
+    auto res = streamDataRefsInternal(m_dataSocket, datarefs, [&buffer, &len](map<int, float> const& values)
     {
         for (const auto& [idx, v] : values)
         {
@@ -258,12 +217,15 @@ Result XPlaneUDPClient::readString(const std::string& dataref, int len, string& 
     return res;
 }
 
-Result XPlaneUDPClient::read(const std::string& dataref, float& returnValue)
+Result XPlaneUDPClient::read(const string& dataref, float& returnValue)
 {
-    vector<pair<int, string>> datarefs;
-    datarefs.emplace_back(0, dataref);
+    vector<shared_ptr<DataDefinition>> datarefs;
+    auto datadef = make_shared<DataDefinition>();
+    datadef->idx = 1;
+    datadef->mapping.dataRef = dataref;
+    datarefs.push_back(datadef);
 
-    return streamDataRefs(m_dataSocket, datarefs, [&returnValue](map<int, float> const& values)
+    return streamDataRefsInternal(m_dataSocket, datarefs, [&returnValue](map<int, float> const& values)
     {
         for (const auto& [idx, value] : values)
         {
@@ -272,8 +234,7 @@ Result XPlaneUDPClient::read(const std::string& dataref, float& returnValue)
     }, 1);
 }
 
-
-void XPlaneUDPClient::sendMessage(const std::string& string)
+void XPlaneUDPClient::sendMessage(const string& string)
 {
     XPlaneAlertMessage message;
 
@@ -281,6 +242,9 @@ void XPlaneUDPClient::sendMessage(const std::string& string)
     memcpy(message.header, alrt, 4);
     message.header[4] = 0;
     strcpy(message.message1, string.c_str());
+    message.message2[0] = 0;
+    message.message3[0] = 0;
+    message.message4[0] = 0;
     m_dataSocket->send(&message, sizeof(message));
 }
 

@@ -81,14 +81,14 @@ void UFCLua::execute(std::string str)
     m_lua.CompileStringAndRun(str);
 }
 
-float UFCLua::execute(const std::string &str, std::string variable, float value)
+float UFCLua::execute(const std::string& name, const std::string &str, std::string variable, float value)
 {
-    m_lua.CompileString("ufcexec", str);
+    m_lua.CompileString(name, str);
 
     auto luaValue = make_shared<LuaTNumber>(value);
     LuaEnvironment env;
     env[variable] = luaValue;
-    m_lua.RunWithEnvironment("ufcexec", env);
+    m_lua.RunWithEnvironment(name, env);
 
     return luaValue->getValue();
 }

@@ -50,7 +50,7 @@ class UFCLua
     bool init();
     void execute(std::string str);
 
-    float execute(const std::string &str, std::string variable, float value);
+    float execute(const std::string& name, const std::string &str, std::string variable, float value);
 };
 
 }

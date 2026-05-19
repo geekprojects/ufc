@@ -5,12 +5,10 @@
 #ifndef UFC_XPLANECLIENT_H
 #define UFC_XPLANECLIENT_H
 
-#include "ufc/utils/data.h"
 #include "ufc/flightconnector.h"
+#include "ufc/utils/udp.h"
 
 #include <memory>
-
-#include "ufc/utils/udp.h"
 
 namespace UFC
 {
@@ -19,7 +17,7 @@ class XPlaneClient : protected Logger
     static std::vector<XPlaneClient*> g_clients;
 
  public:
-    explicit XPlaneClient(std::string name) : Logger(name)
+    explicit XPlaneClient(const std::string &name) : Logger(name)
     {
         g_clients.push_back(this);
     }
@@ -41,7 +39,16 @@ class XPlaneClient : protected Logger
     virtual Result readString(const std::string &dataref, int len, std::string& value) = 0;
     virtual Result read(const std::string& dataref, float& returnValue) = 0;
     virtual Result readInt(const std::string& dataref, int& value) = 0;
-    virtual Result streamDataRefs(const std::vector<std::pair<int, std::string>> &datarefs, const std::function<void(std::map<int, float>)> &, int count = 0) = 0;
+    virtual Result streamDataRefs(
+        const std::vector<std::shared_ptr<DataDefinition>> &datarefs,
+        const std::function<void(std::map<int, float>)>& func,
+        int count) = 0;
+    Result streamDataRefs(
+        const std::vector<std::shared_ptr<DataDefinition>> &datarefs,
+        const std::function<void(std::map<int, float>)>& func)
+    {
+        return streamDataRefs(datarefs, func, 0);
+    }
 
     virtual Result sendCommand(const std::string &command) = 0;
 

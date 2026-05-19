@@ -2,11 +2,11 @@
 // Created by Ian Parker on 14/10/2024.
 //
 
-#include <ufc/datasource.h>
-
-#include "../../../include/ufc/utils/utils.h"
-#include "../lua.h"
+#include "ufc/datasource.h"
+#include "ufc/utils/utils.h"
 #include "ufc/flightconnector.h"
+
+#include "../lua.h"
 
 using namespace std;
 using namespace UFC;
@@ -49,7 +49,7 @@ void DataSource::command(const std::string& commandName)
         {
             string dataref = StringUtils::trim(commandStr.substr(0, idx));
             string valueStr = StringUtils::trim(commandStr.substr(idx + 1));
-            auto value = (float)atof(valueStr.c_str());
+            auto value = static_cast<float>(atof(valueStr.c_str()));
 #if 0
             log(INFO, "command: Setting data ref: %s = %0.2f", dataref.c_str(), value);
 #endif
@@ -84,7 +84,7 @@ int DataSource::transformData(const std::shared_ptr<DataDefinition> &dataRef, in
     if (!dataRef->mapping.luaScript.empty())
     {
         //log(DEBUG, "transformData: Calling LUA script:\n%s", dataRef->mapping.luaScript.c_str());
-        value = (int)m_dataLua->execute(dataRef->mapping.luaScript, "value", (float)value);
+        value = (int)m_dataLua->execute(dataRef->id, dataRef->mapping.luaScript, "value", (float)value);
     }
     return value;
 }
@@ -93,8 +93,10 @@ float DataSource::transformData(const shared_ptr<DataDefinition>& dataRef, float
 {
     if (!dataRef->mapping.luaScript.empty())
     {
-        //log(DEBUG, "transformData: Calling LUA script:\n%s", dataRef->mapping.luaScript.c_str());
-        value = m_dataLua->execute(dataRef->mapping.luaScript, "value", value);
+#if 0
+        printf("transformData: Calling LUA script:\n%s\n", dataRef->mapping.luaScript.c_str());
+#endif
+        value = m_dataLua->execute(dataRef->id, dataRef->mapping.luaScript, "value", value);
     }
     return value;
 }
