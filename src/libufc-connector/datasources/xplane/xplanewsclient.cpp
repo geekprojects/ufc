@@ -55,7 +55,7 @@ Result XPlaneWebSocketClient::readString(const string &dataref, int len, string 
 
     string value64 = valueJson.get<string>();
 
-#if 0
+#ifdef DEBUG_XPLANE_WS
     log(DEBUG, "readString: %s = Base64: %s", dataref.c_str(), value64.c_str());
 #endif
 
@@ -151,7 +151,7 @@ Result XPlaneWebSocketClient::sendCommand(const string &command)
     bodyJson["duration"] = 0;
 
     string url = m_baseRestUrl + "/command/" + to_string(id) + "/activate";
-#if 0
+#ifdef DEBUG_XPLANE_WS
     log(DEBUG, "sendCommand: Sending request to: %s", url.c_str());
 #endif
     auto request= curly_hpp::request_builder()
@@ -198,24 +198,28 @@ int64_t XPlaneWebSocketClient::getDataRefId(string dataref)
     auto indexIdx = dataref.find_first_of('[');
     if (indexIdx != string::npos)
     {
+#ifdef DEBUG_XPLANE_WS
         log(DEBUG, "getDataRefId: Stripping index off of %s...", dataref.c_str());
+#endif
         dataref = dataref.substr(0, indexIdx);
     }
 
     auto it = m_dataRefIds.find(dataref);
     if (it != m_dataRefIds.end())
     {
-        log(DEBUG, "getDataRefIds: Got: %s -> %d", dataref.c_str(), it->second);
+#ifdef DEBUG_XPLANE_WS
+        log(DEBUG, "getDataRefIds: Got: %s -> %" PRId64, dataref.c_str(), it->second);
+#endif
         return it->second;
     }
 
     string query = "filter[name]=" + dataref;
-#if 1
+#ifdef DEBUG_XPLANE_WS
     log(DEBUG, "getDataRefId: Querying for %s...", dataref.c_str());
 #endif
 
     string url = m_baseRestUrl + "/datarefs?" + query;
-#if 0
+#ifdef DEBUG_XPLANE_WS
     log(DEBUG, "getDataRefIds: Sending request to: %s", url.c_str());
 #endif
 
@@ -250,7 +254,9 @@ int64_t XPlaneWebSocketClient::getDataRefId(string dataref)
             const string& name = datarefJson["name"].get<string>();
             id = datarefJson["id"].get<int64_t>();
             m_dataRefIds[name] = id;
+#ifdef DEBUG_XPLANE_WS
             log(DEBUG, "getDataRefId: %s -> %" PRId64, name.c_str(), id);
+#endif
         }
     }
     else if (code == 404)
@@ -260,7 +266,7 @@ int64_t XPlaneWebSocketClient::getDataRefId(string dataref)
     }
     else
     {
-        log(WARN, "getDataRefId: code=%d, content: %s\n", code, content.c_str());
+        log(WARN, "getDataRefId: Unexpected code=%d, content: %s\n", code, content.c_str());
     }
     return id;
 }
@@ -274,7 +280,7 @@ bool XPlaneWebSocketClient::getDataRef(const string &dataref, json& valueJson)
     }
 
     string url = m_baseRestUrl + "/datarefs/" + to_string(id) + "/value";
-#if 0
+#ifdef DEBUG_XPLANE_WS
     log(DEBUG, "getDataRef: Sending request to: %s", url.c_str());
 #endif
 
@@ -322,17 +328,19 @@ int64_t XPlaneWebSocketClient::getCommandId(const string &command)
     auto it = m_commandIds.find(command);
     if (it != m_commandIds.end())
     {
-        log(DEBUG, "getCommandIds: Got: %s -> %d", command.c_str(), it->second);
+#ifdef DEBUG_XPLANE_WS
+        log(DEBUG, "getCommandIds: Got: %s -> %" PRId64, command.c_str(), it->second);
+#endif
         return it->second;
     }
 
     string query = "filter[name]=" + command;
-#if 0
+#ifdef DEBUG_XPLANE_WS
     log(DEBUG, "getCommandId: Querying for %s...", command.c_str());
 #endif
 
     string url = m_baseRestUrl + "/commands";//?" + query;
-#if 0
+#ifdef DEBUG_XPLANE_WS
     log(DEBUG, "getCommandId: Sending request to: %s", url.c_str());
 #endif
     auto request= curly_hpp::request_builder()
@@ -354,9 +362,13 @@ int64_t XPlaneWebSocketClient::getCommandId(const string &command)
     }
 
     int code = response.http_code();
+#ifdef DEBUG_XPLANE_WS
     log(DEBUG, "getCommandId: Got response: code=%d", code);
+#endif
     string content = response.content.as_string_copy();
+#ifdef DEBUG_XPLANE_WS
     log(DEBUG, "getCommandId: content: %s\n", content.c_str());
+#endif
 
     int64_t id = -1;
     if (code == 200)
@@ -369,7 +381,9 @@ int64_t XPlaneWebSocketClient::getCommandId(const string &command)
             const string& name = commandJson["name"].get<string>();
             id = commandJson["id"].get<int64_t>();
             m_commandIds[name] = id;
+#ifdef DEBUG_XPLANE_WS
             log(DEBUG, "getCommandId: Got: %s -> %" PRId64 , name.c_str(), id);
+#endif
         }
     }
     else if (code == 404)
@@ -453,7 +467,7 @@ void XPlaneWebSocketClient::dataRefValues(const string &body, DataRefWebSocketIn
         log(ERROR, "dataRefValues: Received: %s", body.c_str());
         return;
     }
-#if 0
+#ifdef DEBUG_XPLANE_WS
     log(INFO, "dataRefValues: Received: %s", body.c_str());
 #endif
 
@@ -484,7 +498,7 @@ void XPlaneWebSocketClient::dataRefValues(const string &body, DataRefWebSocketIn
                 v = value.value().get<float>();
             }
 
-#if 0
+#ifdef DEBUG_XPLANE_WS
             log(DEBUG, "dataRefValues: %llu = %s = %s = %f", id, dataRef->id.c_str(), dataRef->mapping.dataRef.c_str(), v);
 #endif
             values.insert(make_pair(dataRef->idx, v));
@@ -517,7 +531,7 @@ Result XPlaneWebSocketClient::streamDataRefs(
        }
     }
 
-#if 0
+#ifdef DEBUG_XPLANE_WS
     for (auto const& i : dataRefWebSocketData->dataRefIdx)
     {
         log(DEBUG, "streamDataRefs: dataRef: %llu: %d", i.first, i.second.size());
@@ -530,8 +544,6 @@ Result XPlaneWebSocketClient::streamDataRefs(
         return Result::FAIL;
     }
 
-    log(DEBUG, "streamDataRefs: Getting ids for %d datarefs", dataRefWebSocketData->dataRefIdx.size());
-
     json paramsJson;
     paramsJson["datarefs"] = dataRefsJson;
 
@@ -540,9 +552,13 @@ Result XPlaneWebSocketClient::streamDataRefs(
     requestJson["type"] = "dataref_subscribe_values";
     requestJson["params"] = paramsJson;
 
+#ifdef DEBUG_XPLANE_WS
     log(DEBUG, "streamDataRefs: Sending request: %s", requestJson.dump().c_str());
+#endif
     string url = m_baseWebSocketUrl;
+#ifdef DEBUG_XPLANE_WS
     log(DEBUG, "streamDataRefs: Sending request to: %s", url.c_str());
+#endif
 
     // curly_hpp doesn't support Web Sockets :-(
     CURL* webSocket = curl_easy_init();
@@ -572,7 +588,9 @@ Result XPlaneWebSocketClient::streamDataRefs(
     curl_easy_setopt(webSocket, CURLOPT_UPLOAD, 1L);
 
     CURLcode curlResult = curl_easy_perform(webSocket);
+#ifdef DEBUG_XPLANE_WS
     log(INFO, "streamDataRefs: perform result=%d", curlResult);
+#endif
 
     Result result = Result::SUCCESS;
     if (curlResult != CURLE_OK)
@@ -589,7 +607,9 @@ Result XPlaneWebSocketClient::streamDataRefs(
     }
 
     delete dataRefWebSocketData;
+#ifdef DEBUG_XPLANE_WS
     log(INFO, "streamDataRefs: Finished!");
+#endif
 
     return result;
 }
