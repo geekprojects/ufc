@@ -20,6 +20,11 @@ UDPSocket::UDPSocket(const string &host, int port) : Logger("UDPSocket")
     m_port = port;
 
     m_socket = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (m_socket == -1)
+    {
+        log(ERROR, "UDPSocket: Failed to create socket");
+        return;
+    }
 
     m_serverAddr.sin_family = AF_INET;
     m_serverAddr.sin_port = htons(port);
@@ -36,7 +41,7 @@ Result UDPSocket::send(void* buffer, size_t len)
     ssize_t result = sendto(m_socket, buffer, len, 0, (const struct sockaddr*)&m_serverAddr, sizeof(m_serverAddr));
     if (result < 0)
     {
-        log(ERROR, "UDPSocket::send: Failed to send data: %z", result);
+        log(ERROR, "UDPSocket::send: Failed to send data: %zd", result);
         return Result::FAIL;
     }
     return Result::SUCCESS;
@@ -88,6 +93,7 @@ void UDPSocket::close()
     if (m_socket != -1)
     {
         ::close(m_socket);
+        m_socket = -1;
         m_connected = false;
     }
 }
@@ -95,6 +101,10 @@ void UDPSocket::close()
 std::shared_ptr<UDPSocket> UDPSocket::connect(const string& host, int port)
 {
     auto socket = std::make_shared<UDPSocket>(host, port);
+    if (socket->m_socket == -1)
+    {
+        return nullptr;
+    }
 
     sockaddr_in receiveAddr = {};
     receiveAddr.sin_family = AF_INET;
@@ -104,7 +114,7 @@ std::shared_ptr<UDPSocket> UDPSocket::connect(const string& host, int port)
     int res = ::bind(socket->m_socket, (struct sockaddr*)&receiveAddr, sizeof(receiveAddr));
     if (res == -1)
     {
-        socket->log(ERROR, "connect: Failed to bind to port %d", port);
+        socket->log(ERROR, "connect: Failed to bind to local UDP socket");
         return nullptr;
     }
 
