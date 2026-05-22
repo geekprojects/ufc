@@ -30,10 +30,12 @@ Result XPlaneWebSocketClient::connect()
 
 void XPlaneWebSocketClient::disconnect()
 {
-    set<DataRefWebSocketInfo*> sockets = m_webSockets;
-    for (const auto webSocket : sockets)
+    scoped_lock lock(m_webSocketsMutex);
+    for (const auto webSocket : m_webSockets)
     {
         log(DEBUG, "disconnect: Closing web socket: %p", webSocket);
+
+        // Signal to the socket that we want to close it
         curl_ws_start_frame(webSocket->ws, CURLWS_CLOSE, 0);
     }
 }
@@ -103,10 +105,10 @@ Result XPlaneWebSocketClient::setDataRef(const string &dataRef, float value)
     bodyJson["data"] = value;
 
     string url = m_baseRestUrl + "/datarefs/" + to_string(id) + "/value";
-#if 0
+#if 1
     log(DEBUG, "setDataRef: Sending request to: %s", url.c_str());
 #endif
-    auto request= curly_hpp::request_builder()
+    auto request = curly_hpp::request_builder()
         .method(curly_hpp::http_method::PATCH)
         .url(url)
         .content(bodyJson.dump())
@@ -241,7 +243,7 @@ int64_t XPlaneWebSocketClient::getDataRefId(string dataref)
     if (code == 200)
     {
         auto json = json::parse(content);
-        auto data= json["data"];
+        auto data = json["data"];
         if (data.is_array() && !data.empty())
         {
             auto datarefJson = data[0];
@@ -298,8 +300,8 @@ bool XPlaneWebSocketClient::getDataRef(const string &dataref, json& valueJson)
 
     if (code == 200)
     {
-        auto json = json::parse(content);
-        valueJson = json["data"];
+        auto responseJson = json::parse(content);
+        valueJson = responseJson["data"];
 
         return true;
     }
@@ -360,7 +362,7 @@ int64_t XPlaneWebSocketClient::getCommandId(const string &command)
     if (code == 200)
     {
         auto json = json::parse(content);
-        auto data= json["data"];
+        auto data = json["data"];
         if (data.is_array() && !data.empty())
         {
             auto commandJson = data[0];
@@ -550,8 +552,11 @@ Result XPlaneWebSocketClient::streamDataRefs(
         return Result::FAIL;
     }
 
-    m_webSockets.insert(dataRefWebSocketData);
-    dataRefWebSocketData->ws = webSocket;
+    {
+        scoped_lock lock(m_webSocketsMutex);
+        dataRefWebSocketData->ws = webSocket;
+        m_webSockets.insert(dataRefWebSocketData);
+    }
 
     read_ctx rctx;
     rctx.webSocket = webSocket;
@@ -566,20 +571,25 @@ Result XPlaneWebSocketClient::streamDataRefs(
     curl_easy_setopt(webSocket, CURLOPT_READDATA, &rctx);
     curl_easy_setopt(webSocket, CURLOPT_UPLOAD, 1L);
 
-    CURLcode result = curl_easy_perform(webSocket);
-    log(INFO, "streamDataRefs: perform result=%d", result);
-    if (result != CURLE_OK)
+    CURLcode curlResult = curl_easy_perform(webSocket);
+    log(INFO, "streamDataRefs: perform result=%d", curlResult);
+
+    Result result = Result::SUCCESS;
+    if (curlResult != CURLE_OK)
     {
-        log(ERROR, "streamDataRefs: Failed to perform CURL request: %s", curl_easy_strerror(result));
-        curl_easy_cleanup(webSocket);
-        m_webSockets.erase(dataRefWebSocketData);
-        delete dataRefWebSocketData;
-        return Result::FAIL;
+        log(ERROR, "streamDataRefs: Failed to perform CURL request: %s", curl_easy_strerror(curlResult));
+        result = Result::FAIL;
     }
+
     curl_easy_cleanup(webSocket);
-    m_webSockets.erase(dataRefWebSocketData);
+
+    {
+        scoped_lock lock(m_webSocketsMutex);
+        m_webSockets.erase(dataRefWebSocketData);
+    }
+
     delete dataRefWebSocketData;
     log(INFO, "streamDataRefs: Finished!");
 
-    return Result::SUCCESS;
+    return result;
 }

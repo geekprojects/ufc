@@ -33,7 +33,9 @@ class XPlaneWebSocketClient : public XPlaneClient
     std::string m_baseWebSocketUrl;
     std::map<std::string, int64_t> m_dataRefIds;
     std::map<std::string, int64_t> m_commandIds;
+
     std::set<DataRefWebSocketInfo*> m_webSockets;
+    std::mutex m_webSocketsMutex;
 
     int64_t getDataRefId(std::string dataref);
     int64_t getCommandId(const std::string& command);
