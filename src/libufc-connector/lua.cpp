@@ -38,9 +38,20 @@ std::shared_ptr<LuaType> UFCDataMetaObject::getValue(std::string &name)
         return;
     }
 
-    LuaTNumber* number = dynamic_cast<LuaTNumber*>(val.get());
-
-    m_flightConnector->getDataSource()->setData(name, number->getValue());
+    if (val->getTypeId() == LUA_TNUMBER)
+    {
+        auto number = static_cast<LuaTNumber*>(val.get());
+        if (number == nullptr)
+        {
+            printf("UFCDataMetaObject::setValue: name=%s value is null?\n", name.c_str());
+            return;
+        }
+        m_flightConnector->getDataSource()->setData(name, number->getValue());
+    }
+    else
+    {
+        printf("UFCDataMetaObject::setValue: Unhandled type: %d\n", val->getTypeId());
+    }
 }
 
 int UFCCommandMetaObject::Execute(LuaState &L)
