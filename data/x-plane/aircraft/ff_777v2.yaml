@@ -39,7 +39,7 @@ commands:
     approach:
       toggle: 1-sim/command/mcpAppButton_button
     altitude:
-      up: 1-sim/command/mcpAltRotary_rotary+
+      up: "1-sim/command/mcpAltRotary_rotary+"
       down: 1-sim/command/mcpAltRotary_rotary-
       manage: 1-sim/command/mcpAltRotary_push
       step:

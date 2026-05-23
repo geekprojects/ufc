@@ -79,8 +79,8 @@ data:
       roll: sim/cockpit/autopilot/flight_director_roll
       mode: sim/cockpit2/autopilot/flight_director_mode
 
-  instrument:
-    speeds:
+  instruments:
+    speed:
       v1: # No default
       vr: # No default
       v2: # No default
@@ -92,6 +92,14 @@ data:
           glideslope: sim/cockpit2/radios/indicators/nav1_flag_glideslope
           horizontalDeflection: sim/cockpit2/radios/indicators/nav1_vdef_dots_pilot
           verticalDeflection: sim/cockpit2/radios/indicators/nav1_vdef_dots_pilot
+
+  weather:
+    wind:
+      direction: sim/weather/wind_direction_degt
+      speed: sim/weather/wind_speed_kt
+    temperature:
+      oat: sim/weather/temperature_ambient_c
+
   apu:
     master:
       on: sim/cockpit/engine/APU_running

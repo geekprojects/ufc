@@ -21,6 +21,14 @@ data:
     ap2Mode: B742/AP_panel/AP_engage_B == 2
     autoThrottleMode: B742/AP_panel/AT_on_sw
     altitudeManaged: B742/front_lamps/AP_alt_hold_lit
+  instruments:
+    speed:
+      v1:
+        dataRef: B742/IAS/bugs_angle_pilot[0]
+        lua: value = ((value + (0 * 5.0)) / 1.28) + 60.0
+      vr:
+        dataRef: B742/IAS/bugs_angle_pilot[1]
+        lua: value = ((value + (1 * 5.0)) / 1.28) + 60.0
 
 commands:
   autopilot:

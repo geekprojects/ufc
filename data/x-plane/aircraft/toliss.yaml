@@ -46,11 +46,12 @@ data:
       ndb: AirbusFBW/NDShowNDBCapt
       airports: AirbusFBW/NDShowARPTCapt
 
-  instrument:
-    v1: AirbusFBW/V1
-    vr: AirbusFBW/VR
-    v2: # No default
-    vfeNext: AirbusFBW/VFENext
+  instruments:
+    speed:
+      v1: AirbusFBW/V1
+      vr: AirbusFBW/VR
+      v2: # No default
+      vfeNext: AirbusFBW/VFENext
     nav:
       1:
         pilot:
