@@ -27,18 +27,10 @@ vector<string> splitRoute(string line)
 
     while (!line.empty())
     {
-        size_t pos = line.find(' ');
-        if (pos == string::npos)
-        {
-            pos = line.find('\t');
-        }
+        size_t pos = line.find_first_of(" \t\n\r");
         if (pos == string::npos)
         {
             pos = line.length();
-            if (pos == 0)
-            {
-                break;
-            }
         }
         if (pos >= 1)
         {
@@ -56,18 +48,16 @@ vector<string> splitRoute(string line)
     return parts;
 }
 
-
-
-bool RouteTextFormat::saveFile(std::shared_ptr<FlightPlan> flightPlan, string filename)
+bool RouteTextFormat::saveFile(shared_ptr<FlightPlan> flightPlan, const string& filename)
 {
     return false;
 }
 
 RouteToken RouteTextFormat::tokenise(
-    const std::string &tokenStr,
+    const string &tokenStr,
     Coordinate& lastCoord,
-    shared_ptr<Airport>& originAirport,
-    shared_ptr<Airport>& destAirport)
+    const shared_ptr<Airport>& originAirport,
+    const shared_ptr<Airport>& destAirport)
 {
     RouteToken rt;
     auto idx = tokenStr.find('/');
@@ -95,11 +85,7 @@ RouteToken RouteTextFormat::tokenise(
             {
                 rt.isAirway = true;
             }
-            else if (getNavDataSource()->getAirways()->isAirway(rt.ident))
-            {
-                rt.isAirway = true;
-            }
-            if (!rt.isAirway)
+            else
             {
                 if (originAirport != nullptr)
                 {
@@ -107,7 +93,12 @@ RouteToken RouteTextFormat::tokenise(
                 }
                 if (!rt.isDeparture && destAirport != nullptr)
                 {
+                    log(DEBUG, "tokenise: Checking for arrival: airport=%s, ident=%s", destAirport->getICAOCode().c_str(), rt.ident.c_str());
                     rt.isArrival = getNavDataSource()->getProcedures()->getArrival(destAirport->getICAOCode(), rt.ident) != nullptr;
+                }
+                if (!rt.isDeparture && !rt.isArrival &&  getNavDataSource()->getAirways()->isAirway(rt.ident))
+                {
+                    rt.isAirway = true;
                 }
             }
         }
@@ -124,14 +115,14 @@ RouteToken RouteTextFormat::tokenise(
 }
 
 bool RouteTextFormat::parseRoute(
-    const std::string& routeStr,
+    const string& routeStr,
     shared_ptr<Airport> originAirport,
     shared_ptr<Airport> destAirport,
     Coordinate& lastCoord,
-    std::vector<RoutePoint>& resolvedPoints)
+    vector<RoutePoint>& resolvedPoints)
 {
     RouteState state = RouteState::START;
-    vector<std::shared_ptr<RoutePoint>> parsedPoints;
+    vector<shared_ptr<RoutePoint>> parsedPoints;
     auto route = splitRoute(routeStr);
     shared_ptr<RoutePoint> previousPoint = nullptr;
 
@@ -141,7 +132,7 @@ bool RouteTextFormat::parseRoute(
 
         if (token.isAirway)
         {
-            log(DEBUG, "parseRoute: Unexpected Airway: %s, skipping", token.ident.c_str());
+            log(WARN, "parseRoute: Unexpected Airway: %s, skipping", token.ident.c_str());
             state = RouteState::EN_ROUTE;
             continue;
         }
@@ -174,7 +165,7 @@ bool RouteTextFormat::parseRoute(
                 {
                     log(WARN, "parseRoute: Invalid airport: %s", token.ident.c_str());
                     state = RouteState::EN_ROUTE;
-                    it--;
+                    --it;
                 }
             }
             else
@@ -189,6 +180,10 @@ bool RouteTextFormat::parseRoute(
                     if (token.isDeparture)
                     {
                         log(DEBUG, "parseRoute: Departure: %s", token.ident.c_str());
+
+                        rp = make_shared<RoutePoint>();
+                        addProcedure(token, originAirport, rp);
+                        parsedPoints.push_back(rp);
                     }
                     else
                     {
@@ -200,8 +195,10 @@ bool RouteTextFormat::parseRoute(
         }
         if (state == RouteState::EN_ROUTE)
         {
-            rp = parseWaypoint(lastCoord, token.ident, token.navAid);
-
+            if (!token.isArrival && !token.isDeparture)
+            {
+                rp = parseWaypoint(lastCoord, token.ident, token.navAid);
+            }
             if (rp != nullptr)
             {
                 log(
@@ -218,6 +215,9 @@ bool RouteTextFormat::parseRoute(
                 {
                     printf("parseRoute: Arrival: %s\n", token.ident.c_str());
                     state = RouteState::END;
+                    rp = make_shared<RoutePoint>();
+                    addProcedure(token, destAirport, rp);
+                    parsedPoints.push_back(rp);
                 }
                 else if (token.airport != nullptr)
                 {
@@ -248,79 +248,95 @@ bool RouteTextFormat::parseRoute(
         }
     }
 
-    log(
-        DEBUG,
-        "parseRoute: Origin: %s: %s",
-        originAirport->getICAOCode().c_str(),
-        originAirport->getName().c_str());
-    addAirport(originAirport, resolvedPoints);
+    if (originAirport != nullptr)
+    {
+        log(
+            DEBUG,
+            "parseRoute: Origin: %s: %ls",
+            originAirport->getICAOCode().c_str(),
+            originAirport->getName().c_str());
+        addAirport(originAirport, resolvedPoints);
+    }
+    else
+    {
+        log(DEBUG, "parseRoute: No origin airport found");
+    }
 
     expandAirways(resolvedPoints, parsedPoints);
-    addAirport(destAirport, resolvedPoints);
+    if (destAirport != nullptr)
+    {
+        addAirport(destAirport, resolvedPoints);
 
-    log(
-        DEBUG,
-        "parseRoute: Destination: %s: %s",
-        destAirport->getICAOCode().c_str(),
-        destAirport->getName().c_str());
+        log(
+            DEBUG,
+            "parseRoute: Destination: %s: %s",
+            destAirport->getICAOCode().c_str(),
+            destAirport->getName().c_str());
+    }
+    else
+    {
+        log(DEBUG, "parseRoute: No destination airport found");
+    }
 
     return true;
 }
 
 void RouteTextFormat::expandAirways(
-    std::vector<RoutePoint> &resolvedPoints,
-    vector<std::shared_ptr<RoutePoint>> parsedPoints)
+    vector<RoutePoint> &resolvedPoints,
+    vector<shared_ptr<RoutePoint>> parsedPoints)
 {
     for (auto it = parsedPoints.begin(); it != parsedPoints.end(); ++it)
     {
         const auto& point = *it;
-        resolvedPoints.push_back(*point);
         if ((it + 1) != parsedPoints.end())
         {
             auto nextPoint = *(it + 1);
-            log( DEBUG, "parseRoute: %s -> %s", point->name.c_str(), nextPoint->name.c_str());
-            if (point->type == NavAidType::WAY_POINT &&
+            log( DEBUG, "expandAirways: %s -> %s: Airway: %s", point->name.c_str(), nextPoint->name.c_str(), point->airway.c_str());
+            if (//point->type == NavAidType::WAY_POINT &&
                 point->sourceId != 0 &&
-                nextPoint->type == NavAidType::WAY_POINT &&
+                //nextPoint->type == NavAidType::WAY_POINT &&
                 nextPoint->sourceId != 0)
             {
-                if (!point->airway.empty())
+                if (!point->airway.empty() &&
+                    point->airway != "DCT" &&
+                    point->type != NavAidType::ARRIVAL &&
+                    point->type != NavAidType::DEPARTURE
+                    )
                 {
-                    log(DEBUG, "parseRoute:  -> Airway: %s", point->airway.c_str());
                     vector<shared_ptr<NavAid>> airwayPoints;
                     getNavDataSource()->getAirways()->expandAirway(
                         point->airway,
                         point->sourceId,
                         nextPoint->sourceId,
                         airwayPoints);
+                    log(DEBUG, "expandAirways:  -> Airway: %s (%lu points)", point->airway.c_str(), airwayPoints.size());
                     for (auto const& ap : airwayPoints)
                     {
                         RoutePoint rp;
                         rp.name = ap->getId();
                         rp.position = ap->getLocation();
                         rp.type = ap->getType();
-                        resolvedPoints.push_back(rp);
+                        point->components.push_back(rp);
                     }
                 }
-                else
-                {
-                    log(DEBUG, "parseRoute:  -> No airway connecting to next point");
-                }
             }
+            resolvedPoints.push_back(*point);
+        }
+        else
+        {
+            resolvedPoints.push_back(*point);
         }
     }
 }
 
-vector<RoutePoint> RouteTextFormat::generateGreatCirclePaths(std::vector<RoutePoint> &points)
+void RouteTextFormat::generateGreatCirclePaths(vector<RoutePoint> &points)
 {
-    vector<RoutePoint> greatCircleRoute;
     for (auto it = points.begin(); it != points.end(); ++it)
     {
         RoutePoint const& rp = *it;
-        bool added = false;
         if (it != points.begin())
         {
-            auto const& prev = *(it - 1);
+            auto& prev = *(it - 1);
             auto distance = GeoUtils::distance(prev.position, rp.position);
             log(
                 DEBUG,
@@ -330,22 +346,15 @@ vector<RoutePoint> RouteTextFormat::generateGreatCirclePaths(std::vector<RoutePo
                 distance);
             if (distance > 300.0f)
             {
-                generateGreatCirclePath(greatCircleRoute, rp, prev, distance);
-                added = true;
+                generateGreatCirclePath(rp, prev, distance);
             }
         }
-        if (!added)
-        {
-            greatCircleRoute.push_back(rp);
-        }
     }
-    return greatCircleRoute;
 }
 
 void RouteTextFormat::generateGreatCirclePath(
-    vector<RoutePoint>& greatCircleRoute,
-    RoutePoint const &rp,
-    RoutePoint const &prev,
+    const RoutePoint& rp,
+    RoutePoint &prev,
     double distance)
 {
     GreatCircle gc(prev.position, rp.position);
@@ -359,23 +368,24 @@ void RouteTextFormat::generateGreatCirclePath(
             gcPoint.name = rp.name;
         }
         gcPoint.position = p;
-        greatCircleRoute.push_back(gcPoint);
+        gcPoint.type = NavAidType::INTERPOLATED;
+        prev.components.push_back(gcPoint);
     }
 }
 
-void RouteTextFormat::addAirport(const shared_ptr<Airport> &originAirport, std::vector<RoutePoint> &resolvedPoints)
+void RouteTextFormat::addAirport(const shared_ptr<Airport> &airport, vector<RoutePoint> &resolvedPoints)
 {
     //if (originAirport.hasCoordinates)
     {
         RoutePoint rp;
-        rp.name = originAirport->getICAOCode();
-        rp.position = originAirport->getLocation();
+        rp.name = airport->getICAOCode();
+        rp.position = airport->getLocation();
         rp.type = NavAidType::AIRPORT;
         resolvedPoints.push_back(rp);
     }
 }
 
-std::shared_ptr<RoutePoint> RouteTextFormat::parseWaypoint(UFC::Coordinate& lastCoord, const string& ident, shared_ptr<NavAid> navAid) const
+shared_ptr<RoutePoint> RouteTextFormat::parseWaypoint(Coordinate& lastCoord, const string& ident, shared_ptr<NavAid> navAid) const
 {
     shared_ptr<RoutePoint> rp = nullptr;
 
@@ -410,7 +420,7 @@ std::shared_ptr<RoutePoint> RouteTextFormat::parseWaypoint(UFC::Coordinate& last
     return rp;
 }
 
-void RouteTextFormat::parseAirway(const std::vector<std::string>& route, std::vector<std::string>::iterator& it, const shared_ptr<RoutePoint> &rp)
+void RouteTextFormat::parseAirway(const vector<string>& route, vector<string>::iterator& it, const shared_ptr<RoutePoint> &rp)
 {
     log(DEBUG, "parseAirway: Parsing airway");
     if ((it + 1) != route.end())
@@ -434,12 +444,13 @@ void RouteTextFormat::parseAirway(const std::vector<std::string>& route, std::ve
         {
             log(DEBUG, "parseRoute: Airway: %s", next.c_str());
             rp->airway = next;
+
             it++;
         }
     }
 }
 
-std::shared_ptr<FlightPlan> RouteTextFormat::loadString(std::string routeStr)
+shared_ptr<FlightPlan> RouteTextFormat::loadString(const string& routeStr)
 {
     return loadString(routeStr, "", "");
 }
@@ -479,14 +490,14 @@ shared_ptr<FlightPlan> RouteTextFormat::loadString(const string& routeStr, const
     auto flightPlan = make_shared<FlightPlan>();
     vector<RoutePoint> points;
     parseRoute(routeStr, originAirport, destAirport, lastCoord, points);
+    generateGreatCirclePaths(points);
 
-    vector<RoutePoint> greatCircleRoute = generateGreatCirclePaths(points);
-    flightPlan->setRoute(greatCircleRoute);
+    flightPlan->setRoute(points);
 
     return flightPlan;
 }
 
-bool RouteTextFormat::parseLatLon(const std::string& ident, UFC::Coordinate& position)
+bool RouteTextFormat::parseLatLon(const string& ident, Coordinate& position)
 {
     if (ident.length() == 7)
     {
@@ -512,7 +523,6 @@ bool RouteTextFormat::parseLatLon(const std::string& ident, UFC::Coordinate& pos
             lonDeg = -lonDeg;
         }
 
-        //printf("parseLonLat(7): %d %c %d %c\n", latDeg, latDir, lonDeg, lonDir);
         position.latitude = static_cast<float>(latDeg);
         position.longitude = static_cast<float>(lonDeg);
         return true;
@@ -558,4 +568,44 @@ bool RouteTextFormat::parseLatLon(const std::string& ident, UFC::Coordinate& pos
     }
 
     return false;
+}
+
+void RouteTextFormat::addProcedure(
+    const RouteToken &token,
+    const shared_ptr<Airport>& airport,
+    const shared_ptr<RoutePoint> &rp)
+{
+    shared_ptr<Procedure> procedure = nullptr;
+    rp->name = token.ident;
+    if (token.isArrival)
+    {
+        procedure = getNavDataSource()->getProcedures()->getArrival(airport->getICAOCode(), token.ident);
+        rp->type = NavAidType::ARRIVAL;
+    }
+    else if (token.isDeparture)
+    {
+        procedure = getNavDataSource()->getProcedures()->getDeparture(airport->getICAOCode(), token.ident);
+        rp->type = NavAidType::DEPARTURE;
+    }
+    if (procedure == nullptr)
+    {
+        log(WARN, "parseRoute: Procedure not found: %s", token.ident.c_str());
+        return;
+    }
+
+    log(DEBUG, "addProcedure: Adding procedure: %s (Airport: %s) with %lu legs", token.ident.c_str(), airport->getICAOCode().c_str(), procedure->legs.size());
+    for (const auto& leg : procedure->legs)
+    {
+        RoutePoint legPoint;
+        legPoint.name = leg.ident;
+        legPoint.position = leg.position;
+        legPoint.minAltitude = leg.minAltitude;
+        legPoint.maxAltitude = leg.maxAltitude;
+        legPoint.maxSpeed = leg.maxSpeed;
+        rp->components.push_back(legPoint);
+    }
+    if (!rp->components.empty())
+    {
+        rp->position = rp->components.front().position;
+    }
 }

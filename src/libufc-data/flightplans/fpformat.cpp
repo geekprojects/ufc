@@ -42,7 +42,24 @@ std::vector<std::vector<std::string>> FlightPlanFormat::readTextFile(std::string
     return result;
 }
 
-shared_ptr<FlightPlan> FlightPlanFormat::loadFile(string fileName)
+shared_ptr<FlightPlan> FlightPlanFormat::loadFile(const string& fileName)
 {
     return nullptr;
+}
+
+vector<RoutePoint> FlightPlan::getAllRoutePoints() const
+{
+    vector<RoutePoint> result;
+    for (const auto& point : m_route)
+    {
+        result.push_back(point);
+        if (!point.components.empty())
+        {
+            for (auto const& component : point.components)
+            {
+                result.push_back(component);
+            }
+        }
+    }
+    return result;
 }

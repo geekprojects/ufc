@@ -63,7 +63,7 @@ std::vector<std::shared_ptr<Procedure>> Procedures::getProceduresForRunway(
     {
         for (auto const& procedure : it->second)
         {
-    log(DEBUG, " -> type=%d, runway=%s", procedure->type, procedure->runway.c_str());
+            log(DEBUG, " -> type=%d, runway=%s", procedure->type, procedure->runway.c_str());
             if (procedure->type == type && procedure->runway == runway)
             {
                 result.push_back(procedure);
@@ -74,9 +74,19 @@ std::vector<std::shared_ptr<Procedure>> Procedures::getProceduresForRunway(
     return result;
 }
 
-std::shared_ptr<Procedure> Procedures::getArrival(const std::string &airportCode, const std::string &name)
+std::shared_ptr<Procedure> Procedures::getArrival(const string &airportCode, const string &name, const string &transition)
 {
     checkProcedures(airportCode);
+
+    log(DEBUG, "getArrival: Finding procedures for: %s", airportCode.c_str());
+    auto procedures = getProcedures(airportCode);
+    for (auto const& procedure : procedures)
+    {
+        if (procedure->ident == name || procedure->ident.starts_with(name + "."))
+        {
+            log(DEBUG, "getArrival: Found procedure %s, transition=%s", procedure->ident.c_str(), procedure->transitionIdent.c_str());
+        }
+    }
 
     auto key = Procedure::generateKey(ProcedureType::ARRIVAL, name, airportCode);
     auto it = m_procedures.find(key);

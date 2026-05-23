@@ -20,8 +20,8 @@ public:
     //std::string getName() override { return "msfs-ini"; }
     //std::string getDescription() override { return "MSFS INI"; }
     //bool check(std::string filename, const std::vector<std::vector<std::string>>& file) override;
-    std::shared_ptr<FlightPlan> loadFile(std::string filename) override;
-    bool saveFile(std::shared_ptr<FlightPlan> flightPlan, std::string filename) override {return false; };
+    std::shared_ptr<FlightPlan> loadFile(const std::string& filename) override;
+    bool saveFile(std::shared_ptr<FlightPlan> flightPlan, const std::string& filename) override {return false; };
 };
 }
 

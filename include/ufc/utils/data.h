@@ -26,10 +26,14 @@ class Data final : public Logger
     bool m_isSub = false;
     Endian m_endian = NONE;
 
+    int m_fd = -1;
+    bool m_write = false;
+    bool m_owner = false;
+
  public:
     Data();
-    Data(char* data, unsigned int length);
-    explicit Data(unsigned int length);
+    Data(char* data, unsigned int length, bool write = false);
+    Data(unsigned int length, bool write = true);
 
     ~Data() override;
 

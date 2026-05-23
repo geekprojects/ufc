@@ -57,7 +57,9 @@ class Procedures : public NavData
     void addProcedure(std::shared_ptr<Procedure> procedure)
     {
         std::string key = Procedure::generateKey(procedure->type, procedure->ident, procedure->airportCode);
+#if 0
         log(UFC::DEBUG, "Adding procedure: %s", key.c_str());
+#endif
         if (m_procedures.find(key) == m_procedures.end())
         {
             m_procedures.try_emplace(key, procedure);
@@ -83,7 +85,7 @@ class Procedures : public NavData
         ProcedureType type,
         const std::string &airportCode,
         const std::string &runway);
-    virtual std::shared_ptr<Procedure> getArrival(const std::string &airportCode, const std::string &name);
+    virtual std::shared_ptr<Procedure> getArrival(const std::string &airportCode, const std::string &name, const std::string& transition = "");
 };
 
 }

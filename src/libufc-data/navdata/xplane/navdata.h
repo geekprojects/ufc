@@ -8,8 +8,26 @@
 #include <string>
 #include <vector>
 
+#include "ufc/data/navdata.h"
+
 namespace UFC
 {
+
+struct NavFile
+{
+    int fd = -1;
+    bool eof = false;
+    char* mmapData;
+    char* ptr;
+    char* end;
+    int64_t size;
+
+    static std::shared_ptr<NavFile> open(const std::string &fileName);
+
+    void close();
+
+    std::wstring readLine();
+};
 
 class NavDataUtils
 {
