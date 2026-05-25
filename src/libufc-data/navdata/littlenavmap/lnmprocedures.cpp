@@ -29,6 +29,7 @@ bool LNMProcedures::init()
 
 bool LNMProcedures::fetchProcedures(const std::string &airportCode)
 {
+    log(DEBUG, "fetchProcedures: airport=%s", airportCode.c_str());
     vector<shared_ptr<Procedure>> procedures;
     m_findStatement->bindString(1, airportCode);
     bool found = false;
@@ -68,7 +69,7 @@ bool LNMProcedures::fetchProcedures(const std::string &airportCode)
             procedure->type = ProcedureType::APPROACH;
             procType = "Approach";
         }
-#if 0
+#if 1
         log(DEBUG, "getProcedures: %s %s type=%s, runway=%s", airportCode.c_str(), procedure->ident.c_str(), procType.c_str(), procedure->runway.c_str());
 #endif
 
@@ -86,6 +87,12 @@ bool LNMProcedures::fetchProcedures(const std::string &airportCode)
             leg.minAltitude = static_cast<int>(m_findApproachLegs->getDouble(6));
             int speedLimit = m_findApproachLegs->getInt(7);
             string speedLimitType = m_findApproachLegs->getString(8);
+
+            if (legType == "CI" || legType == "CA")
+            {
+                // Course to Intercept or Altitude: No position, so skip
+                continue;
+            }
 
             if (speedLimitType == "-")
             {

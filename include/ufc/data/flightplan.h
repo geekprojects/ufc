@@ -67,6 +67,8 @@ class FlightPlan
 
     void setRoute(const std::vector<RoutePoint>& points) { m_route = points; }
     const std::vector<RoutePoint>& getRoute() const { return m_route; }
+
+    std::vector<RoutePoint> getAllRoutePoints() const;
 };
 
 }

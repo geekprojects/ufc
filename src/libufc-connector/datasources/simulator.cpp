@@ -123,6 +123,14 @@ bool SimulatorDataSource::update()
         state->set(DATA_AUTOPILOT_FLIGHTDIRECTOR_PILOT_ON, m_flightDirector);
         state->set("efis/display/ls", m_ls);
 
+        float windDir = state->getFloat(DATA_WEATHER_WIND_DIRECTION);
+        windDir += 1.0f;
+        if (windDir >= 360.0f)
+        {
+            windDir  = 0.0f;
+        }
+        state->set(DATA_WEATHER_WIND_DIRECTION, windDir);
+
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     return true;

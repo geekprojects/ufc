@@ -27,8 +27,8 @@ class RouteTextFormat : public FlightPlanFormat
     RouteToken tokenise(
         const std::string &tokenStr,
         Coordinate &lastCoord,
-        std::shared_ptr<Airport>& originAirport,
-        std::shared_ptr<Airport>& destAirport);
+        const std::shared_ptr<Airport>& originAirport,
+        const std::shared_ptr<Airport>& destAirport);
 
     bool parseRoute(
         const std::string &routeStr,
@@ -39,15 +39,14 @@ class RouteTextFormat : public FlightPlanFormat
 
     void expandAirways(std::vector<RoutePoint> &resolvedPoints, std::vector<std::shared_ptr<RoutePoint>> parsedPoints);
 
-    std::vector<RoutePoint> generateGreatCirclePaths(std::vector<RoutePoint> &points);
+    void generateGreatCirclePaths(std::vector<RoutePoint> &points);
 
     static void generateGreatCirclePath(
-        std::vector<RoutePoint> &greatCircleRoute,
         RoutePoint const &rp,
-        RoutePoint const &prev,
+        RoutePoint &prev,
         double distance);
 
-    static void addAirport(const std::shared_ptr<Airport> &originAirport, std::vector<RoutePoint> &resolvedPoints);
+    static void addAirport(const std::shared_ptr<Airport> &airport, std::vector<RoutePoint> &resolvedPoints);
 
     std::shared_ptr<RoutePoint> parseWaypoint(
         Coordinate &lastCoord,
@@ -61,14 +60,19 @@ class RouteTextFormat : public FlightPlanFormat
 
     static bool parseLatLon(const std::string &ident, UFC::Coordinate &position);
 
+    void addProcedure(
+        const RouteToken &token,
+        const std::shared_ptr<Airport> &airport,
+        const std::shared_ptr<RoutePoint> &rp);
+
 public:
     RouteTextFormat(UFC::NavDataSource* navSource) : FlightPlanFormat(navSource, "RouteTextFormat") {}
     ~RouteTextFormat() override = default;
 
-    std::shared_ptr<FlightPlan> loadString(std::string file) override;
+    std::shared_ptr<FlightPlan> loadString(const std::string& file) override;
     std::shared_ptr<FlightPlan> loadString(const std::string& routeStr, const std::string& origin, const std::string& dest);
 
-    bool saveFile(std::shared_ptr<FlightPlan> flightPlan, std::string filename) override;
+    bool saveFile(std::shared_ptr<FlightPlan> flightPlan, const std::string& filename) override;
 };
 }
 

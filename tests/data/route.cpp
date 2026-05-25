@@ -94,7 +94,7 @@ class TestProcedures : public Procedures
         return nullptr;
     }
 
-    shared_ptr<Procedure> getArrival(const std::string &airportCode, const std::string &name) override
+    shared_ptr<Procedure> getArrival(const std::string &airportCode, const std::string &name, const std::string& transition) override
     {
         if (name == "BIBA9W")
         {
@@ -137,12 +137,16 @@ TEST(RouteParser, Route)
 
     RouteTextFormat routeTextFormat(&lnmDataSource);
 
-    routeTextFormat.loadString(
-        //"EGKK/08R SFD4Z SFD M605 XIDIL UM605 BIBAX BIBA9W LFPG/09L",
+    auto flightPlan = routeTextFormat.loadString(
+        "EGKK/08R SFD4Z SFD M605 XIDIL\tUM605 BIBAX\nBIBA9W LFPG/09L ",
         //"SFD M605 XIDIL UM605 BIBAX BIBA9W",
-        "SFD M605 XIDIL UM605 BIBAX",
+        //"SFD M605 XIDIL UM605 BIBAX",
         "EGKK",
         "LFPG"
         );
+    for (auto const& point : flightPlan->getAllRoutePoints())
+    {
+        printf("%s: %ls\n", point.name.c_str(), point.position.toString().c_str());
+    }
 }
 
