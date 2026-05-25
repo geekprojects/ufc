@@ -269,7 +269,7 @@ bool RouteTextFormat::parseRoute(
 
         log(
             DEBUG,
-            "parseRoute: Destination: %s: %s",
+            "parseRoute: Destination: %s: %ls",
             destAirport->getICAOCode().c_str(),
             destAirport->getName().c_str());
     }
