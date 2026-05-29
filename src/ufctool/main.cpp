@@ -23,10 +23,13 @@ const static option g_options[] =
 
 [[noreturn]] void usage()
 {
+    const char* home = getenv("HOME");
+    const char* homeForDisplay = (home != nullptr) ? home : "~";
+
     printf("UFC - Universal Flight Connector\n");
     printf("\n");
     printf("Usage: ufctool [OPTIONS]\n");
-    printf("  -c, --config           Specify configuration file. (Default: %s/.config/ufc.yaml)\n", getenv("HOME"));
+    printf("  -c, --config           Specify configuration file. (Default: %s/.config/ufc.yaml)\n", homeForDisplay);
     printf("  -d, --data             Specify data directory (Defaults to configured directory)\n");
     printf("  -s, --source           Data Source type (Defaults to configured source)\n");
     printf("  -t, --connection-type  Type of connection for the Data Source\n");
