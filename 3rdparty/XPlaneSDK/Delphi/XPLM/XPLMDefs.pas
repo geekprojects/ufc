@@ -1,5 +1,5 @@
 {
-   Copyright 2005-2022 Laminar Research, Sandy Barbour and Ben Supnik All
+   Copyright 2005-2025 Laminar Research, Sandy Barbour and Ben Supnik All
    rights reserved.  See license.txt for usage. X-Plane SDK Version: 4.0.0
 }
 
@@ -81,8 +81,8 @@ CONST
     { X-Plane itself                                                             }
    XPLM_PLUGIN_XPLANE   = (0);
 
-    { The current XPLM revision is 4.1.1 (411).                                  }
-   kXPLM_Version        = (411);
+    { The current XPLM revision is 4.3.0 (430).                                  }
+   kXPLM_Version        = (430);
 
    {
     XPLMKeyFlags
@@ -464,6 +464,111 @@ TYPE
  
      { X-Plane shows the cursor but lets you select an OS cursor.                 }
      ,xplm_CursorCustom                        = 3
+ 
+{$IFDEF XPLM420}
+     { X-Plane shows a small bi-directional knob-rotating cursor.                 }
+     ,xplm_CursorRotateSmall                   = 4
+{$ENDIF XPLM420}
+ 
+{$IFDEF XPLM420}
+     { X-Plane shows a small counter-clockwise knob-rotating cursor.              }
+     ,xplm_CursorRotateSmallLeft               = 5
+{$ENDIF XPLM420}
+ 
+{$IFDEF XPLM420}
+     { X-Plane shows a small clockwise knob-rotating cursor.                      }
+     ,xplm_CursorRotateSmallRight              = 6
+{$ENDIF XPLM420}
+ 
+{$IFDEF XPLM420}
+     { X-Plane shows a medium bi-directional knob-rotating cursor.                }
+     ,xplm_CursorRotateMedium                  = 7
+{$ENDIF XPLM420}
+ 
+{$IFDEF XPLM420}
+     { X-Plane shows a medium counter-clockwise knob-rotating cursor.             }
+     ,xplm_CursorRotateMediumLeft              = 8
+{$ENDIF XPLM420}
+ 
+{$IFDEF XPLM420}
+     { X-Plane shows a medium clockwise knob-rotating cursor.                     }
+     ,xplm_CursorRotateMediumRight             = 9
+{$ENDIF XPLM420}
+ 
+{$IFDEF XPLM420}
+     { X-Plane shows a large bi-directional knob-rotating cursor.                 }
+     ,xplm_CursorRotateLarge                   = 10
+{$ENDIF XPLM420}
+ 
+{$IFDEF XPLM420}
+     { X-Plane shows a large counter-clockwise knob-rotating cursor.              }
+     ,xplm_CursorRotateLargeLeft               = 11
+{$ENDIF XPLM420}
+ 
+{$IFDEF XPLM420}
+     { X-Plane shows a large clockwise knob-rotating cursor.                      }
+     ,xplm_CursorRotateLargeRight              = 12
+{$ENDIF XPLM420}
+ 
+{$IFDEF XPLM420}
+     { X-Plane shows an up-and-down arrows cursor.                                }
+     ,xplm_CursorUpDown                        = 13
+{$ENDIF XPLM420}
+ 
+{$IFDEF XPLM420}
+     { X-Plane shows a down arrow cursor.                                         }
+     ,xplm_CursorDown                          = 14
+{$ENDIF XPLM420}
+ 
+{$IFDEF XPLM420}
+     { X-Plane shows an up arrow cursor.                                          }
+     ,xplm_CursorUp                            = 15
+{$ENDIF XPLM420}
+ 
+{$IFDEF XPLM420}
+     { X-Plane shows a left-right arrow cursor.                                   }
+     ,xplm_CursorLeftRight                     = 16
+{$ENDIF XPLM420}
+ 
+{$IFDEF XPLM420}
+     { X-Plane shows a left arrow cursor.                                         }
+     ,xplm_CursorLeft                          = 17
+{$ENDIF XPLM420}
+ 
+{$IFDEF XPLM420}
+     { X-Plane shows a right arrow cursor.                                        }
+     ,xplm_CursorRight                         = 18
+{$ENDIF XPLM420}
+ 
+{$IFDEF XPLM420}
+     { X-Plane shows a button-pushing cursor.                                     }
+     ,xplm_CursorButton                        = 19
+{$ENDIF XPLM420}
+ 
+{$IFDEF XPLM420}
+     { X-Plane shows a handle-grabbing cursor.                                    }
+     ,xplm_CursorHandle                        = 20
+{$ENDIF XPLM420}
+ 
+{$IFDEF XPLM420}
+     { X-Plane shows a four-arrows cursor.                                        }
+     ,xplm_CursorFourArrows                    = 21
+{$ENDIF XPLM420}
+ 
+{$IFDEF XPLM420}
+     { X-Plane shows a cursor to drag a horizontal splitter bar.                  }
+     ,xplm_CursorSplitterH                     = 22
+{$ENDIF XPLM420}
+ 
+{$IFDEF XPLM420}
+     { X-Plane shows a cursor to drag a vertical splitter bar.                    }
+     ,xplm_CursorSplitterV                     = 23
+{$ENDIF XPLM420}
+ 
+{$IFDEF XPLM420}
+     { X-Plane shows an I-Beam cursor for text editing.                           }
+     ,xplm_CursorText                          = 24
+{$ENDIF XPLM420}
  
    );
    PXPLMCursorStatus = ^XPLMCursorStatus;

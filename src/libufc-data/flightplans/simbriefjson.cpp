@@ -57,7 +57,7 @@ bool SimbriefJson::check(string filename, const std::vector<std::vector<std::str
 }
 */
 
-shared_ptr<FlightPlan> SimbriefJson::loadFile(string filename)
+shared_ptr<FlightPlan> SimbriefJson::loadFile(const string& filename)
 {
     FILE* fd = fopen(filename.c_str(), "r");
     auto json = json::parse(fd);
@@ -65,13 +65,13 @@ shared_ptr<FlightPlan> SimbriefJson::loadFile(string filename)
     return load(json);
 }
 
-std::shared_ptr<FlightPlan> SimbriefJson::loadString(std::string str)
+std::shared_ptr<FlightPlan> SimbriefJson::loadString(const std::string& str)
 {
     auto json = json::parse(str);
     return load(json);
 }
 
-shared_ptr<FlightPlan> SimbriefJson::fetch(std::string username)
+shared_ptr<FlightPlan> SimbriefJson::fetch(const std::string& username)
 {
     string url = "https://www.simbrief.com/api/xml.fetcher.php?username=" + username + "&json=1";
     printf("Loading SimBrief plan from URL: %s\n", url.c_str());
@@ -160,7 +160,7 @@ shared_ptr<FlightPlan> SimbriefJson::load(json json)
     return flightPlan;
 }
 
-bool SimbriefJson::saveFile(std::shared_ptr<FlightPlan> flightPlan, std::string filename)
+bool SimbriefJson::saveFile(std::shared_ptr<FlightPlan> flightPlan, const std::string& filename)
 {
     return false;
 }

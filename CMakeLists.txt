@@ -98,6 +98,7 @@ add_library(ufc-data SHARED
         src/libufc-data/navdata/xplane/airports.cpp
         src/libufc-data/navdata/xplane/navaids.cpp
         src/libufc-data/navdata/xplane/xplanenavdata.cpp
+        src/libufc-data/navdata/xplane/navdata.cpp
 )
 target_compile_definitions(ufc-data PUBLIC -DDATADIR=${DATADIR})
 target_link_libraries(ufc-data

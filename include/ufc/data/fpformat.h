@@ -20,13 +20,13 @@ class FlightPlanFormat : protected Logger
     static std::vector<std::vector<std::string>> readTextFile(std::string filename, bool split);
 
  public:
-    FlightPlanFormat(NavDataSource* navSource, std::string name) : Logger(name), m_navDataSource(navSource) {}
+    FlightPlanFormat(NavDataSource* navSource, const std::string &name) : Logger(name), m_navDataSource(navSource) {}
     ~FlightPlanFormat() override = default;
 
-    virtual std::shared_ptr<FlightPlan> loadString(std::string file) = 0;
-    virtual std::shared_ptr<FlightPlan> loadFile(std::string fileName);
+    virtual std::shared_ptr<FlightPlan> loadString(const std::string& file) = 0;
+    virtual std::shared_ptr<FlightPlan> loadFile(const std::string& fileName);
 
-    virtual bool saveFile(std::shared_ptr<FlightPlan> flightPlan, std::string filename) = 0;
+    virtual bool saveFile(std::shared_ptr<FlightPlan> flightPlan, const std::string& filename) = 0;
 };
 
 }

@@ -19,22 +19,26 @@ Data::Data()
     reset();
 }
 
-Data::Data(unsigned int length)
+Data::Data(unsigned int length, bool write)
     : Logger("Data")
 {
     m_data = new char[length];
     m_length = length;
     m_bufferSize = length;
+    m_write = write;
+    m_owner = true;
 
     reset();
 }
 
-Data::Data(char* data, unsigned int length)
+Data::Data(char* data, unsigned int length, bool write)
     : Logger("Data")
 {
     m_data = data;
     m_length = length;
     m_bufferSize = length;
+    m_write = write;
+    m_owner = false;
 
     reset();
 }
@@ -46,9 +50,11 @@ Data::~Data()
 
 Data* Data::copy(char* data, unsigned int length)
 {
-    auto newData = new char[length];
-    memcpy(newData, data, length);
-    return new Data(newData, length);
+    auto newBuffer = new char[length];
+    memcpy(newBuffer, data, length);
+    auto newData = new Data(newBuffer, length, true);
+    newData->m_owner = true;
+    return newData;
 }
 
 void Data::setEndian(Endian endian)

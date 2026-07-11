@@ -19,16 +19,16 @@ public:
     explicit SimbriefJson(NavDataSource* flightConverter);
 
     //bool check(std::string filename, const std::vector<std::vector<std::string>>& file) override;
-    std::shared_ptr<FlightPlan> loadFile(std::string filename) override;
-    std::shared_ptr<FlightPlan> loadString(std::string file) override;
+    std::shared_ptr<FlightPlan> loadFile(const std::string& filename) override;
+    std::shared_ptr<FlightPlan> loadString(const std::string& file) override;
 
-    std::shared_ptr<FlightPlan> fetch(std::string username);
+    std::shared_ptr<FlightPlan> fetch(const std::string& username);
 
     //FormatType getType() override { return FormatType::SIMBRIEF_JSON;}
     //std::string getName() override { return "simbrief-json"; }
     //std::string getDescription() override { return "Simbrief JSON"; }
 
-    bool saveFile(std::shared_ptr<FlightPlan> flightPlan, std::string filename) override;
+    bool saveFile(std::shared_ptr<FlightPlan> flightPlan, const std::string& filename) override;
 };
 }
 

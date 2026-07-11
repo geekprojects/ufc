@@ -10,11 +10,13 @@ using namespace UFC;
 bool LNMNavAids::init()
 {
     m_findNavStatement = getDatabase()->prepareStatement(
-        "SELECT lonx, laty, nav_type, name, waypoint_id FROM nav_search WHERE ident=?");
+        "SELECT ns.lonx, ns.laty, ns.nav_type, ns.name, wp.waypoint_id FROM nav_search ns "
+        "left join waypoint wp on wp.waypoint_id = ns.waypoint_id or wp.nav_id = ns.vor_id "
+        "WHERE ns.ident=?");
     return true;
 }
 
-vector<shared_ptr<NavAid>> LNMNavAids::findById(const string &id) const
+vector<shared_ptr<NavAid>> LNMNavAids::findById(const string &id)
 {
     vector<shared_ptr<NavAid>> navAids;
 

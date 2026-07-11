@@ -5,8 +5,6 @@
 #ifndef UNIVERSALFLIGHTCONNECTOR_LNMNAVDATA_H
 #define UNIVERSALFLIGHTCONNECTOR_LNMNAVDATA_H
 
-//#include <ufc/data/navdata.h>
-
 #include <ufc/data/airways.h>
 #include <ufc/data/navaids.h>
 #include <ufc/data/procedures.h>
@@ -30,7 +28,7 @@ class LittleNavMapData : public NavDataSource
     std::shared_ptr<LNMAirways> m_airways;
 
 public:
-    explicit LittleNavMapData(UFC::FlightConnector* flightConnector);
+    explicit LittleNavMapData(FlightConnector* flightConnector);
 
     ~LittleNavMapData() override = default;
 
@@ -50,18 +48,19 @@ public:
     }
 };
 
-class LNMAirports : public UFC::Airports
+class LNMAirports : public Airports
 {
-    UFC::PreparedStatement* m_findByCodeStatement = nullptr;
+    PreparedStatement* m_findByCodeStatement = nullptr;
+    PreparedStatement* m_findAllStatement = nullptr;
 
-    std::map<std::string, std::shared_ptr<UFC::Airport> > m_airportCache;
+    //std::map<std::string, std::shared_ptr<Airport> > m_airportCache;
 
-    [[nodiscard]] std::shared_ptr<UFC::Database> getDatabase() const
+    [[nodiscard]] std::shared_ptr<Database> getDatabase() const
     {
         return dynamic_cast<LittleNavMapData*>(m_navDataSource)->getDatabase();
     }
 
-    [[nodiscard]] std::shared_ptr<UFC::Airport> createAirportFromQuery(const std::string &code) const;
+    [[nodiscard]] std::shared_ptr<Airport> createAirportFromQuery(PreparedStatement* statement) const;
 
 public:
     explicit LNMAirports(LittleNavMapData* navDataSource) : Airports(navDataSource, "LittleNavMap")
@@ -71,17 +70,18 @@ public:
     ~LNMAirports() override = default;
 
     bool init() override;
+/*
+    [[nodiscard]] std::shared_ptr<Airport> findNearest(Coordinate point) const override;
 
-    [[nodiscard]] std::shared_ptr<UFC::Airport> findNearest(UFC::Coordinate point) const override;
-
-    std::shared_ptr<UFC::Airport> findByCode(const std::string &code) override;
+    std::shared_ptr<Airport> findByCode(const std::string &code) override;
+    */
 };
 
-class LNMNavAids : public UFC::NavAids
+class LNMNavAids : public NavAids
 {
-    UFC::PreparedStatement* m_findNavStatement = nullptr;
+    PreparedStatement* m_findNavStatement = nullptr;
 
-    [[nodiscard]] std::shared_ptr<UFC::Database> getDatabase() const
+    [[nodiscard]] std::shared_ptr<Database> getDatabase() const
     {
         return dynamic_cast<LittleNavMapData*>(m_navDataSource)->getDatabase();
     }
@@ -93,16 +93,16 @@ public:
 
     bool init() override;
 
-    [[nodiscard]] std::vector<std::shared_ptr<UFC::NavAid> > findById(const std::string &id) const override;
+    [[nodiscard]] std::vector<std::shared_ptr<NavAid> > findById(const std::string &id) override;
 };
 
-class LNMProcedures : public UFC::Procedures
+class LNMProcedures : public Procedures
 {
-    UFC::PreparedStatement* m_findStatement = nullptr;
-    UFC::PreparedStatement* m_findApproachLegs = nullptr;
-    UFC::PreparedStatement* m_findTransitionLegs = nullptr;
+    PreparedStatement* m_findStatement = nullptr;
+    PreparedStatement* m_findApproachLegs = nullptr;
+    PreparedStatement* m_findTransitionLegs = nullptr;
 
-    [[nodiscard]] std::shared_ptr<UFC::Database> getDatabase() const
+    [[nodiscard]] std::shared_ptr<Database> getDatabase() const
     {
         return dynamic_cast<LittleNavMapData*>(m_navDataSource)->getDatabase();
     }
@@ -117,12 +117,13 @@ public:
     bool init() override;
 };
 
-class LNMAirways : public UFC::Airways
+class LNMAirways : public Airways
 {
-    UFC::PreparedStatement* m_findNextAirwayStatement = nullptr;
-    UFC::PreparedStatement* m_findPreviousAirwayStatement = nullptr;
+    PreparedStatement* m_findNextAirwayStatement = nullptr;
+    PreparedStatement* m_findPreviousAirwayStatement = nullptr;
+    PreparedStatement* m_findAirwayStatement;
 
-    [[nodiscard]] std::shared_ptr<UFC::Database> getDatabase() const
+    [[nodiscard]] std::shared_ptr<Database> getDatabase() const
     {
         return dynamic_cast<LittleNavMapData*>(m_navDataSource)->getDatabase();
     }
@@ -140,11 +141,11 @@ public:
         const std::string &ident,
         uint64_t entryWaypointId,
         uint64_t exitWaypointId,
-        std::vector<std::shared_ptr<UFC::NavAid>> &navAids) override;
+        std::vector<std::shared_ptr<NavAid>> &navAids) override;
 
     bool isAirway(const std::string &next) override;
 
-    std::shared_ptr<UFC::NavAid> findNextAirwayWaypoint(const std::string &ident, uint64_t entryWaypointId, bool forward) override;
+    std::shared_ptr<NavAid> findNextAirwayWaypoint(const std::string &ident, uint64_t entryWaypointId, bool forward) override;
 };
 }
 

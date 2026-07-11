@@ -22,6 +22,7 @@ enum class NavAidType
     AIRWAY,
     DEPARTURE,
     ARRIVAL,
+    INTERPOLATED, // Points added between two points (Great Circle, etc)
 };
 
 class NavAid : public UFC::Locationable
@@ -167,7 +168,7 @@ public:
         });
     }
 
-    [[nodiscard]] virtual std::vector<std::shared_ptr<NavAid>> findById(const std::string& id) const
+    [[nodiscard]] virtual std::vector<std::shared_ptr<NavAid>> findById(const std::string& id)
     {
         auto it = m_navAidsById.find(id);
         if (it != m_navAidsById.end())
@@ -177,7 +178,7 @@ public:
         return {};
     }
 
-    [[nodiscard]] virtual std::shared_ptr<NavAid> findById(const std::string& id, Coordinate& near) const
+    [[nodiscard]] virtual std::shared_ptr<NavAid> findById(const std::string& id, Coordinate& near)
     {
         auto navaids = findById(id);
 

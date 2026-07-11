@@ -35,7 +35,7 @@ bool MSFSIniFormat::check(std::string fileName, const std::vector<std::vector<st
 }
 */
 
-shared_ptr<FlightPlan> MSFSIniFormat::loadFile(string filename)
+shared_ptr<FlightPlan> MSFSIniFormat::loadFile(const string& filename)
 {
     auto text = readTextFile(filename, false);
 

@@ -11,6 +11,7 @@ using namespace UFC;
 
 bool LNMAirways::init()
 {
+    m_findAirwayStatement = getDatabase()->prepareStatement("SELECT airway_type FROM airway WHERE airway_name=?");
     m_findNextAirwayStatement = getDatabase()->prepareStatement(
         "SELECT"
         "    aw.sequence_no, aw.from_waypoint_id, aw.to_waypoint_id, w.ident, w.lonx, w.laty"
@@ -100,12 +101,56 @@ bool LNMAirways::expandAirway(
     return true;
 }
 
-bool LNMAirways::isAirway(const std::string &next)
+bool LNMAirways::isAirway(const std::string& ident)
 {
-    return true;
+    m_findAirwayStatement->bindString(1, ident);
+    bool result = m_findAirwayStatement->step();
+    log(DEBUG, "isAirway: %s -> %d", ident.c_str(), result);
+    m_findAirwayStatement->reset();
+    return result;
 }
 
 shared_ptr<NavAid> LNMAirways::findNextAirwayWaypoint(const std::string &ident, uint64_t entryWaypointId, bool forward)
 {
-    return nullptr;
+    PreparedStatement* preparedStatement;
+    if (forward)
+    {
+        preparedStatement = m_findNextAirwayStatement;
+    }
+    else
+    {
+        preparedStatement = m_findPreviousAirwayStatement;
+    }
+
+    preparedStatement->bindString(1, ident);
+    preparedStatement->bindInt64(2, entryWaypointId);
+
+    shared_ptr<NavAid> navAid = nullptr;
+    if (preparedStatement->step())
+    {
+        navAid = make_shared<NavAid>();
+        navAid->setType(NavAidType::WAY_POINT);
+        navAid->setSequenceNo(preparedStatement->getInt64(0));
+        navAid->setSourceId(preparedStatement->getInt64(1));
+        navAid->setNext_id(preparedStatement->getInt64(2));
+
+        navAid->setId(preparedStatement->getString(3));
+        navAid->setName(preparedStatement->getString(3));
+        auto longitude = preparedStatement->getDouble(4);
+        auto latitude = preparedStatement->getDouble(5);
+        navAid->setLocation(Coordinate(latitude, longitude));
+        log(
+            DEBUG,
+            "findNextAirwayWaypoint: %s: %lld: %llu -> %llu: %s (%f, %f)",
+            ident.c_str(),
+            navAid->getSequenceNo(),
+            navAid->getSourceId(),
+            navAid->getNextId(),
+            navAid->getId().c_str(),
+            navAid->getLocation().longitude,
+            navAid->getLocation().latitude);
+    }
+    preparedStatement->reset();
+
+    return navAid;
 }
