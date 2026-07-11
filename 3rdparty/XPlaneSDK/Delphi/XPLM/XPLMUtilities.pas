@@ -1,5 +1,5 @@
 {
-   Copyright 2005-2022 Laminar Research, Sandy Barbour and Ben Supnik All
+   Copyright 2005-2025 Laminar Research, Sandy Barbour and Ben Supnik All
    rights reserved.  See license.txt for usage. X-Plane SDK Version: 4.0.0
 }
 
@@ -923,6 +923,7 @@ TYPE
                                         inKey               : Integer);
     cdecl; external XPLM_DLL;
 
+{$IFDEF XPLM_DEPRECATED}
    {
     XPLMCommandKeyStroke
     
@@ -936,7 +937,9 @@ TYPE
    PROCEDURE XPLMCommandKeyStroke(
                                         inKey               : XPLMCommandKeyID);
     cdecl; external XPLM_DLL;
+{$ENDIF XPLM_DEPRECATED}
 
+{$IFDEF XPLM_DEPRECATED}
    {
     XPLMCommandButtonPress
     
@@ -951,7 +954,9 @@ TYPE
    PROCEDURE XPLMCommandButtonPress(
                                         inButton            : XPLMCommandButtonID);
     cdecl; external XPLM_DLL;
+{$ENDIF XPLM_DEPRECATED}
 
+{$IFDEF XPLM_DEPRECATED}
    {
     XPLMCommandButtonRelease
     
@@ -963,6 +968,7 @@ TYPE
    PROCEDURE XPLMCommandButtonRelease(
                                         inButton            : XPLMCommandButtonID);
     cdecl; external XPLM_DLL;
+{$ENDIF XPLM_DEPRECATED}
 
 {$ENDIF XPLM_DEPRECATED}
 
