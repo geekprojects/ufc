@@ -90,18 +90,48 @@ struct Polygon
 struct Box
 {
     Coordinate position;
-    double size = 0.0f;
+    double latSize = 0.0f;
+    double longSize = 0.0f;
 
     Box() = default;
 
     Box(const double latitude, const double longitude, const double size) :
         position(Coordinate(latitude, longitude)),
-        size(size)
+        latSize(size),
+        longSize(size)
     {
     }
 
-    Box(const Coordinate position, const double size) : position(position), size(size)
+    Box(const Coordinate position, const double size) :
+        position(position),
+        latSize(size),
+        longSize(size)
     {
+    }
+
+    Box(const double latitude, const double longitude, const double latSize, const double longSize) :
+        position(Coordinate(latitude, longitude)),
+        latSize(latSize),
+        longSize(longSize)
+    {
+    }
+
+    Box(
+        const Coordinate position,
+        const double latSize,
+        const double longSize) :
+        position(position),
+        latSize(latSize),
+        longSize(longSize)
+    {
+    }
+    Box(
+        const Coordinate topLeft,
+        const Coordinate bottomRight) :
+        position(topLeft)
+    {
+        latSize = bottomRight.latitude - topLeft.latitude;
+        longSize = bottomRight.longitude - topLeft.longitude;
     }
 
     [[nodiscard]] std::wstring toString() const
@@ -125,38 +155,41 @@ struct Box
 
     [[nodiscard]] double maxLatitude() const
     {
-        return position.latitude + size;
+        return position.latitude + latSize;
     }
 
     [[nodiscard]] double maxLongitude() const
     {
-        return position.longitude + size;
+        return position.longitude + longSize;
     }
 
     [[nodiscard]] double midLatitude() const
     {
-        return position.latitude + (size / 2);
+        return position.latitude + (latSize / 2);
     }
 
     [[nodiscard]] double midLongitude() const
     {
-        return position.longitude + (size / 2);
+        return position.longitude + (longSize / 2);
     }
 
     [[nodiscard]] bool contains(Coordinate c) const
     {
         bool res = (
             c.latitude >= position.latitude &&
-            c.latitude < position.latitude + size &&
+            c.latitude < position.latitude + latSize &&
             c.longitude >= position.longitude &&
-            c.longitude < position.longitude + size);
+            c.longitude < position.longitude + longSize);
         return res;
     }
 
-    [[nodiscard]] bool intersects(Box box) const
+    [[nodiscard]] bool intersects(const Box& box) const
     {
-        return !(minLatitude() >= box.maxLatitude() || maxLatitude() <= box.minLatitude() ||
-                 minLongitude() >= box.maxLongitude() || maxLongitude() <= box.minLongitude());
+        return
+            minLatitude() < box.maxLatitude() &&
+            maxLatitude() > box.minLatitude() &&
+            minLongitude() < box.maxLongitude() &&
+            maxLongitude() > box.minLongitude();
     }
 };
 
@@ -173,38 +206,43 @@ class QuadTreeNode : public std::enable_shared_from_this<QuadTreeNode<T> >
 
     void subdivide()
     {
-        double halfSize = m_boundary.size / 2.0f;
+        double lonHalfSize = m_boundary.longSize / 2.0f;
+        double latHalfSize = m_boundary.latSize / 2.0f;
 
         // North West
         auto northWest = make_shared<QuadTreeNode>(
             this->shared_from_this(),
             m_boundary.minLatitude(),
             m_boundary.minLongitude(),
-            halfSize);
+            latHalfSize,
+            lonHalfSize);
         m_children.push_back(northWest);
 
         // North East
         auto northEast = make_shared<QuadTreeNode>(
             this->shared_from_this(),
             m_boundary.minLatitude(),
-            m_boundary.minLongitude() + halfSize,
-            halfSize);
+            m_boundary.minLongitude() + lonHalfSize,
+            latHalfSize,
+            lonHalfSize);
         m_children.push_back(northEast);
 
         // South East
         auto southEast = make_shared<QuadTreeNode>(
             this->shared_from_this(),
-            m_boundary.minLatitude() + halfSize,
-            m_boundary.minLongitude() + halfSize,
-            halfSize);
+            m_boundary.minLatitude() + latHalfSize,
+            m_boundary.minLongitude() + lonHalfSize,
+            latHalfSize,
+            lonHalfSize);
         m_children.push_back(southEast);
 
         // South West
         auto southWest = make_shared<QuadTreeNode>(
             this->shared_from_this(),
-            m_boundary.minLatitude() + halfSize,
+            m_boundary.minLatitude() + latHalfSize,
             m_boundary.minLongitude(),
-            halfSize);
+            latHalfSize,
+            lonHalfSize);
         m_children.push_back(southWest);
 
         for (const auto &object: m_objects)
@@ -227,6 +265,22 @@ public:
 
     QuadTreeNode(std::shared_ptr<QuadTreeNode> parent, double latitude, double longitude, double size) : m_parent(parent),
         m_boundary(Coordinate(latitude, longitude), size)
+    {
+    }
+
+    QuadTreeNode(double latitude, double longitude, double latSize, double lonSize) :
+    m_boundary(Coordinate(latitude, longitude), latSize, lonSize)
+    {
+    }
+
+    QuadTreeNode(
+        std::shared_ptr<QuadTreeNode> parent,
+        double latitude,
+        double longitude,
+        double latSize,
+        double lonSize) :
+        m_parent(parent),
+        m_boundary(Coordinate(latitude, longitude), latSize, lonSize)
     {
     }
 
