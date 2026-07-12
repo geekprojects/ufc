@@ -14,6 +14,8 @@
 using namespace std;
 using namespace UFC;
 
+#define DEBUG_USBHIDCONFIG
+
 #ifdef DEBUG_USBHIDCONFIG
 static void hexdump(const uint8_t* pos, int len)
 {
@@ -63,6 +65,19 @@ bool USBHIDConfigDevice::init()
 
     hid_set_nonblocking(getDevice(), true);
 
+    if (!m_initScript.empty())
+    {
+        log(DEBUG, "init: Calling init script...");
+        //m_lua->execute("usbdevice-init", m_initScript, "init", 1);
+        m_lua->execute(m_initScript);
+    }
+
+    for (Descriptor descriptor : m_init)
+    {
+        log(DEBUG, "init: Sending init descriptor: %s", descriptor.name.c_str());
+        updateOutput({}, descriptor, {});
+    }
+
     clear();
 
     return true;
@@ -80,9 +95,9 @@ void USBHIDConfigDevice::clear()
     update(state);
 }
 
-map<string, uint8_t> USBHIDConfigDevice::createDisplayValues(const shared_ptr<AircraftState>& state)
+map<string, AircraftValue> USBHIDConfigDevice::createDisplayValues(const shared_ptr<AircraftState> &state)
 {
-    map<string, uint8_t> displayValues;
+    map<string, AircraftValue> displayValues;
     if (state->getInt("autopilot/displaySpeed"))
     {
         float apSpeed = state->getFloat("autopilot/speed");
@@ -193,14 +208,6 @@ map<string, uint8_t> USBHIDConfigDevice::createDisplayValues(const shared_ptr<Ai
         displayValues.try_emplace("display/qnh[0]", DIGIT_D);
     }
 
-
-#ifdef DEBUG_USBHIDCONFIG
-    for (auto dv : displayValues)
-    {
-        log(DEBUG, "Display Value: %s = %d", dv.first.c_str(), dv.second);
-    }
-#endif
-
     return displayValues;
 }
 
@@ -212,11 +219,16 @@ void USBHIDConfigDevice::update(shared_ptr<AircraftState> state)
     }
     updateInput(state);
 
-    map<string, uint8_t> displayValues = createDisplayValues(state);
+    map<string, AircraftValue> displayValues = createDisplayValues(state);
 
     for (auto const& output : m_outputs)
     {
         updateOutput(state, output, displayValues);
+    }
+
+    if (m_hasFMC)
+    {
+        updateFMC(state);
     }
 }
 
@@ -284,16 +296,8 @@ uint8_t USBHIDConfigDevice::formatDigit(uint8_t number, const std::string& forma
     }
 }
 
-void USBHIDConfigDevice::updateOutput(
-    const shared_ptr<AircraftState>& state,
-    const Descriptor& output,
-    const map<string, uint8_t>& displayValues)
+void USBHIDConfigDevice::updateValue(const shared_ptr<AircraftState> &state, const Descriptor &output, const map<string, AircraftValue> &displayValues, BitBuffer& bitBuffer)
 {
-    BitBuffer bitBuffer;
-    if (output.hasReportId)
-    {
-        bitBuffer.appendByte(output.reportId);
-    }
     for (auto const& field: output.fields)
     {
         switch (field.type)
@@ -318,8 +322,11 @@ void USBHIDConfigDevice::updateOutput(
             }
 
             case FieldType::BYTE:
-                bitBuffer.appendByte((uint8_t)getValue(state, field, displayValues));
+            {
+                uint8_t value = getValue(state, field, displayValues);
+                bitBuffer.appendByte(value);
                 break;
+            }
 
             case FieldType::UINT16:
             {
@@ -340,7 +347,7 @@ void USBHIDConfigDevice::updateOutput(
             }
 
             case FieldType::DATA:
-                //log(DEBUG, "updateOutput: DATA: Appending %d bytes of data", field.data.size());
+                log(DEBUG, "updateOutput: DATA: Appending %d bytes of data", field.data.size());
                 for (uint8_t value : field.data)
                 {
                     bitBuffer.appendByte(value);
@@ -368,6 +375,19 @@ void USBHIDConfigDevice::updateOutput(
                 break;
         }
     }
+}
+
+void USBHIDConfigDevice::updateOutput(
+    const shared_ptr<AircraftState>& state,
+    const Descriptor& output,
+    const map<string, AircraftValue>& displayValues)
+{
+    BitBuffer bitBuffer;
+    if (output.hasReportId)
+    {
+        bitBuffer.appendByte(output.reportId);
+    }
+    updateValue(state, output, displayValues, bitBuffer);
     bitBuffer.flushBits();
 
 #ifdef DEBUG_USBHIDCONFIG
@@ -390,6 +410,9 @@ void USBHIDConfigDevice::updateInput(shared_ptr<AircraftState> state)
         {
             break;
         }
+
+        //log(DEBUG, "updateInput: Got %d bytes", res);
+        //log(DEBUG, "updateInput: Report id: %d", buffer[0]);
 
         for (Descriptor& input : m_inputs)
         {
@@ -439,12 +462,53 @@ void USBHIDConfigDevice::updateInput(shared_ptr<AircraftState> state, Descriptor
     }
 }
 
+void USBHIDConfigDevice::updateFMC(shared_ptr<AircraftState> state)
+{
+    BitBuffer bitBuffer;
+    int idx = 0;
+    for (int row = 0; row < 14; row++)
+    {
+        for (int col = 0; col < 24; ++col, ++idx)
+        {
+            map<string, AircraftValue> values;
 
-int USBHIDConfigDevice::getValue(shared_ptr<AircraftState> state, const Field &field, const map<string, uint8_t>& displayValues)
+            // Use the device config to render the character
+            FMSCharacter& fmsCharacter = state->getFMSState().characters[idx];
+            values["character"] = (int)fmsCharacter.character;
+            values["textColour"] = fmsCharacter.textColour;
+            values["backgroundColour"] = fmsCharacter.backgroundColour;
+
+            updateValue(state, m_fmcPageDescriptor, values, bitBuffer);
+        }
+    }
+    bitBuffer.flushBits();
+
+    log(DEBUG, "updateFMC: Buffer: %d bytes", bitBuffer.size());
+    //hexdump(bitBuffer.data(), bitBuffer.size());
+    int pos = 0;
+    while (pos < bitBuffer.size())
+    {
+        int len = bitBuffer.size();
+        if (len > 63)
+        {
+            len = 63;
+        }
+        std::vector<uint8_t> packet;
+        packet.push_back(0xf2);
+        for (int i = 0; i < len; i++)
+        {
+            packet.push_back(bitBuffer.data()[i + pos]);
+        }
+        hid_write(getDevice(), packet.data(), packet.size());
+        pos += len;
+    }
+}
+
+int USBHIDConfigDevice::getValue(shared_ptr<AircraftState> state, const Field &field, const map<string, AircraftValue>& displayValues)
 {
     if (field.valueType == FieldValueType::LUA)
     {
-        return m_lua->execute("usbhid-" + field.dataRef, field.lua, "value", 0.0f);
+        return m_lua->execute("usbhid-" + field.id, field.lua, displayValues);
     }
     if (field.valueType == FieldValueType::VALUE)
     {
@@ -467,7 +531,7 @@ int USBHIDConfigDevice::getValue(shared_ptr<AircraftState> state, const Field &f
     int value;
     if (displayValues.contains(dataRef))
     {
-        value = displayValues.at(dataRef);
+        value = displayValues.at(dataRef).getInt();
     }
     else
     {
@@ -484,11 +548,21 @@ bool USBHIDConfigDevice::loadConfig(const YAML::Node &config)
 {
     for (auto& node : config["init"])
     {
-        Descriptor descriptor;
-        descriptor.name = node.first.as<string>();
-        parseDescriptor(node.second, descriptor);
-        m_init.push_back(descriptor);
+        string name = node.first.as<string>();
+        if (name == "lua")
+        {
+            m_initScript = node.second.as<string>();
+log(DEBUG, "loadConfig: init script: %s", m_initScript.c_str());
+        }
+        else
+        {
+            Descriptor descriptor;
+            descriptor.name = node.first.as<string>();
+            parseDescriptor(node.second, descriptor);
+            m_init.push_back(descriptor);
+        }
     }
+
     for (auto& node : config["close"])
     {
         Descriptor descriptor;
@@ -510,6 +584,14 @@ bool USBHIDConfigDevice::loadConfig(const YAML::Node &config)
         parseDescriptor(node.second, descriptor);
         m_outputs.push_back(descriptor);
     }
+
+    if (config["fmc"])
+    {
+        m_hasFMC = true;
+        auto character = config["fmc"]["page"]["character"];
+        parseDescriptor(character, m_fmcPageDescriptor);
+    }
+
     return true;
 }
 
@@ -525,6 +607,8 @@ void USBHIDConfigDevice::parseDescriptor(const YAML::Node& descriptorNode, Descr
     {
         descriptor.hasReportId = false;
     }
+
+    int idx = 0;
     for (auto fieldNode : fields)
     {
         Field field;
@@ -573,6 +657,7 @@ void USBHIDConfigDevice::parseDescriptor(const YAML::Node& descriptorNode, Descr
                 field.data.push_back(value.as<uint8_t>());
                 field.length += 8;
             }
+            log(DEBUG, "parseDescriptor: data: %d bytes", field.length / 8);
         }
         else if (fieldNode["digit"])
         {
@@ -595,8 +680,19 @@ void USBHIDConfigDevice::parseDescriptor(const YAML::Node& descriptorNode, Descr
             field.type = FieldType::PADDING;
             field.length = length;
         }
+
+        field.id = descriptor.name + "-";
+        if (!field.dataRef.empty())
+        {
+            field.id += field.dataRef;
+        }
+        else
+        {
+            field.id += to_string(idx);
+        }
         descriptor.fields.push_back(field);
         descriptor.bitLength += field.length;
+        idx++;
     }
 }
 

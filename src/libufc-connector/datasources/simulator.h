@@ -74,6 +74,8 @@ class SimulatorDataSource : public DataSource
     bool m_flightDirector = false;
     bool m_ls = false;
 
+    std::string m_scratchPad;
+
  public:
     explicit SimulatorDataSource(FlightConnector* flightConnector);
     ~SimulatorDataSource() override = default;

@@ -42,6 +42,7 @@ enum class FieldValueType
 
 struct Field
 {
+    std::string id;
     FieldType type;
     FieldValueType valueType;
     int length;
@@ -65,6 +66,7 @@ struct Descriptor
 
 class USBHIDConfigDevice : public USBHIDDevice
 {
+    std::string m_initScript;
     std::vector<Descriptor> m_init;
     std::vector<Descriptor> m_close;
     std::vector<Descriptor> m_inputs;
@@ -72,14 +74,32 @@ class USBHIDConfigDevice : public USBHIDDevice
 
     std::shared_ptr<UFCLua> m_lua = nullptr;
 
+    bool m_hasFMC = false;
+    //int m_fmcPageReportId = 0;
+    //int m_fmcPacketSize = 0;
+    Descriptor m_fmcPageDescriptor;
+
     uint8_t formatDigit(uint8_t uint8, const std::string & string);
 
-    void updateOutput(const std::shared_ptr<AircraftState> &state, const Descriptor &output, const std::map<std::string, unsigned char> &
-                      displayValues);
+    void updateValue(
+        const std::shared_ptr<AircraftState> &state,
+        const Descriptor &output,
+        const std::map<std::string, AircraftValue> &displayValues,
+        BitBuffer &bitBuffer);
+
+    void updateOutput(
+        const std::shared_ptr<AircraftState> &state,
+        const Descriptor &output,
+        const std::map<std::string, AircraftValue> &displayValues);
     void updateInput(std::shared_ptr<AircraftState> state);
     void updateInput(std::shared_ptr<AircraftState> state, Descriptor &input, BitBuffer &buffer);
 
-    int getValue(std::shared_ptr<AircraftState> state, const Field &field, const std::map<std::string, unsigned char> &displayValues);
+    void updateFMC(std::shared_ptr<AircraftState> state);
+
+    int getValue(
+        std::shared_ptr<AircraftState> state,
+        const Field &field,
+        const std::map<std::string, AircraftValue> &displayValues);
 
     void parseDescriptor(const YAML::Node &descriptorNode, Descriptor &descriptor);
 
@@ -96,7 +116,7 @@ public:
 
     void close() override;
 
-    std::map<std::string, unsigned char> createDisplayValues(const std::shared_ptr<AircraftState> &state);
+    std::map<std::string, AircraftValue> createDisplayValues(const std::shared_ptr<AircraftState> &state);
 
     void update(std::shared_ptr<AircraftState> state) override;
 };

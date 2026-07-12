@@ -10,6 +10,7 @@
 
 #include <unistd.h>
 
+using namespace std;
 using namespace UFC;
 
 UFC_DATA_SOURCE(Simulator, SimulatorDataSource)
@@ -122,6 +123,43 @@ bool SimulatorDataSource::update()
 
         state->set(DATA_AUTOPILOT_FLIGHTDIRECTOR_PILOT_ON, m_flightDirector);
         state->set("efis/display/ls", m_ls);
+
+        auto t = std::time(nullptr);
+        auto tm = *std::localtime(&t);
+
+        FMSState& fmsState = state->getFMSState();
+        string title = "UFC FMS";
+        int spaces = (24 - title.length()) / 2;
+        title = string(spaces, ' ') + title;
+        while (title.length() < 24)
+        {
+            title += " ";
+        }
+        fmsState.print(0, 0, title, 'b', 'g');
+        std::ostringstream oss;
+        oss << std::put_time(&tm, "%d-%m-%Y %H:%M:%S");
+        fmsState.print(0, 1, oss.str());
+        fmsState.print(0, 2, "< Detatch Engine");
+        fmsState.print(0, 4, "< Increase Turbulence");
+        fmsState.print(0, 6, "< Deploy Chemtrails");
+        fmsState.print(0, 8, "< Fire Missile");
+        fmsState.print(0, 10, "< Eject Random Passenger");
+        fmsState.print(0, 12, "< Inflate Otto Pilot");
+
+        string scratchPad = m_scratchPad;
+        if ((t % 2) == 0)
+        {
+            scratchPad += "_";
+        }
+        else
+        {
+            scratchPad += " ";
+        }
+        while (scratchPad.length() < 24)
+        {
+            scratchPad += " ";
+        }
+        fmsState.print(0, 13, scratchPad, 'b', 'w');
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
@@ -285,6 +323,37 @@ void SimulatorDataSource::command(const std::string& command)
     else if (command == "efis/ls/toggle")
     {
         m_ls = !m_ls;
+    }
+    else if (command.starts_with("fmc/0/"))
+    {
+        if (command.starts_with("fmc/0/key") || command == ("fmc/0/space"))
+        {
+            string key = " ";
+            if (command.starts_with("fmc/0/key"))
+            {
+                key = command.substr(9);
+            }
+            m_scratchPad += key;
+            if (m_scratchPad.length() > 23)
+            {
+                m_scratchPad = m_scratchPad.substr(1);
+            }
+        }
+        else if (command.starts_with("fmc/0/clear"))
+        {
+            if (!m_scratchPad.empty())
+            {
+                m_scratchPad = m_scratchPad.substr(0, m_scratchPad.length() - 1);
+            }
+        }
+        else
+        {
+            m_scratchPad = command;
+            if (m_scratchPad.length() > 23)
+            {
+                m_scratchPad = m_scratchPad.substr(0, 23);
+            }
+        }
     }
     else
     {
