@@ -30,6 +30,7 @@ enum class FieldType
     UINT32,
     DATA,
     DIGIT,
+    UTF8,
     PADDING
 };
 

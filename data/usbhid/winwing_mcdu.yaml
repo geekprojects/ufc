@@ -308,13 +308,23 @@ fmc:
                   return 0x84
                 elseif col == string.byte('m') then
                   return 0xa5
+                elseif col == string.byte('c') then
+                  return 0x63
+                elseif col == string.byte('a') then
+                  return 0x21
+                elseif col == string.byte('y') then
+                  return 0xe7
                 else
                   return 0x42
                 end
               end
               value = mapColour(textColour) + (mapColour(backgroundColour) / 11)
-        - byte:
-            lua: |
-              value = character
+
+              -- Small font
+              if small == 89 then
+               value = value + 0x016b
+              end
+        - utf8:
+            lua: value = character
 
 

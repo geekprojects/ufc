@@ -10,6 +10,7 @@
 #include "lcd.h"
 
 #include "Engine/LuaState.hpp"
+#include "ufc/utils/utils.h"
 
 using namespace std;
 using namespace UFC;
@@ -347,7 +348,7 @@ void USBHIDConfigDevice::updateValue(const shared_ptr<AircraftState> &state, con
             }
 
             case FieldType::DATA:
-                log(DEBUG, "updateOutput: DATA: Appending %d bytes of data", field.data.size());
+                //log(DEBUG, "updateOutput: DATA: Appending %d bytes of data", field.data.size());
                 for (uint8_t value : field.data)
                 {
                     bitBuffer.appendByte(value);
@@ -362,6 +363,18 @@ void USBHIDConfigDevice::updateValue(const shared_ptr<AircraftState> &state, con
                 {
                     int v = (value >> i) & 0x1;
                     bitBuffer.appendBit(v);
+                }
+                break;
+            }
+            case FieldType::UTF8:
+            {
+                int value = getValue(state, field, displayValues);
+                wstring charstr;
+                charstr += (wchar_t)value;
+                string utf8char = wstring2utf8(charstr);
+                for (int i = 0; i < utf8char.length(); i++)
+                {
+                    bitBuffer.appendByte(utf8char[i]);
                 }
                 break;
             }
@@ -468,27 +481,59 @@ void USBHIDConfigDevice::updateFMC(shared_ptr<AircraftState> state)
     int idx = 0;
     for (int row = 0; row < 14; row++)
     {
+        wstring text = state->getString("fmc/0/line" + to_string(row + 1) + "/text");
+        wstring textColour = state->getString("fmc/0/line" + to_string(row + 1) + "/textColour");
+        wstring backgroundColour = state->getString("fmc/0/line" + to_string(row + 1) + "/backgroundColour");
+        wstring small = state->getString("fmc/0/line" + to_string(row + 1) + "/small");
+
         for (int col = 0; col < 24; ++col, ++idx)
         {
             map<string, AircraftValue> values;
 
-            // Use the device config to render the character
-            FMSCharacter& fmsCharacter = state->getFMSState().characters[idx];
-            values["character"] = (int)fmsCharacter.character;
-            values["textColour"] = fmsCharacter.textColour;
-            values["backgroundColour"] = fmsCharacter.backgroundColour;
+            if (text.length() > col)
+            {
+                values["character"] = (int)text.at(col);
+            }
+            else
+            {
+                values["character"] = ' ';
+            }
+            if (textColour.length() > col)
+            {
+                values["textColour"] = (int)textColour.at(col);
+            }
+            else
+            {
+                values["textColour"] = 'w';
+            }
+            if (backgroundColour.length() > col)
+            {
+                values["backgroundColour"] = (int)backgroundColour.at(col);
+            }
+            else
+            {
+                values["backgroundColour"] = 'b';
+            }
+            if (small.length() > col)
+            {
+                values["small"] = (int)small.at(col);
+            }
+            else
+            {
+                values["small"] = ' ';
+            }
 
             updateValue(state, m_fmcPageDescriptor, values, bitBuffer);
         }
     }
     bitBuffer.flushBits();
 
-    log(DEBUG, "updateFMC: Buffer: %d bytes", bitBuffer.size());
+    //log(DEBUG, "updateFMC: Buffer: %d bytes", bitBuffer.size());
     //hexdump(bitBuffer.data(), bitBuffer.size());
     int pos = 0;
     while (pos < bitBuffer.size())
     {
-        int len = bitBuffer.size();
+        int len = bitBuffer.size() - pos;
         if (len > 63)
         {
             len = 63;
@@ -498,6 +543,12 @@ void USBHIDConfigDevice::updateFMC(shared_ptr<AircraftState> state)
         for (int i = 0; i < len; i++)
         {
             packet.push_back(bitBuffer.data()[i + pos]);
+        }
+
+        // Pad to 64 bytes, if necessary
+        while (packet.size() < 64)
+        {
+            packet.push_back(0);
         }
         hid_write(getDevice(), packet.data(), packet.size());
         pos += len;
@@ -633,6 +684,13 @@ void USBHIDConfigDevice::parseDescriptor(const YAML::Node& descriptorNode, Descr
             field.length = 8;
 
             parseFieldValue(field, fieldNode["byte"]);
+        }
+        else if (fieldNode["utf8"])
+        {
+            field.type = FieldType::UTF8;
+            field.length = 8;
+
+            parseFieldValue(field, fieldNode["utf8"]);
         }
         else if (fieldNode["uint16"])
         {
