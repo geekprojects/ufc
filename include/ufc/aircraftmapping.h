@@ -73,8 +73,8 @@ class AircraftMapping : UFC::Logger
     void initDefinitions();
 
     bool checkAircraft(
-        const std::string &author,
-        const std::string &icaoType,
+        const std::wstring &author,
+        const std::wstring &icaoType,
         const std::filesystem::directory_entry &entry,
         YAML::Node aircraftFile);
 
@@ -83,7 +83,7 @@ class AircraftMapping : UFC::Logger
 
     void addDataRef(const DataDefinition& dataRef);
 
-    DataMapping parseMapping(std::string mapping);
+    DataMapping parseMapping(std::wstring mappingStr);
 
     void loadDefinitions(YAML::Node config);
     void loadCommands(YAML::Node node, const std::string& id);
@@ -92,7 +92,7 @@ class AircraftMapping : UFC::Logger
     AircraftMapping(UFC::DataSource* dataSource, const std::string &baseDir);
 
     void loadDefaults();
-    void loadDefinitionsForAircraft(const std::string &author, const std::string &icaoType);
+    void loadDefinitionsForAircraft(const std::wstring &author, const std::wstring &icaoType);
 
     const CommandDefinition& getCommand(const std::string &command);
 
@@ -103,7 +103,7 @@ class AircraftMapping : UFC::Logger
     void writeFloat(const std::shared_ptr<DataDefinition> &dataDef, float value);
     void writeInt(const std::shared_ptr<DataDefinition> &dataDef, int32_t value);
     void writeBoolean(const std::shared_ptr<DataDefinition> &dataDef, int32_t value);
-    void writeString(const std::shared_ptr<DataDefinition> &dataDef, const std::string& value);
+    void writeString(const std::shared_ptr<DataDefinition> &dataDef, const std::wstring &value);
     void writeValue(const std::shared_ptr<DataDefinition> &dataDef, const UFC::AircraftValue& value);
 };
 

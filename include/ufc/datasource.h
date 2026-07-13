@@ -122,14 +122,14 @@ class DataSource : public Logger
     virtual void command(const std::string& command);
     virtual void executeCommand(const std::string& command, const CommandDefinition& commandDefinition) {}
 
-    virtual void setData(const std::string& dataName, float value) {}
+    virtual void setData(const std::string& dataName, AircraftValue value) {}
 
     // Not all values may be updated in real time or you may not be running
     // the update thread. These can be used to retrieve values in these cases.
     virtual bool getDataInt(const std::string& dataName, int& value);
 
     virtual bool getDataFloat(const std::string& dataName, float& value);
-    virtual bool getDataString(const std::string& dataName, std::string& value);
+    virtual bool getDataString(const std::string &dataName, std::wstring &value);
 
     virtual void sendMessage(const std::string& message) {}
 

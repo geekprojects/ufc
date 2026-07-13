@@ -36,16 +36,16 @@ class XPlaneClient : protected Logger
         }
     }
 
-    virtual Result readString(const std::string &dataref, int len, std::string& value) = 0;
+    virtual Result readString(const std::string &dataref, int len, std::wstring& value) = 0;
     virtual Result read(const std::string& dataref, float& returnValue) = 0;
     virtual Result readInt(const std::string& dataref, int& value) = 0;
     virtual Result streamDataRefs(
         const std::vector<std::shared_ptr<DataDefinition>> &datarefs,
-        const std::function<void(std::map<int, float>)>& func,
+        const std::function<void(std::map<int, AircraftValue>)>& func,
         int count) = 0;
     Result streamDataRefs(
         const std::vector<std::shared_ptr<DataDefinition>> &datarefs,
-        const std::function<void(std::map<int, float>)>& func)
+        const std::function<void(std::map<int, AircraftValue>)>& func)
     {
         return streamDataRefs(datarefs, func, 0);
     }

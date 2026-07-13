@@ -12,6 +12,8 @@
 
 #include <cinttypes>
 
+#include "ufc/utils/utils.h"
+
 using namespace std;
 using namespace UFC;
 using namespace nlohmann;
@@ -45,7 +47,7 @@ bool XPlaneWebSocketClient::isConnected() const
     return true;
 }
 
-Result XPlaneWebSocketClient::readString(const string &dataref, int len, string &value)
+Result XPlaneWebSocketClient::readString(const string &dataref, int len, wstring &value)
 {
     json valueJson;
     if (!getDataRef(dataref, valueJson))
@@ -59,8 +61,9 @@ Result XPlaneWebSocketClient::readString(const string &dataref, int len, string 
     log(DEBUG, "readString: %s = Base64: %s", dataref.c_str(), value64.c_str());
 #endif
 
-    value = base64_decode(value64);
-    log(DEBUG, "readString: %s = %s", dataref.c_str(), value.c_str());
+    string utf8value = base64_decode(value64);
+    value = utf82wstring(utf8value.c_str());
+    log(DEBUG, "readString: %s = %ls", dataref.c_str(), value.c_str());
 
     return Result::SUCCESS;
 }
@@ -445,7 +448,7 @@ size_t XPlaneWebSocketClient::dataRefCallback(char* b, size_t size, size_t nitem
     auto payload = string(b, blen);
     data->buffer += payload;
 
-    if (meta == nullptr || !(meta->flags & CURLWS_CONT))
+    if (meta != nullptr && !(meta->flags & CURLWS_CONT) && meta->bytesleft == 0)
     {
         data->client->dataRefValues(data->buffer, data);
         data->buffer.clear();
@@ -472,7 +475,7 @@ void XPlaneWebSocketClient::dataRefValues(const string &body, DataRefWebSocketIn
 #endif
 
     json data = dataRefValuesJson["data"];
-    map<int, float> values;
+    map<int, AircraftValue> values;
     for (auto const& value : data.items())
     {
         int64_t id = atoll(value.key().c_str());
@@ -480,7 +483,7 @@ void XPlaneWebSocketClient::dataRefValues(const string &body, DataRefWebSocketIn
 
         for (const auto& dataRef : dataRefs)
         {
-            float v = 0;
+            AircraftValue v;
             if (value.value().is_array())
             {
                 size_t index = 0;
@@ -492,6 +495,19 @@ void XPlaneWebSocketClient::dataRefValues(const string &body, DataRefWebSocketIn
                 {
                     v = value.value().at(index).get<float>();
                 }
+            }
+            else if (value.value().is_string())
+            {
+                string value64 = value.value().get<string>();
+                string decoded = base64_decode(value64);
+
+                auto idx = decoded.find('\0');
+                if (idx != string::npos)
+                {
+                    decoded = decoded.substr(0, idx);
+                }
+
+                v = utf82wstring(decoded.c_str());
             }
             else
             {
@@ -509,7 +525,7 @@ void XPlaneWebSocketClient::dataRefValues(const string &body, DataRefWebSocketIn
 
 Result XPlaneWebSocketClient::streamDataRefs(
     const vector<shared_ptr<DataDefinition>>& dataRefs,
-    const function<void(map<int, float>)>& func,
+    const function<void(map<int, AircraftValue>)>& func,
     int count)
 {
     json dataRefsJson;

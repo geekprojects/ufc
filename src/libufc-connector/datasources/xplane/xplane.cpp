@@ -11,6 +11,7 @@
 
 #include "xplaneudpclient.h"
 #include "xplanewsclient.h"
+#include "../../lua.h"
 
 using namespace std;
 using namespace UFC;
@@ -82,7 +83,7 @@ bool XPlaneDataSource::connect()
         return false;
     }
 
-    string aircraftAuthor;
+    wstring aircraftAuthor;
     m_client->readString("sim/aircraft/view/acf_studio", 64, aircraftAuthor);
     if (aircraftAuthor.empty())
     {
@@ -90,7 +91,7 @@ bool XPlaneDataSource::connect()
     }
     state->set("aircraft/author", aircraftAuthor);
 
-    string aircraftICAO;
+    wstring aircraftICAO;
     m_client->readString("sim/aircraft/view/acf_ICAO", 10, aircraftICAO);
     state->set("aircraft/icao", aircraftICAO);
 
@@ -133,7 +134,7 @@ bool XPlaneDataSource::update()
         }
     }
 
-    auto res = m_client->streamDataRefs(datarefs, [this](map<int, float> const& values)
+    auto res = m_client->streamDataRefs(datarefs, [this](map<int, AircraftValue> const& values)
     {
         update(values);
     }, 0);
@@ -141,7 +142,7 @@ bool XPlaneDataSource::update()
     return res == Result::SUCCESS;
 }
 
-void XPlaneDataSource::update(const map<int, float>& values)
+void XPlaneDataSource::update(const map<int, AircraftValue>& values)
 {
     auto state = getFlightConnector()->getState();
     auto& mapping = getMapping();
@@ -155,33 +156,50 @@ void XPlaneDataSource::update(const map<int, float>& values)
 
         const auto& dataRef = getMapping().getDataRefs()[idx - 1];
 
-        auto v = transformData(dataRef, value);
-#if 0
-        log(DEBUG, "update: %s -> %f -> %f", dataRef->id.c_str(), value, v);
-#endif
-        switch (dataRef->type)
+        if (value.getType() == DataRefType::STRING)
         {
-            case DataRefType::FLOAT:
-                mapping.writeFloat(dataRef, v);
-                break;
-            case DataRefType::BOOLEAN:
-                mapping.writeBoolean(dataRef, static_cast<bool>(v));
-                break;
-            case DataRefType::INTEGER:
-                mapping.writeInt(dataRef, static_cast<int>(v));
-                break;
-            default:
-                if (dataRef->value != nullptr)
-                {
-                    getMapping().writeFloat(dataRef, v);
-                }
-                else
-                {
-                    log(WARN, "update: Unknown value for %s", dataRef->id.c_str());
-                }
-                break;
+            mapping.writeString(dataRef, value.getString());
+        }
+        else
+        {
+            auto v = transformData(dataRef, value.getFloat());
+#if 0
+            log(DEBUG, "update: %s -> %f -> %f", dataRef->id.c_str(), value, v);
+#endif
+            switch (dataRef->type)
+            {
+                case DataRefType::FLOAT:
+                    mapping.writeFloat(dataRef, v);
+                    break;
+                case DataRefType::BOOLEAN:
+                    mapping.writeBoolean(dataRef, static_cast<bool>(v));
+                    break;
+                case DataRefType::INTEGER:
+                    mapping.writeInt(dataRef, static_cast<int>(v));
+                    break;
+                default:
+                    if (dataRef->value != nullptr)
+                    {
+                        getMapping().writeFloat(dataRef, v);
+                    }
+                    else
+                    {
+                        log(WARN, "update: Unknown value for %s", dataRef->id.c_str());
+                    }
+                    break;
+            }
         }
     }
+
+    for (auto dataRef : mapping.getDataRefs())
+    {
+        if (dataRef->mapping.dataRef.empty() && !dataRef->mapping.luaScript.empty())
+        {
+            //log(DEBUG, "Updating computed value: %s", dataRef->id.c_str());
+            getDataLua()->execute(dataRef->mapping.luaScript);
+        }
+    }
+
 }
 
 void XPlaneDataSource::executeCommand(const string& commandName, const CommandDefinition& commandDefinition)
@@ -190,23 +208,22 @@ void XPlaneDataSource::executeCommand(const string& commandName, const CommandDe
     m_client->sendCommand(commandName);
 }
 
-void XPlaneDataSource::setData(const std::string& dataName, float value)
+void XPlaneDataSource::setData(const std::string& dataName, AircraftValue value)
 {
     auto dataRef = getMapping().getDataRef(dataName);
     if (dataRef == nullptr)
     {
         // Not mapped. Try setting directly
-        m_client->setDataRef(dataName, value);
+        m_client->setDataRef(dataName, value.getFloat());
         return;
     }
 
     if (dataRef->mapping.dataRef.empty())
     {
-        log(WARN, "setData: Data ref is empty for {}", dataName.c_str());
         return;
     }
 
-    m_client->setDataRef(dataRef->mapping.dataRef, value);
+    m_client->setDataRef(dataRef->mapping.dataRef, value.getFloat());
 }
 
 bool XPlaneDataSource::getDataInt(const std::string& dataName, int& value)
@@ -236,7 +253,7 @@ bool XPlaneDataSource::getDataFloat(const std::string& dataName, float& value)
     return res == Result::SUCCESS;
 }
 
-bool XPlaneDataSource::getDataString(const std::string& dataName, string& value)
+bool XPlaneDataSource::getDataString(const string &dataName, wstring &value)
 {
     auto dataRef = getMapping().getDataRef(dataName);
     if (dataRef == nullptr || dataRef->mapping.dataRef.empty())

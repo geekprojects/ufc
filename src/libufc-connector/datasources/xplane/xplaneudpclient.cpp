@@ -5,7 +5,9 @@
 
 #include "xplaneudpclient.h"
 
+#include "../../../libufc-utils/utf8.h"
 #include "ufc/utils/data.h"
+#include "ufc/utils/utils.h"
 
 using namespace std;
 using namespace UFC;
@@ -59,7 +61,7 @@ struct dref_struct_in
 
 Result XPlaneUDPClient::streamDataRefs(
     const vector<shared_ptr<DataDefinition>>& datarefs,
-    const function<void(map<int, float>)>& callback,
+    const function<void(map<int, AircraftValue>)>& callback,
     int count)
 {
     auto streamSocket = createConnection();
@@ -74,7 +76,7 @@ Result XPlaneUDPClient::streamDataRefs(
 Result XPlaneUDPClient::streamDataRefsInternal(
     const shared_ptr<UDPSocket>& socket,
     const vector<shared_ptr<DataDefinition>>& datarefs,
-    const function<void(map<int, float>)>& callback,
+    const function<void(map<int, AircraftValue>)>& callback,
     const int count)
 {
     auto res = sendRREF(socket, datarefs, 20);
@@ -106,7 +108,7 @@ Result XPlaneUDPClient::streamDataRefsInternal(
             continue;
         }
         packet->read8(); // null
-        map<int, float> values;
+        map<int, AircraftValue> values;
         while (!packet->eof())
         {
             auto idx = static_cast<int>(packet->read32());
@@ -180,7 +182,7 @@ Result XPlaneUDPClient::setDataRef(const string& dataRef, float value)
 
 #define READ_OFFSET 10000
 
-Result XPlaneUDPClient::readString(const string& dataref, int len, string& value)
+Result XPlaneUDPClient::readString(const string& dataref, int len, wstring& value)
 {
     vector<shared_ptr<DataDefinition>> datarefs;
     for (int i = 0; i < len; i++)
@@ -193,7 +195,7 @@ Result XPlaneUDPClient::readString(const string& dataref, int len, string& value
 
     char buffer[len + 1];
     memset(buffer, 0, len + 1);
-    auto res = streamDataRefsInternal(m_dataSocket, datarefs, [&buffer, &len](map<int, float> const& values)
+    auto res = streamDataRefsInternal(m_dataSocket, datarefs, [&buffer, &len](map<int, AircraftValue> const& values)
     {
         for (const auto& [idx, v] : values)
         {
@@ -204,14 +206,14 @@ Result XPlaneUDPClient::readString(const string& dataref, int len, string& value
             int i = idx - READ_OFFSET;
             if (i < len)
             {
-                buffer[i] = (char)v;
+                buffer[i] = (char)v.getFloat();
             }
         }
     }, 1);
 
     if (res == Result::SUCCESS)
     {
-        value = string(buffer);
+        value = utf82wstring(buffer);
     }
 
     return res;
@@ -225,11 +227,11 @@ Result XPlaneUDPClient::read(const string& dataref, float& returnValue)
     datadef->mapping.dataRef = dataref;
     datarefs.push_back(datadef);
 
-    return streamDataRefsInternal(m_dataSocket, datarefs, [&returnValue](map<int, float> const& values)
+    return streamDataRefsInternal(m_dataSocket, datarefs, [&returnValue](map<int, AircraftValue> const& values)
     {
         for (const auto& [idx, value] : values)
         {
-            returnValue = value;
+            returnValue = value.getFloat();
         }
     }, 1);
 }

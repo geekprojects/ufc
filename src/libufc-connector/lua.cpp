@@ -8,6 +8,7 @@
 #include "lua.h"
 
 #include "Engine/LuaTTable.hpp"
+#include "ufc/utils/utils.h"
 
 using namespace std;
 using namespace UFC;
@@ -27,17 +28,33 @@ shared_ptr<LuaType> UFCDataMetaObject::getValue(string &name)
         return make_shared<LuaTNil>();
     }
 
-    float value = m_flightConnector->getState()->getFloat(name);
-    return make_shared<LuaTNumber>(value);
+    auto value = m_flightConnector->getState()->getValue(name);
+    if (value == nullptr)
+    {
+        return make_shared<LuaTNil>();
+    }
+
+    switch (value->getType())
+    {
+        case DataRefType::BOOLEAN:
+        case DataRefType::INTEGER:
+        case DataRefType::FLOAT:
+        case DataRefType::UNKNOWN:
+            return make_shared<LuaTNumber>(value->getFloat());
+        case DataRefType::STRING:
+        {
+            auto table = make_shared<LuaTTable>();
+            for (int idx = 0; idx < value->getString().size(); ++idx)
+            {
+                table->setValue(Table::Key(idx + 1), make_shared<LuaTNumber>(value->getString()[idx]));
+            }
+            return table;
+        }
+    }
 }
 
  void UFCDataMetaObject::setValue(string &name, shared_ptr<LuaType> val)
 {
-    if (val->getTypeId() != LUA_TNUMBER)
-    {
-        return;
-    }
-
     if (val->getTypeId() == LUA_TNUMBER)
     {
         auto number = static_cast<LuaTNumber*>(val.get());
@@ -46,7 +63,26 @@ shared_ptr<LuaType> UFCDataMetaObject::getValue(string &name)
             printf("UFCDataMetaObject::setValue: name=%s value is null?\n", name.c_str());
             return;
         }
-        m_flightConnector->getDataSource()->setData(name, number->getValue());
+        m_flightConnector->getDataSource()->setData(name, AircraftValue((float)number->getValue()));
+    }
+    else if (val->getTypeId() == LUA_TSTRING)
+    {
+        auto str = static_cast<LuaTString*>(val.get());
+        m_flightConnector->getState()->set(name, utf82wstring(str->getValue().c_str()));
+    }
+    else if (val->getTypeId() == LUA_TTABLE)
+    {
+        auto strTable = static_cast<LuaTTable*>(val.get());
+
+        wstring str(strTable->getValues().size(), ' ');
+        for (auto valuePair : strTable->getValues())
+        {
+            int idx = valuePair.first.getIntValue();
+            wchar_t value = static_cast<LuaTNumber*>(valuePair.second.get())->getValue();
+            str[idx - 1] = value;
+        }
+
+        m_flightConnector->getState()->set(name, str);
     }
     else
     {
@@ -92,7 +128,7 @@ void UFCLua::execute(string str)
     m_lua.CompileStringAndRun(str);
 }
 
-float UFCLua::execute(const string& name, const string &str, string variable, float value)
+float UFCLua::execute(const string &name, const string &str, string variable, float value)
 {
     map<string, AircraftValue> values;
     values[name] = value;

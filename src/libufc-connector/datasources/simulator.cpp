@@ -10,6 +10,8 @@
 
 #include <unistd.h>
 
+#include "ufc/utils/utils.h"
+
 using namespace std;
 using namespace UFC;
 
@@ -127,43 +129,52 @@ bool SimulatorDataSource::update()
         auto t = std::time(nullptr);
         auto tm = *std::localtime(&t);
 
-        FMSState& fmsState = state->getFMSState();
-        string title = "UFC FMS";
+        wstring title = L"⬡UFC FMS°";
         int spaces = (24 - title.length()) / 2;
-        title = string(spaces, ' ') + title;
+        title = wstring(spaces, ' ') + title;
         while (title.length() < 24)
         {
-            title += " ";
+            title += L" ";
         }
-        fmsState.print(0, 0, title, 'b', 'g');
-        std::ostringstream oss;
-        oss << std::put_time(&tm, "%d-%m-%Y %H:%M:%S");
-        fmsState.print(0, 1, oss.str());
-        fmsState.print(0, 2, "< Detatch Engine");
-        fmsState.print(0, 4, "< Increase Turbulence");
-        fmsState.print(0, 6, "< Deploy Chemtrails");
-        fmsState.print(0, 8, "< Fire Missile");
-        fmsState.print(0, 10, "< Eject Random Passenger");
-        fmsState.print(0, 12, "< Inflate Otto Pilot");
 
-        string scratchPad = m_scratchPad;
+        std::wstringstream oss;
+        oss << std::put_time(&tm, L"%d-%m-%Y %H:%M:%S");
+
+        fmsPrint(state, 1, title, 'b', 'g');
+        fmsPrint(state, 2, oss.str());
+
+        fmsPrint(state, 3, L"< Detatch Engine");
+        fmsPrint(state, 5, L"< Increase Turbulence");
+        fmsPrint(state, 7, L"< Deploy Chemtrails");
+        fmsPrint(state, 9, L"< Fire Missile");
+        fmsPrint(state, 11, L"< Eject Random Passenger");
+        fmsPrint(state, 13, L"< Inflate Otto Pilot");
+
+        wstring scratchPad = m_scratchPad;
         if ((t % 2) == 0)
         {
-            scratchPad += "_";
+            scratchPad += L"_";
         }
         else
         {
-            scratchPad += " ";
+            scratchPad += L" ";
         }
         while (scratchPad.length() < 24)
         {
-            scratchPad += " ";
+            scratchPad += L" ";
         }
-        fmsState.print(0, 13, scratchPad, 'b', 'w');
+        fmsPrint(state, 14, scratchPad, 'b', 'w');
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     return true;
+}
+
+void SimulatorDataSource::fmsPrint(shared_ptr<AircraftState> state, int row, std::wstring text, char fg, char bg)
+{
+    state->set("fmc/0/line" + to_string(row) + "/text", text);
+    state->set("fmc/0/line" + to_string(row) + "/textColour", wstring(24, fg));
+    state->set("fmc/0/line" + to_string(row) + "/backgroundColour", wstring(24, bg));
 }
 
 void SimulatorDataSource::command(const std::string& command)
@@ -328,10 +339,10 @@ void SimulatorDataSource::command(const std::string& command)
     {
         if (command.starts_with("fmc/0/key") || command == ("fmc/0/space"))
         {
-            string key = " ";
+            wstring key = L" ";
             if (command.starts_with("fmc/0/key"))
             {
-                key = command.substr(9);
+                key = utf82wstring(command.substr(9).c_str());
             }
             m_scratchPad += key;
             if (m_scratchPad.length() > 23)
@@ -348,7 +359,7 @@ void SimulatorDataSource::command(const std::string& command)
         }
         else
         {
-            m_scratchPad = command;
+            m_scratchPad = utf82wstring(command.c_str());
             if (m_scratchPad.length() > 23)
             {
                 m_scratchPad = m_scratchPad.substr(0, 23);
@@ -363,3 +374,4 @@ void SimulatorDataSource::command(const std::string& command)
 
     m_autopilot = autopilot;
 }
+

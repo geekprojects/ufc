@@ -73,7 +73,7 @@ bool DataSource::getDataFloat(const std::string &dataName, float &value)
     return true;
 }
 
-bool DataSource::getDataString(const std::string &dataName, std::string &value)
+bool DataSource::getDataString(const std::string &dataName, std::wstring &value)
 {
     value = m_flightConnector->getState()->getString(dataName);
     return true;

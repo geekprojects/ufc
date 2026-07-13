@@ -30,7 +30,7 @@ enum class DataRefType
 class AircraftValue
 {
     DataRefType m_type = DataRefType::UNKNOWN;
-    std::variant<std::monostate, int, float, std::string> m_value;
+    std::variant<std::monostate, int, float, std::wstring> m_value;
 
  public:
     AircraftValue()
@@ -52,7 +52,7 @@ class AircraftValue
         set(f);
     }
 
-    AircraftValue(std::string const& str)
+    AircraftValue(std::wstring const& str)
     {
         set(str);
     }
@@ -75,7 +75,7 @@ class AircraftValue
         m_value = f;
     }
 
-    void set(std::string const& str)
+    void set(std::wstring const& str)
     {
         m_type = DataRefType::STRING;
         m_value = str;
@@ -120,19 +120,19 @@ class AircraftValue
         }
     }
 
-    [[nodiscard]] std::string getString() const
+    [[nodiscard]] std::wstring getString() const
     {
         switch (m_type)
         {
             case DataRefType::BOOLEAN:
             case DataRefType::INTEGER:
-                return std::to_string(std::get<int>(m_value));
+                return std::to_wstring(std::get<int>(m_value));
             case DataRefType::FLOAT:
-                return std::to_string(std::get<float>(m_value));
+                return std::to_wstring(std::get<float>(m_value));
             case DataRefType::STRING:
-                return std::get<std::string>(m_value);
+                return std::get<std::wstring>(m_value);
             default:
-                return "";
+                return L"";
         }
     }
 
@@ -142,60 +142,10 @@ class AircraftValue
     }
 };
 
-struct FMSCharacter
-{
-    char textColour = 'w';
-    char backgroundColour = 'b';
-    wchar_t character = ' ';
-};
-
-struct FMSState
-{
-    int columns;
-    int rows;
-    std::vector<FMSCharacter> characters;
-
-    FMSState()
-    {
-        init(24, 14);
-    }
-
-    void init(int c, int r)
-    {
-        columns = c;
-        rows = r;
-        characters = std::vector<FMSCharacter>(rows * columns, FMSCharacter());
-    }
-
-    void set(int c, int r, wchar_t character, int tc = 'w', int bc = 'b')
-    {
-        int idx = (r * columns) + c;
-        if (idx >= rows * columns)
-        {
-            return;
-        }
-        characters[idx].character = character;
-        characters[idx].textColour = tc;
-        characters[idx].backgroundColour = bc;
-    }
-
-    FMSCharacter& at(int c, int r) { return characters[r * columns + c]; }
-
-    void print(int c, int r, std::string str, int tc = 'w', int bc = 'b')
-    {
-        for (int i = 0; i < str.length() && c < columns; i++, c++)
-        {
-            set(c, r, str[i], tc, bc);
-        }
-    }
-};
-
 class AircraftState : public Logger
 {
     std::mutex m_mutex;
     std::map<std::string, std::shared_ptr<AircraftValue>, std::less<>> m_valuesByName;
-
-    FMSState m_fms;
 
  public:
     AircraftState() : Logger("AircraftState") {}
@@ -222,7 +172,7 @@ class AircraftState : public Logger
         getOrCreateValue(name)->set(f);
     }
 
-    void set(std::string const& name, const std::string& str)
+    void set(std::string const& name, const std::wstring& str)
     {
         getOrCreateValue(name)->set(str);
     }
@@ -234,9 +184,10 @@ class AircraftState : public Logger
 
     float getFloat(const std::string& dataName);
     int getInt(const std::string& dataName);
-    std::string getString(const std::string& dataName);
 
-    FMSState& getFMSState() { return m_fms; }
+    std::wstring getString(const std::string &dataName);
+
+    void fmsPrint(int row, std::wstring text, char fg = 'w', char bg = 'b');
 
     void dump();
 };
