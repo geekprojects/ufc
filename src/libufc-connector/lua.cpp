@@ -34,23 +34,17 @@ shared_ptr<LuaType> UFCDataMetaObject::getValue(string &name)
         return make_shared<LuaTNil>();
     }
 
-    switch (value->getType())
+    if (value->getType() == DataRefType::STRING)
     {
-        case DataRefType::BOOLEAN:
-        case DataRefType::INTEGER:
-        case DataRefType::FLOAT:
-        case DataRefType::UNKNOWN:
-            return make_shared<LuaTNumber>(value->getFloat());
-        case DataRefType::STRING:
+        auto table = make_shared<LuaTTable>();
+        for (size_t idx = 0; idx < value->getString().size(); ++idx)
         {
-            auto table = make_shared<LuaTTable>();
-            for (int idx = 0; idx < value->getString().size(); ++idx)
-            {
-                table->setValue(Table::Key(idx + 1), make_shared<LuaTNumber>(value->getString()[idx]));
-            }
-            return table;
+            table->setValue(Table::Key(static_cast<int>(idx) + 1), make_shared<LuaTNumber>(value->getString()[idx]));
         }
+        return table;
     }
+
+    return make_shared<LuaTNumber>(value->getFloat());
 }
 
  void UFCDataMetaObject::setValue(string &name, shared_ptr<LuaType> val)
@@ -75,7 +69,7 @@ shared_ptr<LuaType> UFCDataMetaObject::getValue(string &name)
         auto strTable = static_cast<LuaTTable*>(val.get());
 
         wstring str(strTable->getValues().size(), ' ');
-        for (auto valuePair : strTable->getValues())
+        for (auto const& valuePair : strTable->getValues())
         {
             int idx = valuePair.first.getIntValue();
             wchar_t value = static_cast<LuaTNumber*>(valuePair.second.get())->getValue();
@@ -123,7 +117,7 @@ UFCLua::UFCLua(FlightConnector* flightConnector) : m_flightConnector(flightConne
     m_lua.AddGlobalVariable("state", m_stateTable);
 }
 
-void UFCLua::execute(string str)
+void UFCLua::execute(const string& str)
 {
     m_lua.CompileStringAndRun(str);
 }
@@ -142,10 +136,9 @@ float UFCLua::execute(const string &name, const string &str, map<string, Aircraf
     LuaEnvironment env;
     shared_ptr<LuaTNumber> returnValue = nullptr;
 
-    for (pair<string, AircraftValue> value : values)
+    for (auto [valueName, value] : values)
     {
-        string valueName = value.first;
-        auto luaValue = make_shared<LuaTNumber>(value.second.getFloat());
+        auto luaValue = make_shared<LuaTNumber>(value.getFloat());
         env[valueName] = luaValue;
         if (valueName == "value")
         {
