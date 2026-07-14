@@ -15,7 +15,7 @@
 using namespace std;
 using namespace UFC;
 
-#define DEBUG_USBHIDCONFIG
+#undef DEBUG_USBHIDCONFIG
 
 #ifdef DEBUG_USBHIDCONFIG
 static void hexdump(const uint8_t* pos, int len)
@@ -372,7 +372,7 @@ void USBHIDConfigDevice::updateValue(const shared_ptr<AircraftState> &state, con
                 wstring charstr;
                 charstr += (wchar_t)value;
                 string utf8char = wstring2utf8(charstr);
-                for (int i = 0; i < utf8char.length(); i++)
+                for (size_t i = 0; i < utf8char.length(); i++)
                 {
                     bitBuffer.appendByte(utf8char[i]);
                 }
@@ -486,13 +486,13 @@ void USBHIDConfigDevice::updateFMC(shared_ptr<AircraftState> state)
         wstring backgroundColour = state->getString("fmc/0/line" + to_string(row + 1) + "/backgroundColour");
         wstring small = state->getString("fmc/0/line" + to_string(row + 1) + "/small");
 
-        for (int col = 0; col < 24; ++col, ++idx)
+        for (size_t col = 0; col < 24; ++col, ++idx)
         {
             map<string, AircraftValue> values;
 
             if (text.length() > col)
             {
-                values["character"] = (int)text.at(col);
+                values["character"] = static_cast<int>(text.at(col));
             }
             else
             {
@@ -500,7 +500,7 @@ void USBHIDConfigDevice::updateFMC(shared_ptr<AircraftState> state)
             }
             if (textColour.length() > col)
             {
-                values["textColour"] = (int)textColour.at(col);
+                values["textColour"] = static_cast<int>(textColour.at(col));
             }
             else
             {
@@ -508,7 +508,7 @@ void USBHIDConfigDevice::updateFMC(shared_ptr<AircraftState> state)
             }
             if (backgroundColour.length() > col)
             {
-                values["backgroundColour"] = (int)backgroundColour.at(col);
+                values["backgroundColour"] = static_cast<int>(backgroundColour.at(col));
             }
             else
             {
@@ -516,7 +516,7 @@ void USBHIDConfigDevice::updateFMC(shared_ptr<AircraftState> state)
             }
             if (small.length() > col)
             {
-                values["small"] = (int)small.at(col);
+                values["small"] = static_cast<int>(small.at(col));
             }
             else
             {
@@ -530,7 +530,7 @@ void USBHIDConfigDevice::updateFMC(shared_ptr<AircraftState> state)
 
     //log(DEBUG, "updateFMC: Buffer: %d bytes", bitBuffer.size());
     //hexdump(bitBuffer.data(), bitBuffer.size());
-    int pos = 0;
+    size_t pos = 0;
     while (pos < bitBuffer.size())
     {
         int len = bitBuffer.size() - pos;
