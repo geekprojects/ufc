@@ -74,6 +74,10 @@ class SimulatorDataSource : public DataSource
     bool m_flightDirector = false;
     bool m_ls = false;
 
+    std::wstring m_scratchPad;
+
+    void fmsPrint(std::shared_ptr<AircraftState> state, int row, std::wstring text, char fg = 'w', char bg = 'b');
+
  public:
     explicit SimulatorDataSource(FlightConnector* flightConnector);
     ~SimulatorDataSource() override = default;

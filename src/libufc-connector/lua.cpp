@@ -8,6 +8,7 @@
 #include "lua.h"
 
 #include "Engine/LuaTTable.hpp"
+#include "ufc/utils/utils.h"
 
 using namespace std;
 using namespace UFC;
@@ -15,29 +16,49 @@ using namespace LuaCpp;
 using namespace LuaCpp::Registry;
 using namespace LuaCpp::Engine;
 
-bool UFCDataMetaObject::Exists(const std::string &name)
+bool UFCDataMetaObject::Exists(const string &name)
 {
     return m_flightConnector->getState()->isSet(name);
 }
 
-std::shared_ptr<LuaType> UFCDataMetaObject::getValue(std::string &name)
+shared_ptr<LuaType> UFCDataMetaObject::getValue(string &name)
 {
     if (m_flightConnector->getDataSource() == nullptr)
     {
-        return std::make_shared<LuaTNil>();
+        return make_shared<LuaTNil>();
     }
 
-    float value = m_flightConnector->getState()->getFloat(name);
-    return std::make_shared<LuaTNumber>(value);
+    auto value = m_flightConnector->getState()->getValue(name);
+    if (value == nullptr)
+    {
+        return make_shared<LuaTNil>();
+    }
+
+    if (value->getType() == DataRefType::STRING)
+    {
+        auto table = make_shared<LuaTTable>();
+        for (size_t idx = 0; idx < value->getString().size(); ++idx)
+        {
+            table->setValue(Table::Key(static_cast<int>(idx) + 1), make_shared<LuaTNumber>(value->getString()[idx]));
+        }
+        return table;
+    }
+    if (value->getType() == DataRefType::INT_ARRAY)
+    {
+        auto table = make_shared<LuaTTable>();
+        const auto& array = value->getArray();
+        for (size_t idx = 0; idx < array.size(); ++idx)
+        {
+            table->setValue(Table::Key(static_cast<int>(idx) + 1), make_shared<LuaTNumber>(array.at(idx)));
+        }
+        return table;
+    }
+
+    return make_shared<LuaTNumber>(value->getFloat());
 }
 
- void UFCDataMetaObject::setValue(std::string &name, std::shared_ptr<LuaType> val)
+ void UFCDataMetaObject::setValue(string &name, shared_ptr<LuaType> val)
 {
-    if (val->getTypeId() != LUA_TNUMBER)
-    {
-        return;
-    }
-
     if (val->getTypeId() == LUA_TNUMBER)
     {
         auto number = static_cast<LuaTNumber*>(val.get());
@@ -46,7 +67,26 @@ std::shared_ptr<LuaType> UFCDataMetaObject::getValue(std::string &name)
             printf("UFCDataMetaObject::setValue: name=%s value is null?\n", name.c_str());
             return;
         }
-        m_flightConnector->getDataSource()->setData(name, number->getValue());
+        m_flightConnector->getDataSource()->setData(name, AircraftValue((float)number->getValue()));
+    }
+    else if (val->getTypeId() == LUA_TSTRING)
+    {
+        auto str = static_cast<LuaTString*>(val.get());
+        m_flightConnector->getState()->set(name, utf82wstring(str->getValue().c_str()));
+    }
+    else if (val->getTypeId() == LUA_TTABLE)
+    {
+        auto strTable = static_cast<LuaTTable*>(val.get());
+
+        wstring str(strTable->getValues().size(), ' ');
+        for (auto const& valuePair : strTable->getValues())
+        {
+            int idx = valuePair.first.getIntValue();
+            wchar_t value = static_cast<LuaTNumber*>(valuePair.second.get())->getValue();
+            str[idx - 1] = value;
+        }
+
+        m_flightConnector->getState()->set(name, str);
     }
     else
     {
@@ -77,29 +117,56 @@ int UFCCommandMetaObject::Execute(LuaState &L)
 
 UFCLua::UFCLua(FlightConnector* flightConnector) : m_flightConnector(flightConnector)
 {
-    m_ufcDataMetaObject = std::make_shared<UFCDataMetaObject>(m_flightConnector);
+    m_ufcDataMetaObject = make_shared<UFCDataMetaObject>(m_flightConnector);
     m_lua.AddGlobalVariable("data", m_ufcDataMetaObject);
 
-    m_ufcCommandMetaObject = std::make_shared<UFCCommandMetaObject>(m_flightConnector);
+    m_ufcCommandMetaObject = make_shared<UFCCommandMetaObject>(m_flightConnector);
     m_lua.AddGlobalVariable("command", m_ufcCommandMetaObject);
 
-    m_stateTable = std::make_shared<LuaTTable>();
+    m_stateTable = make_shared<LuaTTable>();
     m_lua.AddGlobalVariable("state", m_stateTable);
 }
 
-void UFCLua::execute(std::string str)
+void UFCLua::execute(const string& str)
 {
     m_lua.CompileStringAndRun(str);
 }
 
-float UFCLua::execute(const std::string& name, const std::string &str, std::string variable, float value)
+float UFCLua::execute(const string &name, const string &str, string variable, float value)
+{
+    map<string, AircraftValue> values;
+    values[name] = value;
+    return execute(name, str, values);
+}
+
+float UFCLua::execute(const string &name, const string &str, map<string, AircraftValue> values)
 {
     m_lua.CompileString(name, str);
 
-    auto luaValue = make_shared<LuaTNumber>(value);
     LuaEnvironment env;
-    env[variable] = luaValue;
+    shared_ptr<LuaTNumber> returnValue = nullptr;
+
+    for (auto [valueName, value] : values)
+    {
+        auto luaValue = make_shared<LuaTNumber>(value.getFloat());
+        env[valueName] = luaValue;
+        if (valueName == "value")
+        {
+            returnValue = luaValue;
+        }
+    }
+
+    if (returnValue == nullptr)
+    {
+        returnValue = make_shared<LuaTNumber>(0.0);
+        env["value"] = returnValue;
+    }
+
+    env["data"] = m_ufcDataMetaObject;
+    env["command"] = m_ufcCommandMetaObject;
+    env["state"] = m_stateTable;
+
     m_lua.RunWithEnvironment(name, env);
 
-    return luaValue->getValue();
+    return returnValue->getValue();
 }

@@ -28,12 +28,12 @@ class XPPluginDataSource : public UFC::DataSource
     std::map<std::string, DataRefInfo> m_dataRefInfoMap;
     std::map<std::string, XPLMCommandRef> m_commandDefs;
 
-    std::string getString(XPLMDataRef ref);
+    std::wstring getString(XPLMDataRef ref);
 
     std::vector<XPLMCommandRef> m_commandQueue;
     std::mutex m_commandQueueMutex;
 
-    std::map<std::string, float> m_dataQueue;
+    std::map<std::string, UFC::AircraftValue> m_dataQueue;
     std::mutex m_dataQueueMutex;
 
     bool m_checkAircraft = true;
@@ -42,7 +42,7 @@ class XPPluginDataSource : public UFC::DataSource
     bool updateDataRefs();
     void executeCommands();
     void updateValues();
-    void executeSetData(const std::string& dataName, float value);
+    void executeSetData(const std::string &dataName, UFC::AircraftValue value);
 
     void checkReload();
 
@@ -61,7 +61,7 @@ class XPPluginDataSource : public UFC::DataSource
     bool update() override;
 
     void executeCommand(const std::string& command, const CommandDefinition& commandDefinition) override;
-    void setData(const std::string& dataName, float value) override;
+    void setData(const std::string& dataName, UFC::AircraftValue value) override;
 };
 
 #endif //XPPLUGINDATASOURCE_H

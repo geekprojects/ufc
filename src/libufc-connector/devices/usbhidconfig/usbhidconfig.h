@@ -8,9 +8,9 @@
 #include <string>
 #include <yaml-cpp/yaml.h>
 
-#include <../../../include/ufc/utils/bitbuffer.h>
+#include <ufc/utils/bitbuffer.h>
 #include <ufc/flightconnector.h>
-#include <../../../include/ufc/devices/usbhiddevice.h>
+#include <ufc/devices/usbhiddevice.h>
 
 namespace UFC
 {
@@ -30,6 +30,7 @@ enum class FieldType
     UINT32,
     DATA,
     DIGIT,
+    UTF8,
     PADDING
 };
 
@@ -42,6 +43,7 @@ enum class FieldValueType
 
 struct Field
 {
+    std::string id;
     FieldType type;
     FieldValueType valueType;
     int length;
@@ -65,6 +67,7 @@ struct Descriptor
 
 class USBHIDConfigDevice : public USBHIDDevice
 {
+    std::string m_initScript;
     std::vector<Descriptor> m_init;
     std::vector<Descriptor> m_close;
     std::vector<Descriptor> m_inputs;
@@ -72,18 +75,42 @@ class USBHIDConfigDevice : public USBHIDDevice
 
     std::shared_ptr<UFCLua> m_lua = nullptr;
 
-    uint8_t formatDigit(uint8_t uint8, const std::string & string);
+    bool m_hasFMC = false;
+    Descriptor m_fmcPageDescriptor;
+    std::string m_fmcFontFile;
 
-    void updateOutput(const std::shared_ptr<AircraftState> &state, const Descriptor &output, const std::map<std::string, unsigned char> &
-                      displayValues);
-    void updateInput(std::shared_ptr<AircraftState> state);
-    void updateInput(std::shared_ptr<AircraftState> state, Descriptor &input, BitBuffer &buffer);
 
-    int getValue(std::shared_ptr<AircraftState> state, const Field &field, const std::map<std::string, unsigned char> &displayValues);
+    void updateValue(
+        const std::shared_ptr<AircraftState> &state,
+        const Descriptor &output,
+        const std::map<std::string, AircraftValue> &displayValues,
+        BitBuffer &bitBuffer);
+
+    void updateOutput(
+        const std::shared_ptr<AircraftState> &state,
+        const Descriptor &output,
+        const std::map<std::string, AircraftValue> &displayValues);
+    void updateInput();
+    void updateInput(Descriptor &input, BitBuffer &buffer);
+
+
+    void updateFMC(const std::shared_ptr<AircraftState>& state);
+
+    int getValue(
+        const std::shared_ptr<AircraftState> &state,
+        const Field &field,
+        const std::map<std::string, AircraftValue> &displayValues);
 
     void parseDescriptor(const YAML::Node &descriptorNode, Descriptor &descriptor);
 
     static void parseFieldValue(Field &field, const YAML::Node &node);
+
+    static std::map<std::string, AircraftValue> createDisplayValues(const std::shared_ptr<AircraftState> &state);
+    static uint8_t formatDigit(uint8_t uint8, const std::string & string);
+
+    static void populateValue(const std::wstring &text, const std::string &valueName, size_t col, std::map<std::string, AircraftValue> &values);
+
+    void sendBuffer(uint8_t reportId, const BitBuffer &bitBuffer);
 
 public:
     USBHIDConfigDevice(FlightConnector* flightConnector, const std::string &name, uint16_t vendorId, uint16_t productId);
@@ -96,7 +123,6 @@ public:
 
     void close() override;
 
-    std::map<std::string, unsigned char> createDisplayValues(const std::shared_ptr<AircraftState> &state);
 
     void update(std::shared_ptr<AircraftState> state) override;
 };

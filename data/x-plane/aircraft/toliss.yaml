@@ -106,6 +106,290 @@ data:
     passengerCount: AirbusFBW/NoPax
     passengerDistribution: AirbusFBW/PaxDistrib
 
+  fmc:
+    0:
+      columns: 24
+      rows: 14
+      line1:
+        textA: AirbusFBW/MCDU1titlea
+        textW: AirbusFBW/MCDU1titlew
+        textG: AirbusFBW/MCDU1titleg
+        textB: AirbusFBW/MCDU1titleb
+        textM: AirbusFBW/MCDU1titlem
+        textY: AirbusFBW/MCDU1titley
+        textSA: AirbusFBW/MCDU1stitlea
+        textSW: AirbusFBW/MCDU1stitlew
+        textSG: AirbusFBW/MCDU1stitleg
+        textSB: AirbusFBW/MCDU1stitleb
+        textSM: AirbusFBW/MCDU1stitlem
+        textSY: AirbusFBW/MCDU1stitley
+        textSym: AirbusFBW/MCDU1titles
+      line2:
+        textA: AirbusFBW/MCDU1label1a
+        textW: AirbusFBW/MCDU1label1w
+        textG: AirbusFBW/MCDU1label1g
+        textB: AirbusFBW/MCDU1label1b
+        textY: AirbusFBW/MCDU1label1y
+        textSA: AirbusFBW/MCDU1slabel1a
+        textSW: AirbusFBW/MCDU1slabel1w
+        textSG: AirbusFBW/MCDU1slabel1g
+        textSB: AirbusFBW/MCDU1slabel1b
+        textSM: AirbusFBW/MCDU1slabel1m
+        textSY: AirbusFBW/MCDU1slabel1y
+        textSym: AirbusFBW/MCDU1label1s
+      line3:
+        textA: AirbusFBW/MCDU1cont1a
+        textW: AirbusFBW/MCDU1cont1w
+        textG: AirbusFBW/MCDU1cont1g
+        textB: AirbusFBW/MCDU1cont1b
+        textM: AirbusFBW/MCDU1cont1m
+        textY: AirbusFBW/MCDU1cont1y
+        textSA: AirbusFBW/MCDU1scont1a
+        textSW: AirbusFBW/MCDU1scont1w
+        textSG: AirbusFBW/MCDU1scont1g
+        textSB: AirbusFBW/MCDU1scont1b
+        textSM: AirbusFBW/MCDU1scont1m
+        textSY: AirbusFBW/MCDU1scont1y
+        textSym: AirbusFBW/MCDU1cont1s
+      line4:
+        textA: AirbusFBW/MCDU1label2a
+        textW: AirbusFBW/MCDU1label2w
+        textG: AirbusFBW/MCDU1label2g
+        textB: AirbusFBW/MCDU1label2b
+        textY: AirbusFBW/MCDU1label2y
+        textSA: AirbusFBW/MCDU1slabel2a
+        textSW: AirbusFBW/MCDU1slabel2w
+        textSG: AirbusFBW/MCDU1slabel2g
+        textSB: AirbusFBW/MCDU1slabel2b
+        textSY: AirbusFBW/MCDU1slabel2y
+        textSym: AirbusFBW/MCDU1label2s
+
+      line5:
+        textA: AirbusFBW/MCDU1cont2a
+        textW: AirbusFBW/MCDU1cont2w
+        textG: AirbusFBW/MCDU1cont2g
+        textB: AirbusFBW/MCDU1cont2b
+        textY: AirbusFBW/MCDU1cont2y
+        textSA: AirbusFBW/MCDU1scont2a
+        textSW: AirbusFBW/MCDU1scont2w
+        textSG: AirbusFBW/MCDU1scont2g
+        textSB: AirbusFBW/MCDU1scont2b
+        textSY: AirbusFBW/MCDU1scont2y
+        textSym: AirbusFBW/MCDU1cont2s
+      line6:
+        textA: AirbusFBW/MCDU1label3a
+        textW: AirbusFBW/MCDU1label3w
+        textG: AirbusFBW/MCDU1label3g
+        textB: AirbusFBW/MCDU1label3b
+        texty: AirbusFBW/MCDU1label3y
+        textSA: AirbusFBW/MCDU1slabel3a
+        textSW: AirbusFBW/MCDU1slabel3w
+        textSG: AirbusFBW/MCDU1slabel3g
+        textSB: AirbusFBW/MCDU1slabel3b
+        textSY: AirbusFBW/MCDU1slabel3y
+        textSym: AirbusFBW/MCDU1label3s
+      line7:
+        textA: AirbusFBW/MCDU1cont3a
+        textW: AirbusFBW/MCDU1cont3w
+        textG: AirbusFBW/MCDU1cont3g
+        textB: AirbusFBW/MCDU1cont3b
+        textY: AirbusFBW/MCDU1cont3y
+        textSA: AirbusFBW/MCDU1scont3a
+        textSW: AirbusFBW/MCDU1scont3w
+        textSG: AirbusFBW/MCDU1scont3g
+        textSB: AirbusFBW/MCDU1scont3b
+        textSY: AirbusFBW/MCDU1scont3y
+        textSym: AirbusFBW/MCDU1cont3s
+      line8:
+        textA: AirbusFBW/MCDU1label4a
+        textW: AirbusFBW/MCDU1label4w
+        textG: AirbusFBW/MCDU1label4g
+        textB: AirbusFBW/MCDU1label4b
+        textY: AirbusFBW/MCDU1label4y
+        textSA: AirbusFBW/MCDU1slabel4a
+        textSW: AirbusFBW/MCDU1slabel4w
+        textSG: AirbusFBW/MCDU1slabel4g
+        textSB: AirbusFBW/MCDU1slabel4b
+        textSY: AirbusFBW/MCDU1slabel4y
+        textSym: AirbusFBW/MCDU1label4s
+      line9:
+        textA: AirbusFBW/MCDU1cont4a
+        textW: AirbusFBW/MCDU1cont4w
+        textG: AirbusFBW/MCDU1cont4g
+        textB: AirbusFBW/MCDU1cont4b
+        textY: AirbusFBW/MCDU1cont4y
+        textSA: AirbusFBW/MCDU1scont4a
+        textSW: AirbusFBW/MCDU1scont4w
+        textSG: AirbusFBW/MCDU1scont4g
+        textSB: AirbusFBW/MCDU1scont4b
+        textSY: AirbusFBW/MCDU1scont4y
+        textSym: AirbusFBW/MCDU1cont4s
+      line10:
+        textA: AirbusFBW/MCDU1label5a
+        textW: AirbusFBW/MCDU1label5w
+        textG: AirbusFBW/MCDU1label5g
+        textB: AirbusFBW/MCDU1label5b
+        textY: AirbusFBW/MCDU1label5y
+        textSA: AirbusFBW/MCDU1slabel5a
+        textSW: AirbusFBW/MCDU1slabel5w
+        textSG: AirbusFBW/MCDU1slabel5g
+        textSB: AirbusFBW/MCDU1slabel5b
+        textSY: AirbusFBW/MCDU1slabel5y
+        textSym: AirbusFBW/MCDU1label5s
+      line11:
+        textA: AirbusFBW/MCDU1cont5a
+        textW: AirbusFBW/MCDU1cont5w
+        textG: AirbusFBW/MCDU1cont5g
+        textB: AirbusFBW/MCDU1cont5b
+        textY: AirbusFBW/MCDU1cont5y
+        textSA: AirbusFBW/MCDU1scont5a
+        textSW: AirbusFBW/MCDU1scont5w
+        textSG: AirbusFBW/MCDU1scont5g
+        textSB: AirbusFBW/MCDU1scont5b
+        textSY: AirbusFBW/MCDU1scont5y
+        textSym: AirbusFBW/MCDU1cont5s
+      line12:
+        textA: AirbusFBW/MCDU1label6a
+        textW: AirbusFBW/MCDU1label6w
+        textG: AirbusFBW/MCDU1label6g
+        textB: AirbusFBW/MCDU1label6b
+        textY: AirbusFBW/MCDU1label6y
+        textSA: AirbusFBW/MCDU1slabel6a
+        textSW: AirbusFBW/MCDU1slabel6w
+        textSG: AirbusFBW/MCDU1slabel6g
+        textSB: AirbusFBW/MCDU1slabel6b
+        textSY: AirbusFBW/MCDU1slabel6y
+        textSym: AirbusFBW/MCDU1label6s
+      line13:
+        textA: AirbusFBW/MCDU1cont6a
+        textW: AirbusFBW/MCDU1cont6w
+        textG: AirbusFBW/MCDU1cont6g
+        textB: AirbusFBW/MCDU1cont6b
+        textY: AirbusFBW/MCDU1cont6y
+        textSA: AirbusFBW/MCDU1scont6a
+        textSW: AirbusFBW/MCDU1scont6w
+        textSG: AirbusFBW/MCDU1scont6g
+        textSB: AirbusFBW/MCDU1scont6b
+        textSY: AirbusFBW/MCDU1scont6y
+        textSym: AirbusFBW/MCDU1cont6s
+      line14:
+        textW: AirbusFBW/MCDU1spw
+        textA: AirbusFBW/MCDU1spa
+      vertSlewKeys: AirbusFBW/MCDU1VertSlewKeys
+    updateScript:
+      lua: |
+        for row=1,14 do
+          local dr = 'fmc/0/line' .. row .. '/'
+
+          -- The ToLiss aircraft separate the different colours/styles
+          -- into different data refs. We need to munge these into
+          -- the text and style datatypes used by UFC
+          local types = {'Sym', 'A', 'B', 'G', 'M', 'W', 'Y', 'LG', 'LW'}
+          line = {}
+          for i, lineType in ipairs(types) do
+            local v = data[dr .. 'text' .. lineType]
+            if v ~= nil and type(v) == "table" then
+              line[lineType] = v;
+            end
+
+            v = data[dr .. 'textS' .. lineType]
+            if v ~= nil and type(v) == "table" then
+              line[lineType .. '_Small'] = v;
+            end
+          end
+
+          value = {}
+          local textColour = {}
+          local small = {}
+          for col=1,24 do
+            local t = string.byte('w')
+
+            local character = string.byte(' ')
+            local charColour = string.byte('w')
+            local charSmall
+            if math.fmod(row, 2) == 0 and row < 14 then
+              charSmall = string.byte('Y')
+            else
+              charSmall = string.byte(' ')
+            end
+
+            local hasSym = false
+            for type, v in pairs(line) do
+
+              local typeChar = v[col]
+              --print(" -> type=" .. type .. ", char=" , typeChar)
+              if typeChar ~= nil and typeChar ~= string.byte(" ") then
+                if not hasSym then
+                  character = typeChar
+                end
+
+                local idx = string.find(type, "_Small")
+                if idx ~= nil then
+                  charSmall = string.byte('Y')
+                end
+                if string.sub(type, 1, 3) == "Sym" then
+                  hasSym = true
+                  if character == string.byte("A") then
+                    character = string.byte("[")
+                  elseif character == string.byte("B") then
+                    character = string.byte("]")
+                  elseif character == string.byte("0") then
+                    character = 0x2190
+                  elseif character == string.byte("1") then
+                    character = 0x2192
+                  elseif character == string.byte("2") then
+                    character = 0x2190
+                  elseif character == string.byte("3") then
+                    character = 0x2192
+                  elseif character == string.byte("E") then
+                    character = 0x2610
+                  elseif character == string.byte("`") then
+                    character = 0x00B0
+                  end
+                else
+                  local typeColour = string.sub(type, 1, 1)
+                  if typeColour == "A" then
+                    t = string.byte('a')
+                  elseif typeColour == "B" then
+                    t = string.byte('c')
+                  elseif typeColour == "G" then
+                    t = string.byte('g')
+                  elseif typeColour == "M" then
+                    t = string.byte('m')
+                  elseif typeColour == "Y" then
+                    t = string.byte('y')
+                  end
+
+                  if character == string.byte("`") then
+                    character = 0x00B0
+                  end
+                end
+
+                if not hasSym then
+                  break
+                end
+              end
+            end
+
+            if row == 14 and  col == 23 and data['fmc/0/vertSlewKeys'] == 1 then
+              character = 0x2191
+              charSmall = 'Y'
+            elseif row == 14 and  col == 24 and data['fmc/0/vertSlewKeys'] == 1 then
+              character = 0x2193
+              charSmall = 'Y'
+            end
+
+            table.insert(value , character)
+            table.insert(small , charSmall)
+            table.insert(textColour , t)
+
+          end
+          -- Write the line to the common FMC format
+          data[dr .. 'textColour'] = textColour
+          data[dr .. 'text'] = value
+          data[dr .. 'small'] = small
+        end
+
 ############
 # Commands #
 ############
@@ -431,3 +715,83 @@ commands:
         toggle: toliss_airbus/aircondcommands/Pack1Toggle
       2:
         toggle: toliss_airbus/aircondcommands/Pack2Toggle
+  fmc:
+    0:
+      lsk1l: AirbusFBW/MCDU1LSK1L
+      lsk2l: AirbusFBW/MCDU1LSK2L
+      lsk3l: AirbusFBW/MCDU1LSK3L
+      lsk4l: AirbusFBW/MCDU1LSK4L
+      lsk5l: AirbusFBW/MCDU1LSK5L
+      lsk6l: AirbusFBW/MCDU1LSK6L
+      lsk1r: AirbusFBW/MCDU1LSK1R
+      lsk2r: AirbusFBW/MCDU1LSK2R
+      lsk3r: AirbusFBW/MCDU1LSK3R
+      lsk4r: AirbusFBW/MCDU1LSK4R
+      lsk5r: AirbusFBW/MCDU1LSK5R
+      lsk6r: AirbusFBW/MCDU1LSK6R
+
+      key0: AirbusFBW/MCDU1Key0
+      key1: AirbusFBW/MCDU1Key1
+      key2: AirbusFBW/MCDU1Key2
+      key3: AirbusFBW/MCDU1Key3
+      key4: AirbusFBW/MCDU1Key4
+      key5: AirbusFBW/MCDU1Key5
+      key6: AirbusFBW/MCDU1Key6
+      key7: AirbusFBW/MCDU1Key7
+      key8: AirbusFBW/MCDU1Key8
+      key9: AirbusFBW/MCDU1Key9
+
+      keyA: AirbusFBW/MCDU1KeyA
+      keyB: AirbusFBW/MCDU1KeyB
+      keyC: AirbusFBW/MCDU1KeyC
+      keyD: AirbusFBW/MCDU1KeyD
+      keyE: AirbusFBW/MCDU1KeyE
+      keyF: AirbusFBW/MCDU1KeyF
+      keyG: AirbusFBW/MCDU1KeyG
+      keyH: AirbusFBW/MCDU1KeyH
+      keyI: AirbusFBW/MCDU1KeyI
+      keyJ: AirbusFBW/MCDU1KeyJ
+      keyK: AirbusFBW/MCDU1KeyK
+      keyL: AirbusFBW/MCDU1KeyL
+      keyM: AirbusFBW/MCDU1KeyM
+      keyN: AirbusFBW/MCDU1KeyN
+      keyO: AirbusFBW/MCDU1KeyO
+      keyP: AirbusFBW/MCDU1KeyP
+      keyQ: AirbusFBW/MCDU1KeyQ
+      keyR: AirbusFBW/MCDU1KeyR
+      keyS: AirbusFBW/MCDU1KeyS
+      keyT: AirbusFBW/MCDU1KeyT
+      keyU: AirbusFBW/MCDU1KeyU
+      keyV: AirbusFBW/MCDU1KeyV
+      keyW: AirbusFBW/MCDU1KeyW
+      keyX: AirbusFBW/MCDU1KeyX
+      keyY: AirbusFBW/MCDU1KeyY
+      keyZ: AirbusFBW/MCDU1KeyZ
+
+      slash: AirbusFBW/MCDU1KeySlash
+      space: AirbusFBW/MCDU1KeySpace
+      overfly: AirbusFBW/MCDU1KeyOverfly
+      clear: AirbusFBW/MCDU1KeyClear
+      keyDecimal: AirbusFBW/MCDU1KeyDecimal
+      keyPlusMinus: AirbusFBW/MCDU1KeyPM
+
+      directTo: AirbusFBW/MCDU1DirTo
+      progress: AirbusFBW/MCDU1Prog
+      performance: AirbusFBW/MCDU1Perf
+      init: AirbusFBW/MCDU1Init
+      data: AirbusFBW/MCDU1Data
+      bright: AirbusFBW/MCDU1KeyBright
+      flightPlan: AirbusFBW/MCDU1Fpln
+      radNav: AirbusFBW/MCDU1RadNav
+      fuelPrediction: AirbusFBW/MCDU1FuelPred
+      secondaryFlightPlan: AirbusFBW/MCDU1SecFpln
+      atcComm: AirbusFBW/MCDU1ATC
+      menu: AirbusFBW/MCDU1Menu
+      dim: AirbusFBW/MCDU1KeyDim
+      airport: AirbusFBW/MCDU1Airport
+      slewLeft: AirbusFBW/MCDU1SlewLeft
+      slewUp: AirbusFBW/MCDU1SlewUp
+      slewRight: AirbusFBW/MCDU1SlewRight
+      slewDown: AirbusFBW/MCDU1SlewDown
+
+

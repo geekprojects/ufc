@@ -37,7 +37,7 @@ class XPlaneUDPClient : public XPlaneClient
     Result streamDataRefsInternal(
         const std::shared_ptr<UDPSocket> &socket,
         const std::vector<std::shared_ptr<DataDefinition>> &datarefs,
-        const std::function<void(std::map<int, float>)>& func,
+        const std::function<void(std::map<int, AircraftValue>)>& func,
         int count);
 
  public:
@@ -50,7 +50,7 @@ class XPlaneUDPClient : public XPlaneClient
     void disconnect() override;
     [[nodiscard]] bool isConnected() const override { return m_dataSocket->isConnected(); }
 
-    Result readString(const std::string &dataref, int len, std::string& value) override;
+    Result readString(const std::string &dataref, int len, std::wstring& value) override;
     Result read(const std::string& dataref, float& returnValue) override;
     Result readInt(const std::string& dataref, int& value) override
     {
@@ -66,7 +66,7 @@ class XPlaneUDPClient : public XPlaneClient
 
     Result streamDataRefs(
         const std::vector<std::shared_ptr<DataDefinition>> &datarefs,
-        const std::function<void(std::map<int, float>)> &,
+        const std::function<void(std::map<int, AircraftValue>)> &,
         int count) override;
 
     Result sendCommand(const std::string &command) override;

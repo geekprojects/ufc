@@ -48,8 +48,8 @@ void AircraftMapping::loadDefaults()
 }
 
 void AircraftMapping::loadDefinitionsForAircraft(
-    const string& author,
-    const string& icaoType)
+    const wstring& author,
+    const wstring& icaoType)
 {
     loadDefaults();
 
@@ -72,8 +72,8 @@ void AircraftMapping::loadDefinitionsForAircraft(
 }
 
 bool AircraftMapping::checkAircraft(
-    const string &author,
-    const string &icaoType,
+    const wstring &author,
+    const wstring &icaoType,
     const filesystem::directory_entry &entry,
     YAML::Node aircraftFile)
 {
@@ -98,7 +98,7 @@ bool AircraftMapping::checkAircraft(
         }
     }
 
-    int match = fnmatch(fileAuthor.c_str(), author.c_str(), 0);
+    int match = fnmatch(fileAuthor.c_str(), wstring2utf8(author).c_str(), 0);
     if (match != 0)
     {
         return true;
@@ -107,7 +107,8 @@ bool AircraftMapping::checkAircraft(
     bool foundICAO = false;
     for (const auto& fileICAO : fileICAOs)
     {
-        match = fnmatch(icaoType.c_str(), fileICAO.c_str(), 0);
+        log(DEBUG, "checkAircraft: %s == %s", fileICAO.c_str(), fileICAO.c_str());
+        match = fnmatch(fileICAO.c_str(), wstring2utf8(icaoType).c_str(), 0);
         if (match == 0)
         {
             foundICAO = true;
@@ -214,16 +215,20 @@ void AircraftMapping::addDataDefinition(const string& id, YAML::Node definitionN
 
     if (definitionNode.Type() == YAML::NodeType::Map)
     {
-        auto dataRefNode = definitionNode["dataRef"].as<string>();
+        string dataRefNode = "";
+        if (definitionNode["dataRef"])
+        {
+            dataRefNode = definitionNode["dataRef"].as<string>();
+            addDataRefIndex(dataRefNode, dataRef->mapping);
+        }
         auto lua = definitionNode["lua"].as<string>();
-        addDataRefIndex(dataRefNode, dataRef->mapping);
         dataRef->mapping.luaScript = lua;
         log(DEBUG, "addDataDefinition: %s -> %s (With lua script)", id.c_str(), dataRefNode.c_str());
     }
     else
     {
         auto value = definitionNode.as<string>();
-        dataRef->mapping = parseMapping(value);
+        dataRef->mapping = parseMapping(utf82wstring(value.c_str()));
         log(DEBUG, "addDataDefinition: %s -> %s", id.c_str(), value.c_str());
     }
 }
@@ -269,18 +274,18 @@ void AircraftMapping::loadCommands(YAML::Node commandsNode, const std::string& i
     }
 }
 
-bool is_number(const std::string& s)
+bool is_number(const std::wstring& s)
 {
-    std::string::const_iterator it = s.begin();
+    std::wstring::const_iterator it = s.begin();
     while (it != s.end() && std::isdigit(*it)) ++it;
     return !s.empty() && it == s.end();
 }
 
-DataMapping AircraftMapping::parseMapping(std::string mappingStr)
+DataMapping AircraftMapping::parseMapping(std::wstring mappingStr)
 {
     DataMapping mapping;
 
-    vector<string> mappingParts = splitString(mappingStr, ' ');
+    vector<wstring> mappingParts = splitString(mappingStr, ' ');
     if (mappingParts.empty())
     {
         log(WARN, "parseMapping: Mapping string is empty");
@@ -292,10 +297,10 @@ DataMapping AircraftMapping::parseMapping(std::string mappingStr)
 
     if (mappingParts.size() == 1)
     {
-        if (mappingParts.at(0) == "true" || mappingParts.at(0) == "false")
+        if (mappingParts.at(0) == L"true" || mappingParts.at(0) == L"false")
         {
             mapping.type = DataMappingType::STATIC;
-            mapping.value.set(mappingParts.at(0) == "true");
+            mapping.value.set(mappingParts.at(0) == L"true");
             log(DEBUG, "parseMapping: STATIC: %d", mapping.value.getInt());
             return mapping;
         }
@@ -303,13 +308,21 @@ DataMapping AircraftMapping::parseMapping(std::string mappingStr)
         if (is_number(mappingParts.at(0)))
         {
             mapping.type = DataMappingType::STATIC;
-            mapping.value.set(atoi(mappingParts.at(0).c_str()));
+            mapping.value.set((int)wcstol(mappingParts.at(0).c_str(), nullptr, 10));
             log(DEBUG, "parseMapping: STATIC: %d", mapping.value.getInt());
+            return mapping;
+        }
+
+        if (mappingParts.at(0).starts_with(L"static:"))
+        {
+            mapping.type = DataMappingType::STATIC;
+            mapping.value.set(mappingParts.at(0).substr(7));
+            log(DEBUG, "parseMapping: STATIC: %s", mapping.value.getString().c_str());
             return mapping;
         }
     }
 
-    addDataRefIndex(mappingParts.at(0), mapping);
+    addDataRefIndex(wstring2utf8(mappingParts.at(0)), mapping);
     if (mapping.dataRef.at(0) == '!')
     {
         mapping.type = DataMappingType::NEGATE;
@@ -319,18 +332,18 @@ DataMapping AircraftMapping::parseMapping(std::string mappingStr)
 
     if (mappingParts.size() == 3)
     {
-        string comparison = mappingParts.at(1);
-        string operand = mappingParts.at(2);
-        if (comparison == "==")
+        wstring comparison = mappingParts.at(1);
+        wstring operand = mappingParts.at(2);
+        if (comparison == L"==")
         {
             mapping.type = DataMappingType::EQUALS;
-            mapping.operand = atoi(operand.c_str());
+            mapping.operand = wcstol(operand.c_str(), nullptr, 10);
             log(DEBUG, "parseMapping: EQUALS: '%s' -> %d", mapping.dataRef.c_str(), mapping.operand);
         }
-        else if (comparison == ">")
+        else if (comparison == L">")
         {
             mapping.type = DataMappingType::GREATER_THAN;
-            mapping.operand = atoi(operand.c_str());
+            mapping.operand = wcstol(operand.c_str(), nullptr, 10);
             log(DEBUG, "parseMapping: GREATER_THAN: '%s' -> %d", mapping.dataRef.c_str(), mapping.operand);
         }
     }
@@ -428,9 +441,32 @@ void AircraftMapping::writeBoolean(const shared_ptr<DataDefinition>& dataDef, in
     writeInt(dataDef, value);
 }
 
-void AircraftMapping::writeString([[maybe_unused]] const shared_ptr<DataDefinition>& dataDef, [[maybe_unused]] const string& value)
+void AircraftMapping::writeString(
+    [[maybe_unused]] const shared_ptr<DataDefinition>& dataDef,
+    [[maybe_unused]] const wstring& value)
 {
-    log(ERROR, "writeString: Not implemented!");
+    if (dataDef->mapping.type == DataMappingType::STATIC)
+    {
+        dataDef->value->set(dataDef->mapping.value);
+    }
+    else
+    {
+        dataDef->value->set(value);
+    }
+}
+
+void AircraftMapping::writeArray(
+    [[maybe_unused]] const shared_ptr<DataDefinition>& dataDef,
+    [[maybe_unused]] const vector<int>& value)
+{
+    if (dataDef->mapping.type == DataMappingType::STATIC)
+    {
+        dataDef->value->set(dataDef->mapping.value);
+    }
+    else
+    {
+        dataDef->value->set(value);
+    }
 }
 
 void AircraftMapping::writeValue(const std::shared_ptr<DataDefinition> &dataDef, const UFC::AircraftValue &value)
@@ -448,6 +484,9 @@ void AircraftMapping::writeValue(const std::shared_ptr<DataDefinition> &dataDef,
             break;
         case DataRefType::STRING:
             writeString(dataDef, value.getString());
+            break;
+        case DataRefType::INT_ARRAY:
+            writeArray(dataDef, value.getArray());
             break;
         default:
             break;

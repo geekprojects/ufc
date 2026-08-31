@@ -10,6 +10,9 @@
 
 #include <unistd.h>
 
+#include "ufc/utils/utils.h"
+
+using namespace std;
 using namespace UFC;
 
 UFC_DATA_SOURCE(Simulator, SimulatorDataSource)
@@ -123,9 +126,57 @@ bool SimulatorDataSource::update()
         state->set(DATA_AUTOPILOT_FLIGHTDIRECTOR_PILOT_ON, m_flightDirector);
         state->set("efis/display/ls", m_ls);
 
+        auto t = std::time(nullptr);
+        auto tm = *std::localtime(&t);
+
+        wstring title = L"⬡UFC FMS°";
+        int spaces = (24 - title.length()) / 2;
+        title = wstring(spaces, ' ') + title;
+        while (title.length() < 24)
+        {
+            title += L" ";
+        }
+
+        state->set("fmc/0/call", (t % 2) == 0);
+
+        std::wstringstream oss;
+        oss << std::put_time(&tm, L"%d-%m-%Y %H:%M:%S");
+
+        fmsPrint(state, 1, title, 'b', 'g');
+        fmsPrint(state, 2, oss.str());
+
+        fmsPrint(state, 3, L"← Detatch Engine");
+        fmsPrint(state, 5, L"< Increase Turbulence");
+        fmsPrint(state, 7, L"< Deploy Chemtrails");
+        fmsPrint(state, 9, L"< Fire Missile");
+        fmsPrint(state, 11, L"< Eject Random Passenger");
+        fmsPrint(state, 13, L"< Inflate Otto Pilot");
+
+        wstring scratchPad = m_scratchPad;
+        if ((t % 2) == 0)
+        {
+            scratchPad += L"_";
+        }
+        else
+        {
+            scratchPad += L" ";
+        }
+        while (scratchPad.length() < 24)
+        {
+            scratchPad += L" ";
+        }
+        fmsPrint(state, 14, scratchPad, 'b', 'w');
+
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     return true;
+}
+
+void SimulatorDataSource::fmsPrint(shared_ptr<AircraftState> state, int row, std::wstring text, char fg, char bg)
+{
+    state->set("fmc/0/line" + to_string(row) + "/text", text);
+    state->set("fmc/0/line" + to_string(row) + "/textColour", wstring(24, fg));
+    state->set("fmc/0/line" + to_string(row) + "/backgroundColour", wstring(24, bg));
 }
 
 void SimulatorDataSource::command(const std::string& command)
@@ -286,6 +337,37 @@ void SimulatorDataSource::command(const std::string& command)
     {
         m_ls = !m_ls;
     }
+    else if (command.starts_with("fmc/0/"))
+    {
+        if (command.starts_with("fmc/0/key") || command == ("fmc/0/space"))
+        {
+            wstring key = L" ";
+            if (command.starts_with("fmc/0/key"))
+            {
+                key = utf82wstring(command.substr(9).c_str());
+            }
+            m_scratchPad += key;
+            if (m_scratchPad.length() > 23)
+            {
+                m_scratchPad = m_scratchPad.substr(1);
+            }
+        }
+        else if (command.starts_with("fmc/0/clear"))
+        {
+            if (!m_scratchPad.empty())
+            {
+                m_scratchPad = m_scratchPad.substr(0, m_scratchPad.length() - 1);
+            }
+        }
+        else
+        {
+            m_scratchPad = utf82wstring(command.c_str());
+            if (m_scratchPad.length() > 23)
+            {
+                m_scratchPad = m_scratchPad.substr(0, 23);
+            }
+        }
+    }
     else
     {
         printf("SimulatorDataSource::command: Unknown command: %s\n", command.c_str());
@@ -294,3 +376,4 @@ void SimulatorDataSource::command(const std::string& command)
 
     m_autopilot = autopilot;
 }
+

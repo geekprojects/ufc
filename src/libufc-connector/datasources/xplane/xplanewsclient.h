@@ -21,7 +21,7 @@ struct DataRefWebSocketInfo
     std::string buffer;
     XPlaneWebSocketClient* client;
     std::map<int64_t, std::vector<std::shared_ptr<DataDefinition>>> dataRefIdx;
-    const std::function<void(std::map<int, float>)>* func;
+    const std::function<void(std::map<int, AircraftValue>)>* func;
 };
 
 class XPlaneWebSocketClient : public XPlaneClient
@@ -56,7 +56,7 @@ class XPlaneWebSocketClient : public XPlaneClient
 
     [[nodiscard]] bool isConnected() const override;
 
-    Result readString(const std::string &dataref, int len, std::string &value) override;
+    Result readString(const std::string &dataref, int len, std::wstring &value) override;
 
     Result read(const std::string &dataref, float &returnValue) override;
 
@@ -64,7 +64,7 @@ class XPlaneWebSocketClient : public XPlaneClient
 
     Result streamDataRefs(
         const std::vector<std::shared_ptr<DataDefinition>> &datarefs,
-        const std::function<void(std::map<int, float>)> &,
+        const std::function<void(std::map<int, AircraftValue>)> &,
         int count) override;
 
     Result sendCommand(const std::string &command) override;

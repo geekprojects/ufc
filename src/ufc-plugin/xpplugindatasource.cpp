@@ -12,6 +12,8 @@
 #include <XPLMProcessing.h>
 #include <XPLMUtilities.h>
 
+#include "ufc/utils/utils.h"
+
 using namespace std;
 using namespace UFC;
 
@@ -69,8 +71,8 @@ bool XPPluginDataSource::reloadAircraft()
     m_authorDataRef = XPLMFindDataRef("sim/aircraft/view/acf_author");
     m_studioDataRef = XPLMFindDataRef("sim/aircraft/view/acf_studio");
 
-    string aircraftICAO = getString(m_icaoDataRef);
-    string aircraftAuthor = getString(m_studioDataRef);
+    wstring aircraftICAO = getString(m_icaoDataRef);
+    wstring aircraftAuthor = getString(m_studioDataRef);
     if (aircraftAuthor.empty())
     {
         aircraftAuthor = getString(m_authorDataRef);
@@ -245,15 +247,15 @@ void XPPluginDataSource::executeCommand(const std::string& command, const Comman
     }
 }
 
-void XPPluginDataSource::setData(const std::string &dataName, float value)
+void XPPluginDataSource::setData(const std::string &dataName, AircraftValue value)
 {
     scoped_lock lock(m_dataQueueMutex);
     m_dataQueue.emplace(dataName, value);
 }
 
-void XPPluginDataSource::executeSetData(const std::string &dataName, float value)
+void XPPluginDataSource::executeSetData(const std::string &dataName, AircraftValue value)
 {
-    log(DEBUG, "setData: %s -> %f", dataName.c_str(), value);
+    log(DEBUG, "setData: %s -> %ls", dataName.c_str(), value.getString().c_str());
     string dataRefName = dataName;
 
     auto dataRef = getMapping().getDataRef(dataName);
@@ -282,25 +284,30 @@ void XPPluginDataSource::executeSetData(const std::string &dataName, float value
     {
         if (!!(dataRefInfo.types & xplmType_Float))
         {
-            XPLMSetDataf(dataRefInfo.dataRef, value);
+            XPLMSetDataf(dataRefInfo.dataRef, value.getFloat());
         }
         else if (!!(dataRefInfo.types & xplmType_Int))
         {
-            XPLMSetDatai(dataRefInfo.dataRef, (int)value);
+            XPLMSetDatai(dataRefInfo.dataRef, (int)value.getInt());
+        }
+        else if (!!(dataRefInfo.types & xplmType_Data))
+        {
+            string bytes = wstring2utf8(value.getString());
+            XPLMSetDatab(dataRefInfo.dataRef, (void*)bytes.c_str(), 0, bytes.length());
         }
     }
 }
 
-std::string XPPluginDataSource::getString(const XPLMDataRef ref)
+wstring XPPluginDataSource::getString(const XPLMDataRef ref)
 {
     log(DEBUG, "getString: ref=%p", ref);
     int bytes = XPLMGetDatab(ref, nullptr, 0, 0);
     if (bytes == 0)
     {
-        return "";
+        return L"";
     }
 
     string buffer(bytes, '\0');
     XPLMGetDatab(ref, buffer.data(), 0, bytes);
-    return buffer;
+    return utf82wstring(buffer.c_str());
 }

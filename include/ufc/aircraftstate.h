@@ -17,7 +17,6 @@
 
 namespace UFC
 {
-
 enum class DataRefType
 {
     UNKNOWN,
@@ -25,16 +24,50 @@ enum class DataRefType
     BOOLEAN,
     INTEGER,
     STRING,
+    INT_ARRAY,
 };
 
 class AircraftValue
 {
     DataRefType m_type = DataRefType::UNKNOWN;
-    std::variant<std::monostate, int, float, std::string> m_value;
+    std::variant<std::monostate, int, float, std::wstring, std::vector<int> > m_value;
 
- public:
-    AircraftValue()
+public:
+    AircraftValue() = default;
+
+    explicit AircraftValue(DataRefType type)
     {
+        m_type = type;
+        if (m_type == DataRefType::INT_ARRAY)
+        {
+            std::vector<int> v;
+            m_value = v;
+        }
+    }
+
+    AircraftValue(bool b)
+    {
+        set(b);
+    }
+
+    AircraftValue(int i)
+    {
+        set(i);
+    }
+
+    AircraftValue(float f)
+    {
+        set(f);
+    }
+
+    AircraftValue(std::wstring const &str)
+    {
+        set(str);
+    }
+
+    AircraftValue(std::vector<int> array)
+    {
+        set(array);
     }
 
     void set(bool b)
@@ -55,13 +88,19 @@ class AircraftValue
         m_value = f;
     }
 
-    void set(std::string const& str)
+    void set(std::wstring const &str)
     {
         m_type = DataRefType::STRING;
         m_value = str;
     }
 
-    void set(AircraftValue const & b)
+    void set(std::vector<int> const & array)
+    {
+        m_type = DataRefType::INT_ARRAY;
+        m_value = array;
+    }
+
+    void set(AircraftValue const &b)
     {
         m_type = b.m_type;
         m_value = b.m_value;
@@ -100,20 +139,65 @@ class AircraftValue
         }
     }
 
-    [[nodiscard]] std::string getString() const
+    [[nodiscard]] std::wstring getString() const
     {
         switch (m_type)
         {
             case DataRefType::BOOLEAN:
             case DataRefType::INTEGER:
-                return std::to_string(std::get<int>(m_value));
+                return std::to_wstring(std::get<int>(m_value));
             case DataRefType::FLOAT:
-                return std::to_string(std::get<float>(m_value));
+                return std::to_wstring(std::get<float>(m_value));
             case DataRefType::STRING:
-                return std::get<std::string>(m_value);
+                return std::get<std::wstring>(m_value);
+            case DataRefType::INT_ARRAY:
+                return L"Array of " + std::to_wstring(std::get<std::vector<int>>(m_value).size()) + L" elements";
             default:
-                return "";
+                return L"";
         }
+    }
+
+    void setArrayInt(size_t index, int value)
+    {
+        auto& array = std::get<std::vector<int>>(m_value);
+        if (array.size() <= index)
+        {
+            array.resize(index + 1);
+        }
+        array[index] = value;
+        m_value = array;
+        printf("setArrayInt(%lu)=%d, size=%lu\n", index, value, array.size());
+    }
+
+    size_t getArraySize()
+    {
+        switch (m_type)
+        {
+            case DataRefType::INT_ARRAY:
+            {
+                auto& array = std::get<std::vector<int>>(m_value);
+                return array.size();
+            }
+            case DataRefType::STRING:
+                return std::get<std::wstring>(m_value).size();
+            default:
+                return 1;
+        }
+    }
+
+    int getArrayInt(size_t index)
+    {
+        auto& array = std::get<std::vector<int>>(m_value);
+        if (index < 0 || index >= array.size())
+        {
+            return 0;
+        }
+        return array[index];
+    }
+
+    std::vector<int> getArray() const
+    {
+        return std::get<std::vector<int>>(m_value);
     }
 
     bool hasValue() const
@@ -125,50 +209,61 @@ class AircraftValue
 class AircraftState : public Logger
 {
     std::mutex m_mutex;
-    std::map<std::string, std::shared_ptr<AircraftValue>, std::less<>> m_valuesByName;
+    std::map<std::string, std::shared_ptr<AircraftValue>, std::less<> > m_valuesByName;
 
- public:
-    AircraftState() : Logger("AircraftState") {}
+public:
+    AircraftState() : Logger("AircraftState")
+    {
+    }
 
     std::shared_ptr<AircraftValue> getOrCreateValue(const std::string &dataName);
+
     std::shared_ptr<AircraftValue> getValue(const std::string &dataName);
 
     void init();
 
     bool isSet(const std::string &dataName);
 
-    void set(std::string const& name, bool b)
+    void set(std::string const &name, bool b)
     {
         getOrCreateValue(name)->set(b);
     }
 
-    void set(std::string const& name, int i)
+    void set(std::string const &name, int i)
     {
         getOrCreateValue(name)->set(i);
     }
 
-    void set(std::string const& name, float f)
+    void set(std::string const &name, float f)
     {
         getOrCreateValue(name)->set(f);
     }
 
-    void set(std::string const& name, const std::string& str)
+    void set(std::string const &name, const std::wstring &str)
     {
         getOrCreateValue(name)->set(str);
     }
 
-    void set(std::string const& name, AircraftValue const& value)
+    void set(std::string const &name, const std::vector<int> &array)
+    {
+        getOrCreateValue(name)->set(array);
+    }
+
+    void set(std::string const &name, AircraftValue const &value)
     {
         getOrCreateValue(name)->set(value);
     }
 
-    float getFloat(const std::string& dataName);
-    int getInt(const std::string& dataName);
-    std::string getString(const std::string& dataName);
+    float getFloat(const std::string &dataName);
+
+    int getInt(const std::string &dataName);
+
+    std::wstring getString(const std::string &dataName);
+
+    void fmsPrint(int row, std::wstring text, char fg = 'w', char bg = 'b');
 
     void dump();
 };
-
 }
 
 #endif //UFC_STATE_H

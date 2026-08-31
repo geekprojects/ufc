@@ -48,9 +48,11 @@ class UFCLua
     ~UFCLua() = default;
 
     bool init();
-    void execute(std::string str);
+    void execute(const std::string &str);
 
-    float execute(const std::string& name, const std::string &str, std::string variable, float value);
+    float execute(const std::string &name, const std::string &str, std::string variable, float value);
+
+    float execute(const std::string &name, const std::string &str, std::map<std::string, AircraftValue> values);
 };
 
 }
