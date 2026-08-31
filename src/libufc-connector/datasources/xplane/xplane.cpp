@@ -160,6 +160,10 @@ void XPlaneDataSource::update(const map<int, AircraftValue>& values)
         {
             mapping.writeString(dataRef, value.getString());
         }
+        else if (value.getType() == DataRefType::INT_ARRAY)
+        {
+            mapping.writeArray(dataRef, value.getArray());
+        }
         else
         {
             auto v = transformData(dataRef, value.getFloat());
@@ -199,7 +203,6 @@ void XPlaneDataSource::update(const map<int, AircraftValue>& values)
             getDataLua()->execute(dataRef->mapping.luaScript);
         }
     }
-
 }
 
 void XPlaneDataSource::executeCommand(const string& commandName, const CommandDefinition& commandDefinition)

@@ -43,6 +43,16 @@ shared_ptr<LuaType> UFCDataMetaObject::getValue(string &name)
         }
         return table;
     }
+    if (value->getType() == DataRefType::INT_ARRAY)
+    {
+        auto table = make_shared<LuaTTable>();
+        const auto& array = value->getArray();
+        for (size_t idx = 0; idx < array.size(); ++idx)
+        {
+            table->setValue(Table::Key(static_cast<int>(idx) + 1), make_shared<LuaTNumber>(array.at(idx)));
+        }
+        return table;
+    }
 
     return make_shared<LuaTNumber>(value->getFloat());
 }

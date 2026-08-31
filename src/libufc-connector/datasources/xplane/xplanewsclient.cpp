@@ -486,14 +486,22 @@ void XPlaneWebSocketClient::dataRefValues(const string &body, DataRefWebSocketIn
             AircraftValue v;
             if (value.value().is_array())
             {
-                size_t index = 0;
-                if (dataRef->mapping.dataRefIndex != -1)
+                size_t index = dataRef->mapping.dataRefIndex;
+                if (index != -1)
                 {
-                    index = dataRef->mapping.dataRefIndex;
+                    if (index < value.value().size())
+                    {
+                        v = value.value().at(index).get<float>();
+                    }
                 }
-                if (index < value.value().size())
+                else
                 {
-                    v = value.value().at(index).get<float>();
+                    vector<int> arr;
+                    for (size_t idx = 0; idx < value.value().size(); idx++)
+                    {
+                        arr.push_back(value.value().at(idx).get<int>());
+                    }
+                    v = arr;
                 }
             }
             else if (value.value().is_string())
@@ -507,6 +515,10 @@ void XPlaneWebSocketClient::dataRefValues(const string &body, DataRefWebSocketIn
                     decoded = decoded.substr(0, idx);
                 }
 
+#ifdef DEBUG_XPLANE_WS
+                log(DEBUG, "dataRefValues: %s: String: %s", dataRef->id.c_str(), decoded.c_str());
+#endif
+
                 v = utf82wstring(decoded.c_str());
             }
             else
@@ -515,7 +527,7 @@ void XPlaneWebSocketClient::dataRefValues(const string &body, DataRefWebSocketIn
             }
 
 #ifdef DEBUG_XPLANE_WS
-            log(DEBUG, "dataRefValues: %llu = %s = %s = %f", id, dataRef->id.c_str(), dataRef->mapping.dataRef.c_str(), v);
+            log(DEBUG, "dataRefValues: %llu = %s = %s = %ls", id, dataRef->id.c_str(), dataRef->mapping.dataRef.c_str(), v.getString().c_str());
 #endif
             values.insert(make_pair(dataRef->idx, v));
         }

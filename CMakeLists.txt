@@ -169,6 +169,8 @@ add_library(ufc SHARED
         src/libufc-connector/flightconnector.cpp
         src/libufc-connector/lua.cpp
         src/libufc-connector/lua.h
+        src/libufc-connector/datasources/terminaldatasource.cpp
+        src/libufc-connector/datasources/terminaldatasource.h
 )
 
 if(UNIX AND APPLE)

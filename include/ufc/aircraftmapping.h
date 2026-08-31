@@ -104,6 +104,8 @@ class AircraftMapping : UFC::Logger
     void writeInt(const std::shared_ptr<DataDefinition> &dataDef, int32_t value);
     void writeBoolean(const std::shared_ptr<DataDefinition> &dataDef, int32_t value);
     void writeString(const std::shared_ptr<DataDefinition> &dataDef, const std::wstring &value);
+    void writeArray(const std::shared_ptr<DataDefinition> &dataDef, const std::vector<int> &value);
+
     void writeValue(const std::shared_ptr<DataDefinition> &dataDef, const UFC::AircraftValue& value);
 };
 

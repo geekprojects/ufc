@@ -1,21 +1,18 @@
 
 #include <ufc/utils/bitbuffer.h>
 #include <ufc/flightconnector.h>
-#include "../../lua.h"
 
 #include <hidapi.h>
 #include <yaml-cpp/yaml.h>
 
 #include "usbhidconfig.h"
 #include "lcd.h"
+#include "../../lua.h"
 
-#include "Engine/LuaState.hpp"
 #include "ufc/utils/utils.h"
 
 using namespace std;
 using namespace UFC;
-
-#undef DEBUG_USBHIDCONFIG
 
 #ifdef DEBUG_USBHIDCONFIG
 static void hexdump(const uint8_t* pos, int len)
@@ -69,20 +66,78 @@ bool USBHIDConfigDevice::init()
     if (!m_initScript.empty())
     {
         log(DEBUG, "init: Calling init script...");
-        //m_lua->execute("usbdevice-init", m_initScript, "init", 1);
         m_lua->execute(m_initScript);
     }
 
-    for (Descriptor descriptor : m_init)
+    for (const Descriptor& descriptor : m_init)
     {
         log(DEBUG, "init: Sending init descriptor: %s", descriptor.name.c_str());
         updateOutput({}, descriptor, {});
     }
 
+#if 0
+    if (!m_fmcFontFile.empty())
+    {
+        string fontFile = getFlightConnector()->getDataPath() + "/" + m_fmcFontFile;
+        log(DEBUG, "init: Loading font file: %s", fontFile.c_str());
+        auto font = YAML::LoadFile(fontFile);
+        auto data = font["font"]["data"];
+        int idx = 0;
+        for (auto dataNode : data)
+        {
+            auto values = dataNode.second;
+            log(DEBUG, "init: Sending font data %d...", idx + 1);
+            BitBuffer bitBuffer;
+            log(DEBUG, "init: type=%d, isArray=%d", values.Type(), values.IsSequence());
+            //bitBuffer.appendByte(0xf0);
+            for (auto valueNode : values)
+            {
+                bitBuffer.appendByte(valueNode.as<uint8_t>());
+            }
+            sendBuffer(0xf0, bitBuffer);
+            ///hid_write(getDevice(), bitBuffer.data(), bitBuffer.size());
+            idx++;
+        }
+    }
+#endif
+
     clear();
 
     return true;
 }
+
+#if 0
+void Font::convertGlyphDataForHardware(std::vector<std::vector<unsigned char>> &data, unsigned char hardwareIdentifier, FMCHardwareType hardwareType) {
+    for (auto &row : data) {
+        for (size_t i = 0; i + 1 < row.size(); i++) {
+            if (row[i] == 0x32 && row[i + 1] == 0xbb) { // Sniffed packets always have the MCDU identifier
+                row[i] = hardwareIdentifier;
+                row[i + 1] = 0xbb;
+            }
+        }
+
+        // The text-grid origin lives in an 8-param control block laid out as:
+        //   .. 08 00 00 00 <left> 00 <top> 00 0e 00 18 00
+        // (0e/18 = the 14x24 character grid). Its position within the row is
+        // not fixed: most fonts (737, 744, default, xcrafts) prefix an extra
+        // control block, pushing the values past the indices the old fixed
+        // check used, so the margin was only ever patched for the Airbus/VGA
+        // fonts. Locate the block by signature instead (sniffed defaults are the
+        // MCDU values: left 0x34, top 0x25). The position itself comes from the
+        // per-hardware screen-layout config so it lives in one place; the FMC also
+        // re-asserts it via setScreenPosition after the upload.
+        //const FMCScreenLayout layout = FMCHardwareMapping::ScreenLayoutForHardware(hardwareType);
+        for (size_t i = 0; i + 11 < row.size(); i++) {
+            if (row[i] == 0x08 && row[i + 1] == 0x00 && row[i + 2] == 0x00 && row[i + 3] == 0x00 &&
+                row[i + 4] == 0x34 && row[i + 5] == 0x00 && row[i + 6] == 0x25 && row[i + 7] == 0x00 &&
+                row[i + 8] == 0x0e && row[i + 9] == 0x00 && row[i + 10] == 0x18 && row[i + 11] == 0x00) {
+                row[i + 4] = static_cast<unsigned char>(36 + layout.x); // left
+                row[i + 6] = static_cast<unsigned char>(20 + layout.y); // top
+                }
+        }
+    }
+}
+#endif
 
 void USBHIDConfigDevice::close()
 {
@@ -218,7 +273,7 @@ void USBHIDConfigDevice::update(shared_ptr<AircraftState> state)
     {
         return;
     }
-    updateInput(state);
+    updateInput();
 
     map<string, AircraftValue> displayValues = createDisplayValues(state);
 
@@ -233,6 +288,10 @@ void USBHIDConfigDevice::update(shared_ptr<AircraftState> state)
     }
 }
 
+/*
+ * Format a number in to something understood by a device.
+ * The formats are hardcoded, this should be moved to the config yaml files!
+ */
 uint8_t USBHIDConfigDevice::formatDigit(uint8_t number, const std::string& format)
 {
     if (format == "winwing1")
@@ -257,13 +316,13 @@ uint8_t USBHIDConfigDevice::formatDigit(uint8_t number, const std::string& forma
             case 7: return static_cast<uint8_t>(NUMBER_7);
             case 8: return static_cast<uint8_t>(NUMBER_8);
             case 9: return static_cast<uint8_t>(NUMBER_9);
-            case DIGIT_DASH: return static_cast<uint8_t>(2);
+            case DIGIT_DASH: return 2;
             default: return 0;
         }
     }
-    else if (format == "winwing2")
-    {
 
+    if (format == "winwing2")
+    {
         switch (number)
         {
             /*
@@ -291,13 +350,14 @@ uint8_t USBHIDConfigDevice::formatDigit(uint8_t number, const std::string& forma
             default: return 0;
         }
     }
-    else
-    {
-        return 0;
-    }
+    return 0;
 }
 
-void USBHIDConfigDevice::updateValue(const shared_ptr<AircraftState> &state, const Descriptor &output, const map<string, AircraftValue> &displayValues, BitBuffer& bitBuffer)
+void USBHIDConfigDevice::updateValue(
+    const shared_ptr<AircraftState>& state,
+    const Descriptor& output,
+    const map<string, AircraftValue>& displayValues,
+    BitBuffer& bitBuffer)
 {
     for (auto const& field: output.fields)
     {
@@ -305,15 +365,13 @@ void USBHIDConfigDevice::updateValue(const shared_ptr<AircraftState> &state, con
         {
             case FieldType::BIT:
             {
-                auto value = (uint8_t)getValue(state, field, displayValues);
+                const auto value = static_cast<uint8_t>(getValue(state, field, displayValues));
                 bitBuffer.appendBit(value & 1);
-                //log(DEBUG, "updateOutput: BIT: %s -> value=0x%x", field.dataRef.c_str(), value);
                 break;
             }
             case FieldType::BITS:
             {
-                uint8_t value = getValue(state, field, displayValues);
-                //log(DEBUG, "updateOutput: BITS: %s -> length=%d, value=0x%x", field.dataRef.c_str(), field.length, value);
+                const auto value = static_cast<uint8_t>(getValue(state, field, displayValues));
                 for (int i = 0; i < field.length; i++)
                 {
                     int v = (value >> i) & 0x1;
@@ -324,22 +382,22 @@ void USBHIDConfigDevice::updateValue(const shared_ptr<AircraftState> &state, con
 
             case FieldType::BYTE:
             {
-                uint8_t value = getValue(state, field, displayValues);
+                const auto value = static_cast<uint8_t>(getValue(state, field, displayValues));
                 bitBuffer.appendByte(value);
                 break;
             }
 
             case FieldType::UINT16:
             {
-                uint16_t value = getValue(state, field, displayValues);
-                bitBuffer.appendByte(value >> 0);
-                bitBuffer.appendByte(value >> 8);
+                const auto value = static_cast<uint16_t>(getValue(state, field, displayValues));
+                bitBuffer.appendByte((value >> 0) & 0xff);
+                bitBuffer.appendByte((value >> 8) & 0xff);
                 break;
             }
 
             case FieldType::UINT32:
             {
-                uint32_t value = static_cast<uint32_t>(getValue(state, field, displayValues));
+                const auto value = static_cast<uint32_t>(getValue(state, field, displayValues));
                 bitBuffer.appendByte((value >> 0) & 0xff);
                 bitBuffer.appendByte((value >> 8) & 0xff);
                 bitBuffer.appendByte((value >> 16) & 0xff);
@@ -348,8 +406,7 @@ void USBHIDConfigDevice::updateValue(const shared_ptr<AircraftState> &state, con
             }
 
             case FieldType::DATA:
-                //log(DEBUG, "updateOutput: DATA: Appending %d bytes of data", field.data.size());
-                for (uint8_t value : field.data)
+                for (const uint8_t value : field.data)
                 {
                     bitBuffer.appendByte(value);
                 }
@@ -357,12 +414,11 @@ void USBHIDConfigDevice::updateValue(const shared_ptr<AircraftState> &state, con
 
             case FieldType::DIGIT:
             {
-                uint8_t value = getValue(state, field, displayValues);
+                auto value = static_cast<uint8_t>(getValue(state, field, displayValues));
                 value = formatDigit(value, field.format);
                 for (int i = 0; i < field.length; i++)
                 {
-                    int v = (value >> i) & 0x1;
-                    bitBuffer.appendBit(v);
+                    bitBuffer.appendBit((value >> i) & 0x1);
                 }
                 break;
             }
@@ -370,7 +426,7 @@ void USBHIDConfigDevice::updateValue(const shared_ptr<AircraftState> &state, con
             {
                 int value = getValue(state, field, displayValues);
                 wstring charstr;
-                charstr += (wchar_t)value;
+                charstr += static_cast<wchar_t>(value);
                 string utf8char = wstring2utf8(charstr);
                 for (size_t i = 0; i < utf8char.length(); i++)
                 {
@@ -411,7 +467,7 @@ void USBHIDConfigDevice::updateOutput(
     hid_write(getDevice(), bitBuffer.data(), bitBuffer.size());
 }
 
-void USBHIDConfigDevice::updateInput(shared_ptr<AircraftState> state)
+void USBHIDConfigDevice::updateInput()
 {
     uint8_t buffer[1024];
     constexpr uint8_t kDefaultInputReportId = 0x01;
@@ -423,9 +479,6 @@ void USBHIDConfigDevice::updateInput(shared_ptr<AircraftState> state)
         {
             break;
         }
-
-        //log(DEBUG, "updateInput: Got %d bytes", res);
-        //log(DEBUG, "updateInput: Report id: %d", buffer[0]);
 
         for (Descriptor& input : m_inputs)
         {
@@ -439,14 +492,14 @@ void USBHIDConfigDevice::updateInput(shared_ptr<AircraftState> state)
                     {
                         bitBuffer.readByte();
                     }
-                    updateInput(state, input, bitBuffer);
+                    updateInput(input, bitBuffer);
                 }
             }
         }
     }
 }
 
-void USBHIDConfigDevice::updateInput(shared_ptr<AircraftState> state, Descriptor &input, BitBuffer& buffer)
+void USBHIDConfigDevice::updateInput(Descriptor &input, BitBuffer &buffer)
 {
     for (auto& field: input.fields)
     {
@@ -475,72 +528,35 @@ void USBHIDConfigDevice::updateInput(shared_ptr<AircraftState> state, Descriptor
     }
 }
 
-void USBHIDConfigDevice::updateFMC(shared_ptr<AircraftState> state)
+void USBHIDConfigDevice::populateValue(
+    const wstring& text,
+    const string& valueName,
+    const size_t col,
+    map<string, AircraftValue>& values)
 {
-    BitBuffer bitBuffer;
-    int idx = 0;
-    for (int row = 0; row < 14; row++)
+    if (text.length() > col)
     {
-        wstring text = state->getString("fmc/0/line" + to_string(row + 1) + "/text");
-        wstring textColour = state->getString("fmc/0/line" + to_string(row + 1) + "/textColour");
-        wstring backgroundColour = state->getString("fmc/0/line" + to_string(row + 1) + "/backgroundColour");
-        wstring small = state->getString("fmc/0/line" + to_string(row + 1) + "/small");
-
-        for (size_t col = 0; col < 24; ++col, ++idx)
-        {
-            map<string, AircraftValue> values;
-
-            if (text.length() > col)
-            {
-                values["character"] = static_cast<int>(text.at(col));
-            }
-            else
-            {
-                values["character"] = ' ';
-            }
-            if (textColour.length() > col)
-            {
-                values["textColour"] = static_cast<int>(textColour.at(col));
-            }
-            else
-            {
-                values["textColour"] = 'w';
-            }
-            if (backgroundColour.length() > col)
-            {
-                values["backgroundColour"] = static_cast<int>(backgroundColour.at(col));
-            }
-            else
-            {
-                values["backgroundColour"] = 'b';
-            }
-            if (small.length() > col)
-            {
-                values["small"] = static_cast<int>(small.at(col));
-            }
-            else
-            {
-                values["small"] = ' ';
-            }
-
-            updateValue(state, m_fmcPageDescriptor, values, bitBuffer);
-        }
+        values[valueName] = static_cast<int>(text.at(col));
     }
-    bitBuffer.flushBits();
+    else
+    {
+        values[valueName] = ' ';
+    }
+}
 
-    //log(DEBUG, "updateFMC: Buffer: %d bytes", bitBuffer.size());
-    //hexdump(bitBuffer.data(), bitBuffer.size());
+void USBHIDConfigDevice::sendBuffer(uint8_t reportId, const BitBuffer& bitBuffer)
+{
     size_t pos = 0;
     while (pos < bitBuffer.size())
     {
-        int len = bitBuffer.size() - pos;
+        auto len = bitBuffer.size() - pos;
         if (len > 63)
         {
             len = 63;
         }
         std::vector<uint8_t> packet;
-        packet.push_back(0xf2);
-        for (int i = 0; i < len; i++)
+        packet.push_back(reportId);
+        for (size_t i = 0; i < len; i++)
         {
             packet.push_back(bitBuffer.data()[i + pos]);
         }
@@ -555,11 +571,43 @@ void USBHIDConfigDevice::updateFMC(shared_ptr<AircraftState> state)
     }
 }
 
-int USBHIDConfigDevice::getValue(shared_ptr<AircraftState> state, const Field &field, const map<string, AircraftValue>& displayValues)
+void USBHIDConfigDevice::updateFMC(const shared_ptr<AircraftState>& state)
+{
+    BitBuffer bitBuffer;
+    int idx = 0;
+    for (int row = 0; row < 14; row++)
+    {
+        wstring text = state->getString("fmc/0/line" + to_string(row + 1) + "/text");
+        wstring textColour = state->getString("fmc/0/line" + to_string(row + 1) + "/textColour");
+        wstring backgroundColour = state->getString("fmc/0/line" + to_string(row + 1) + "/backgroundColour");
+        wstring small = state->getString("fmc/0/line" + to_string(row + 1) + "/small");
+
+        for (size_t col = 0; col < 24; ++col, ++idx)
+        {
+            map<string, AircraftValue> values;
+
+            populateValue(text, "character", col, values);
+            populateValue(textColour, "textColour", col, values);
+            populateValue(backgroundColour, "backgroundColour", col, values);
+            populateValue(small, "small", col, values);
+            updateValue(state, m_fmcPageDescriptor, values, bitBuffer);
+        }
+    }
+    bitBuffer.flushBits();
+
+    //log(DEBUG, "updateFMC: Buffer: %d bytes", bitBuffer.size());
+    //hexdump(bitBuffer.data(), bitBuffer.size());
+    sendBuffer(0xf2, bitBuffer);
+}
+
+int USBHIDConfigDevice::getValue(
+    const shared_ptr<AircraftState> &state,
+    const Field &field,
+    const map<string, AircraftValue>& displayValues)
 {
     if (field.valueType == FieldValueType::LUA)
     {
-        return m_lua->execute("usbhid-" + field.id, field.lua, displayValues);
+        return static_cast<int>(m_lua->execute("usbhid-" + field.id, field.lua, displayValues));
     }
     if (field.valueType == FieldValueType::VALUE)
     {
@@ -599,11 +647,11 @@ bool USBHIDConfigDevice::loadConfig(const YAML::Node &config)
 {
     for (auto& node : config["init"])
     {
-        string name = node.first.as<string>();
+        auto name = node.first.as<string>();
         if (name == "lua")
         {
             m_initScript = node.second.as<string>();
-log(DEBUG, "loadConfig: init script: %s", m_initScript.c_str());
+            log(DEBUG, "loadConfig: init script: %s", m_initScript.c_str());
         }
         else
         {
@@ -641,6 +689,9 @@ log(DEBUG, "loadConfig: init script: %s", m_initScript.c_str());
         m_hasFMC = true;
         auto character = config["fmc"]["page"]["character"];
         parseDescriptor(character, m_fmcPageDescriptor);
+
+        // TODO: Make this come from a data ref
+        m_fmcFontFile = config["fmc"]["fonts"]["airbus"].as<string>();
     }
 
     return true;

@@ -126,6 +126,41 @@ data:
     passengerCount: # No default
     passengerDistribution: # No default
 
+  fmc:
+    0:
+      line1:
+        text: sim/cockpit2/radios/indicators/fms_cdu1_text_line0
+      line2:
+        text: sim/cockpit2/radios/indicators/fms_cdu1_text_line1
+      line3:
+        text: sim/cockpit2/radios/indicators/fms_cdu1_text_line2
+      line4:
+        text: sim/cockpit2/radios/indicators/fms_cdu1_text_line3
+      line5:
+        text: sim/cockpit2/radios/indicators/fms_cdu1_text_line4
+      line6:
+        text: sim/cockpit2/radios/indicators/fms_cdu1_text_line5
+      line7:
+        text: sim/cockpit2/radios/indicators/fms_cdu1_text_line6
+      line8:
+        text: sim/cockpit2/radios/indicators/fms_cdu1_text_line7
+      line9:
+        text: sim/cockpit2/radios/indicators/fms_cdu1_text_line8
+      line10:
+        text: sim/cockpit2/radios/indicators/fms_cdu1_text_line9
+      line11:
+        text: sim/cockpit2/radios/indicators/fms_cdu1_text_line10
+      line12:
+        text: sim/cockpit2/radios/indicators/fms_cdu1_text_line11
+      line13:
+        text: sim/cockpit2/radios/indicators/fms_cdu1_text_line12
+      line14:
+        text: sim/cockpit2/radios/indicators/fms_cdu1_text_line13
+      line15:
+        text: sim/cockpit2/radios/indicators/fms_cdu1_text_line13
+      line16:
+        text: sim/cockpit2/radios/indicators/fms_cdu1_text_line14
+
 commands:
   autopilot:
     altitude:
@@ -185,6 +220,21 @@ commands:
       toggle: sim/electrical/APU_start
     bleed:
       toggle: sim/bleed_air/apu_toggle
+
+  fmc:
+    0:
+      lsk1l: sim/FMS/ls_1l
+      lsk2l: sim/FMS/ls_2l
+      lsk3l: sim/FMS/ls_3l
+      lsk4l: sim/FMS/ls_4l
+      lsk5l: sim/FMS/ls_5l
+      lsk6l: sim/FMS/ls_6l
+      lsk1r: sim/FMS/ls_1r
+      lsk2r: sim/FMS/ls_2r
+      lsk3r: sim/FMS/ls_3r
+      lsk4r: sim/FMS/ls_4r
+      lsk5r: sim/FMS/ls_5r
+      lsk6r: sim/FMS/ls_6r
 
 
 

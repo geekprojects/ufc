@@ -27,6 +27,52 @@ data:
     barometer:
       pilot:
         mode: 1-sim/ckpt/cptHsiBaroModeRotary/anim
+  fmc:
+    0:
+      symbols: 1-sim/cduL/display/symbols
+      colours: 1-sim/cduL/display/symbolsColor
+      sizes: 1-sim/cduL/display/symbolsSize
+      updateScript:
+        lua: |
+          local pos = 1
+          local syms = data['fmc/0/symbols']
+          local colours = data['fmc/0/colours']
+          local sizes = data['fmc/0/sizes']
+          if type(syms) == "table" and type(colours) == "table" and type(sizes) == "table" then
+            for row = 1,14 do
+              local line = {}
+              local textColour = {}
+              local small = {}
+              for col = 1,24 do
+                local character = syms[pos]
+                if character == string.byte('#') then
+                  character = 0x2610
+                end
+
+                local symCol = colours[pos]
+                local t = string.byte('w')
+                if symCol == 4 then
+                  t = string.byte('c')
+                elseif symCol == 5 then
+                  t = string.byte('g')
+                end
+
+                local symSize = sizes[pos]
+                local charSmall = ' '
+                if symSize == 2 then
+                  charSmall = 'Y'
+                end
+
+                table.insert(line, character);
+                table.insert(textColour, t);
+                table.insert(small, charSmall);
+                pos = pos + 1
+              end
+              data['fmc/0/line' .. row .. '/text']=line
+              data['fmc/0/line' .. row .. '/textColour']=textColour
+              data['fmc/0/line' .. row .. '/small']=small
+            end
+          end
 
 commands:
   autopilot:

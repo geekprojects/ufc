@@ -455,6 +455,20 @@ void AircraftMapping::writeString(
     }
 }
 
+void AircraftMapping::writeArray(
+    [[maybe_unused]] const shared_ptr<DataDefinition>& dataDef,
+    [[maybe_unused]] const vector<int>& value)
+{
+    if (dataDef->mapping.type == DataMappingType::STATIC)
+    {
+        dataDef->value->set(dataDef->mapping.value);
+    }
+    else
+    {
+        dataDef->value->set(value);
+    }
+}
+
 void AircraftMapping::writeValue(const std::shared_ptr<DataDefinition> &dataDef, const UFC::AircraftValue &value)
 {
     switch (value.getType())
@@ -470,6 +484,9 @@ void AircraftMapping::writeValue(const std::shared_ptr<DataDefinition> &dataDef,
             break;
         case DataRefType::STRING:
             writeString(dataDef, value.getString());
+            break;
+        case DataRefType::INT_ARRAY:
+            writeArray(dataDef, value.getArray());
             break;
         default:
             break;

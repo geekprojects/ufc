@@ -137,13 +137,15 @@ bool SimulatorDataSource::update()
             title += L" ";
         }
 
+        state->set("fmc/0/call", (t % 2) == 0);
+
         std::wstringstream oss;
         oss << std::put_time(&tm, L"%d-%m-%Y %H:%M:%S");
 
         fmsPrint(state, 1, title, 'b', 'g');
         fmsPrint(state, 2, oss.str());
 
-        fmsPrint(state, 3, L"< Detatch Engine");
+        fmsPrint(state, 3, L"← Detatch Engine");
         fmsPrint(state, 5, L"< Increase Turbulence");
         fmsPrint(state, 7, L"< Deploy Chemtrails");
         fmsPrint(state, 9, L"< Fire Missile");
